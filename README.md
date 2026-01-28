@@ -64,9 +64,10 @@ Ein C# .NET 8 Windows Forms Idle/Incremental Game mit Dark Mode und 500+ einziga
 
 ### 💎 Upgrades (Gems)
 - **Auto Roll**: Automatisches Rollen freischalten (100 Gems)
-- **🆕 Roll Cooldown**: Reduziere Cooldown (Start: 2.0s, Min: 0.1s)
-  - Jedes Upgrade: Cooldown ÷ 2
-  - Kosten: 50 + (Level × 500) Gems
+- **🆕 Roll Cooldown**: Reduziere Cooldown (Start: 2.0s, Min: 0.5s)
+  - Jedes Upgrade: Cooldown - 0.2s
+  - Kosten: Start 200 Gems, dann × 1.5 pro Level
+  - Max. 8 Upgrades (2.0s → 0.5s)
 
 ### 💰 Upgrades (Money)
 - **Luck Booster**: +25% Luck pro Level
@@ -114,6 +115,20 @@ Ein C# .NET 8 Windows Forms Idle/Incremental Game mit Dark Mode und 500+ einziga
 - **XML-Speicher**: Lokale savegame.xml
 - **Version-Check**: Automatisch beim Start
 - **Basic Dice Init**: Automatisch bei leerem Savefile
+
+### 🌐 Multiplayer (NEU!)
+- **🆕 Auto-Setup**: Dialog beim ersten Start für einfache Konfiguration!
+- **🆕 Settings-Integration**: Username und Einstellungen jederzeit änderbar!
+- **Event-Synchronisation**: Admin startet Events für alle Spieler!
+- **Cloud-Based**: OneDrive/Dropbox Sync (1-5s Verzögerung)
+- **Admin-Kontrolle**: Nur Admin kann Events starten
+- **Event-Auswahl**: Dialog mit allen 30 Suffixes
+- **Custom Username**: Zeige deinen Namen statt Windows-Username
+- **Bis zu 10 Spieler**: Gleichzeitig unterstützt
+- **Setup**: Automatischer Dialog oder manuelle `multiplayer.txt`
+- **Sicher**: Nur Events werden geteilt, keine Savegames!
+- **Ordner-Erstellung**: Automatisch oder manuell
+- **Single-Player**: Jederzeit überspringen möglich
 
 ## 📊 Progression Overview
 
@@ -163,6 +178,48 @@ Ein C# .NET 8 Windows Forms Idle/Incremental Game mit Dark Mode und 500+ einziga
 7. **🆕 Roll-Cooldown**: Investiere in Cooldown-Reduktion für schnelleres Rollen
 8. **🆕 Merge-All**: Bei 50+ mergbaren Gruppen nutze MERGE ALL
 9. **🆕 Performance**: Bei 500+ unique Rayans werden nur Top 500 angezeigt
+10. **🌐 Multiplayer**: Spielt mit Freunden! Admin drückt 'E' oder 'M' → Alle bekommen Event!
+11. **⚙️ Username**: Setze deinen Namen in Options → Multiplayer für Event-Anzeige!
+
+## 🌐 Multiplayer Setup
+
+**Für 2-10 Spieler gleichzeitig!**
+
+### 🆕 Einfacher Auto-Setup (empfohlen):
+
+**Beim ersten Start:**
+1. Dialog öffnet sich automatisch
+2. Wähle "Admin" oder "Client"
+3. Gib OneDrive-Pfad ein (wird automatisch erkannt!)
+4. Klicke "Multiplayer aktivieren"
+5. Fertig! 🎉
+
+**Admin:**
+- Drücke 'E' oder 'M' → Wähle Event → Alle bekommen es!
+
+**Client:**
+- Warte auf Events vom Admin!
+
+**→ Siehe [MULTIPLAYER_SETUP.md](MULTIPLAYER_SETUP.md) für Details!**
+
+### Manuelles Setup (optional):
+
+**Admin:**
+1. Erstelle: `C:\Users\[Name]\OneDrive\Anwendungen\Spin a Rayan\`
+2. Teile Ordner (OneDrive → Rechtsklick → Freigeben → **"Kann anzeigen"**)
+3. Erstelle `multiplayer.txt` neben .exe:
+```
+FOLDER=C:\Users\[Name]\OneDrive\Anwendungen\Spin a Rayan
+ADMIN=true
+```
+
+**Client:**
+1. Öffne OneDrive-Link → "Zu meinem OneDrive hinzufügen"
+2. Erstelle `multiplayer.txt`:
+```
+FOLDER=C:\Users\[Name]\OneDrive\Anwendungen\Spin a Rayan
+ADMIN=false
+```
 
 ## 🐛 Bekannte Probleme & Fixes
 

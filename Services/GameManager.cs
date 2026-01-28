@@ -11,6 +11,7 @@ namespace SpinARayan.Services
         private readonly SaveService _saveService;
         private readonly RollService _rollService;
         private readonly QuestService _questService;
+        private EventSyncService? _eventSync;
         private System.Windows.Forms.Timer _gameTimer;
         private DateTime _lastUpdate;
         private DateTime _nextEventTime;
@@ -23,9 +24,13 @@ namespace SpinARayan.Services
         // Admin Mode (Cheat Code)
         public bool AdminMode { get; set; } = false;
         
+        // Multiplayer Mode
+        public bool IsMultiplayerAdmin { get; private set; } = false;
+        public bool IsMultiplayerConnected => _eventSync?.IsConnected ?? false;
+        
         public SuffixEvent? CurrentEvent => _currentEvent;
 
-        public GameManager()
+        public GameManager(string? sharedFolderPath = null, bool isMultiplayerAdmin = false)
         {
             _saveService = new SaveService();
             _rollService = new RollService();
@@ -34,6 +39,23 @@ namespace SpinARayan.Services
             
             // Load saved quest progress
             _questService.LoadQuestsFromStats(Stats);
+            
+            IsMultiplayerAdmin = isMultiplayerAdmin;
+            
+            // Initialize multiplayer if enabled
+            if (!string.IsNullOrEmpty(sharedFolderPath))
+            {
+                try
+                {
+                    _eventSync = new EventSyncService(this, sharedFolderPath, isMultiplayerAdmin);
+                    Console.WriteLine($"[GameManager] Multiplayer enabled - Role: {(isMultiplayerAdmin ? "ADMIN" : "CLIENT")}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[GameManager] Multiplayer disabled: {ex.Message}");
+                    _eventSync = null;
+                }
+            }
             
             _lastUpdate = DateTime.Now;
             _nextEventTime = DateTime.Now.AddMinutes(5); // Erstes Event nach 5 Minuten
@@ -226,6 +248,53 @@ namespace SpinARayan.Services
         {
             // Admin can force an event immediately
             StartRandomEvent();
+        }
+        
+        /// <summary>
+        /// Force a SPECIFIC event (Admin only) and publish to multiplayer if enabled
+        /// </summary>
+        public void ForceSpecificEvent(string suffixName)
+        {
+            if (!AdminMode && !IsMultiplayerAdmin)
+            {
+                Console.WriteLine("[GameManager] ERROR: Only admin can force specific events!");
+                return;
+            }
+            
+            // Get custom username or fallback to Windows username
+            string username = string.IsNullOrEmpty(Stats.MultiplayerUsername) 
+                ? Environment.UserName 
+                : Stats.MultiplayerUsername;
+            
+            // Publish to multiplayer if enabled
+            if (_eventSync != null && IsMultiplayerAdmin)
+            {
+                _eventSync.PublishEvent(suffixName, username);
+                Console.WriteLine($"[GameManager] Published multiplayer event: {suffixName} from {username}");
+            }
+            
+            // Apply locally
+            ApplyRemoteEvent(suffixName, username);
+        }
+        
+        /// <summary>
+        /// Apply remote event from multiplayer sync
+        /// </summary>
+        public void ApplyRemoteEvent(string suffixName, string adminName)
+        {
+            _currentEvent = new SuffixEvent
+            {
+                SuffixName = suffixName,
+                EventName = IsMultiplayerAdmin ? $"{suffixName} Event!" : $"{suffixName} Event! (von {adminName})",
+                StartTime = DateTime.Now,
+                EndTime = DateTime.Now.AddMinutes(2.5),
+                BoostMultiplier = 20.0
+            };
+            
+            _nextEventTime = DateTime.Now.AddMinutes(5); // Reset local event timer
+            OnEventChanged?.Invoke(_currentEvent);
+            
+            Console.WriteLine($"[GameManager] ? Event applied: {suffixName} (Duration: 2.5 min)");
         }
         
         private void UpdateEvents()

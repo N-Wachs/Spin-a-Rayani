@@ -1,0 +1,31 @@
+# MULTIPLAYER CONFIG - CLIENT (Freund)
+# Diese Datei in "multiplayer.txt" umbenennen und neben die .exe legen!
+
+# OneDrive Shared Folder Path (von Admin erhalten!)
+# WICHTIG: Ersetze [DeinName] mit deinem Windows-Benutzernamen!
+FOLDER=C:\Users\[DeinName]\OneDrive\Anwendungen\Spin a Rayan
+
+# Client Mode (du empfängst nur Events, kannst KEINE starten!)
+ADMIN=false
+
+# ========================================
+# SETUP-ANLEITUNG FÜR CLIENT (Freund):
+# ========================================
+# 1. Admin sendet dir OneDrive-Link
+# 2. Öffne Link ? "Zu meinem OneDrive hinzufügen"
+# 3. OneDrive synchronisiert automatisch
+# 4. Finde den Ordner: C:\Users\[DeinName]\OneDrive\...\Spin a Rayan\
+# 5. Kopiere den VOLLEN Pfad
+# 6. Trage den Pfad oben bei FOLDER= ein
+# 7. Benenne diese Datei um zu: multiplayer.txt
+# 8. Starte das Spiel
+# 9. Warte auf Events vom Admin!
+#
+# WICHTIG:
+# - Du kannst KEINE Events starten (nur empfangen)
+# - Wenn Admin ein Event startet, bekommst du es nach 1-5 Sekunden
+# - Events erscheinen oben im Spiel mit Namen des Admins
+# - Du bekommst 20x Boost für das gewählte Suffix!
+#
+# BEISPIEL PFAD:
+# FOLDER=C:\Users\Max\OneDrive\Anwendungen\Spin a Rayan

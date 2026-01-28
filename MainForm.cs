@@ -57,7 +57,60 @@ namespace SpinARayan
             SetDoubleBuffered(panelCenter);
             SetDoubleBuffered(panelRight);
 
-            _gameManager = new GameManager();
+            // MULTIPLAYER CONFIG: Auto-setup or load existing
+            string? multiplayerFolder = null;
+            bool isMultiplayerAdmin = false;
+            
+            string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "multiplayer.txt");
+            
+            // Check if config exists
+            if (!File.Exists(configPath))
+            {
+                // First run! Show setup dialog
+                using var setupDialog = new MultiplayerSetupDialog();
+                var result = setupDialog.ShowDialog();
+                
+                if (result == DialogResult.OK && setupDialog.SetupCompleted)
+                {
+                    multiplayerFolder = setupDialog.SharedFolder;
+                    isMultiplayerAdmin = setupDialog.IsAdmin;
+                    Console.WriteLine($"[MainForm] Multiplayer configured via dialog:");
+                    Console.WriteLine($"  Folder: {multiplayerFolder}");
+                    Console.WriteLine($"  Admin: {isMultiplayerAdmin}");
+                }
+                else
+                {
+                    Console.WriteLine("[MainForm] Multiplayer setup skipped - Single-Player mode");
+                }
+            }
+            else
+            {
+                // Load existing config
+                try
+                {
+                    var lines = File.ReadAllLines(configPath);
+                    foreach (var line in lines)
+                    {
+                        if (line.StartsWith("FOLDER=", StringComparison.OrdinalIgnoreCase))
+                            multiplayerFolder = line.Substring(7).Trim();
+                        else if (line.StartsWith("ADMIN=", StringComparison.OrdinalIgnoreCase))
+                            isMultiplayerAdmin = bool.Parse(line.Substring(6).Trim());
+                    }
+                    
+                    if (!string.IsNullOrEmpty(multiplayerFolder))
+                    {
+                        Console.WriteLine($"[MainForm] Multiplayer loaded from config:");
+                        Console.WriteLine($"  Folder: {multiplayerFolder}");
+                        Console.WriteLine($"  Admin: {isMultiplayerAdmin}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[MainForm] Error loading multiplayer config: {ex.Message}");
+                }
+            }
+
+            _gameManager = new GameManager(multiplayerFolder, isMultiplayerAdmin);
             _gameManager.OnStatsChanged += UpdateUI;
             _gameManager.OnRayanRolled += OnRayanRolled_Handler;
             _gameManager.OnEventChanged += UpdateEventDisplay;
@@ -151,7 +204,15 @@ namespace SpinARayan
             // Admin: Press 'E' to force an event
             if (_gameManager.AdminMode && e.KeyCode == Keys.E)
             {
-                _gameManager.ForceEvent();
+                // Show event selection dialog
+                ShowEventSelectionDialog();
+                e.Handled = true;
+            }
+            
+            // Multiplayer Admin: Press 'M' to force a multiplayer event
+            if (_gameManager.IsMultiplayerAdmin && e.KeyCode == Keys.M)
+            {
+                ShowEventSelectionDialog();
                 e.Handled = true;
             }
         }
@@ -653,6 +714,105 @@ namespace SpinARayan
         private void ShowNewRayan(Rayan rayan)
         {
             lblLastRoll.Text = $"🎲 {rayan.FullName}\n1 in {rayan.Rarity:N0}";
+        }
+        
+        private void ShowEventSelectionDialog()
+        {
+            // Create dark-themed selection dialog
+            var dialog = new Form
+            {
+                Text = _gameManager.IsMultiplayerConnected ? "Event starten (Multiplayer)" : "Event starten (Lokal)",
+                Size = new Size(400, 550),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false,
+                MinimizeBox = false,
+                BackColor = DarkBackground
+            };
+            
+            var titleLabel = new Label
+            {
+                Text = "Wähle Event-Suffix:",
+                Location = new Point(20, 20),
+                Size = new Size(350, 30),
+                Font = new Font("Segoe UI", 12F, FontStyle.Bold),
+                ForeColor = BrightGold
+            };
+            dialog.Controls.Add(titleLabel);
+            
+            if (_gameManager.IsMultiplayerConnected)
+            {
+                var mpLabel = new Label
+                {
+                    Text = "🌐 Multiplayer Modus - Alle Spieler erhalten dieses Event!",
+                    Location = new Point(20, 50),
+                    Size = new Size(350, 40),
+                    Font = new Font("Segoe UI", 9F),
+                    ForeColor = BrightBlue
+                };
+                dialog.Controls.Add(mpLabel);
+            }
+            
+            // Create ListBox with all suffixes
+            var listBox = new ListBox
+            {
+                Location = new Point(20, _gameManager.IsMultiplayerConnected ? 100 : 60),
+                Size = new Size(350, 350),
+                Font = new Font("Segoe UI", 10F),
+                BackColor = DarkPanel,
+                ForeColor = TextColor,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+            
+            // Add all suffixes from RayanData
+            foreach (var suffix in RayanData.Suffixes)
+            {
+                listBox.Items.Add($"{suffix.Suffix} (1:{suffix.Chance:N0}, {suffix.Multiplier}x)");
+            }
+            
+            listBox.SelectedIndex = 0;
+            dialog.Controls.Add(listBox);
+            
+            // Start Event button
+            var btnStart = new Button
+            {
+                Text = "Event starten",
+                Location = new Point(20, 470),
+                Size = new Size(170, 40),
+                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                BackColor = BrightBlue,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnStart.FlatAppearance.BorderSize = 0;
+            btnStart.Click += (s, e) =>
+            {
+                if (listBox.SelectedIndex >= 0)
+                {
+                    var selectedSuffix = RayanData.Suffixes[listBox.SelectedIndex];
+                    _gameManager.ForceSpecificEvent(selectedSuffix.Suffix);
+                    dialog.Close();
+                }
+            };
+            dialog.Controls.Add(btnStart);
+            
+            // Cancel button
+            var btnCancel = new Button
+            {
+                Text = "Abbrechen",
+                Location = new Point(200, 470),
+                Size = new Size(170, 40),
+                Font = new Font("Segoe UI", 11F),
+                BackColor = DarkAccent,
+                ForeColor = TextColor,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnCancel.FlatAppearance.BorderSize = 1;
+            btnCancel.FlatAppearance.BorderColor = Color.FromArgb(80, 80, 85);
+            btnCancel.Click += (s, e) => dialog.Close();
+            dialog.Controls.Add(btnCancel);
+            
+            dialog.ShowDialog(this);
         }
 
         private string FormatBigInt(BigInteger value)

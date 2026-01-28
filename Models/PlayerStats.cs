@@ -67,6 +67,10 @@ namespace SpinARayan.Models
         
         // Quest System - Save quest progress
         public List<Quest> SavedQuests { get; set; } = new List<Quest>();
+        
+        // Multiplayer System
+        public string MultiplayerUsername { get; set; } = "";
+
 
         public double MoneyMultiplier => 1.0 + (Rebirths * 4.0);
         public double LuckMultiplier => 1.0 + (LuckBoosterLevel * 0.25);

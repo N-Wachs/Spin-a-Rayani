@@ -1,5 +1,6 @@
 using System;
 using System.Drawing;
+using System.IO;
 using System.Numerics;
 using System.Windows.Forms;
 using SpinARayan.Models;
@@ -28,6 +29,7 @@ namespace SpinARayan
             _onOptionsChanged = onOptionsChanged;
             InitializeComponent();
             ApplyDarkMode();
+            AddMultiplayerSettings();
             LoadStatistics();
         }
 
@@ -232,6 +234,141 @@ namespace SpinARayan
         private void btnClose_Click(object sender, EventArgs e)
         {
             this.Close();
+        }
+        
+        private void AddMultiplayerSettings()
+        {
+            // Create Multiplayer Settings Panel
+            var mpPanel = new Panel
+            {
+                Location = new Point(20, 420),
+                Size = new Size(560, 200),
+                BackColor = DarkPanel,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+            
+            var lblMpTitle = new Label
+            {
+                Text = "?? Multiplayer Einstellungen",
+                Location = new Point(10, 10),
+                Size = new Size(540, 30),
+                Font = new Font("Segoe UI", 12F, FontStyle.Bold),
+                ForeColor = BrightBlue
+            };
+            mpPanel.Controls.Add(lblMpTitle);
+            
+            // Username
+            var lblUsername = new Label
+            {
+                Text = "Dein Name (für Event-Anzeige):",
+                Location = new Point(10, 50),
+                Size = new Size(220, 25),
+                Font = new Font("Segoe UI", 9F),
+                ForeColor = TextColor
+            };
+            mpPanel.Controls.Add(lblUsername);
+            
+            var txtUsername = new TextBox
+            {
+                Location = new Point(240, 48),
+                Size = new Size(200, 25),
+                Font = new Font("Segoe UI", 10F),
+                BackColor = DarkAccent,
+                ForeColor = TextColor,
+                Text = string.IsNullOrEmpty(_gameManager.Stats.MultiplayerUsername) 
+                    ? Environment.UserName 
+                    : _gameManager.Stats.MultiplayerUsername
+            };
+            mpPanel.Controls.Add(txtUsername);
+            
+            var btnSaveUsername = new Button
+            {
+                Text = "??",
+                Location = new Point(450, 48),
+                Size = new Size(90, 25),
+                Font = new Font("Segoe UI", 10F),
+                BackColor = BrightGreen,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnSaveUsername.FlatAppearance.BorderSize = 0;
+            btnSaveUsername.Click += (s, e) =>
+            {
+                _gameManager.Stats.MultiplayerUsername = txtUsername.Text.Trim();
+                _gameManager.Save();
+                MessageBox.Show(
+                    $"? Username gespeichert: {txtUsername.Text}\n\n" +
+                    "Dein Name wird jetzt in Events angezeigt!",
+                    "Gespeichert",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+            };
+            mpPanel.Controls.Add(btnSaveUsername);
+            
+            // Multiplayer Config Button
+            var btnConfigMP = new Button
+            {
+                Text = "?? Multiplayer konfigurieren",
+                Location = new Point(10, 90),
+                Size = new Size(530, 40),
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                BackColor = BrightBlue,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnConfigMP.FlatAppearance.BorderSize = 0;
+            btnConfigMP.Click += (s, e) =>
+            {
+                using var setupDialog = new MultiplayerSetupDialog();
+                var result = setupDialog.ShowDialog();
+                
+                if (result == DialogResult.OK && setupDialog.SetupCompleted)
+                {
+                    MessageBox.Show(
+                        "? Multiplayer-Einstellungen gespeichert!\n\n" +
+                        "Starte das Spiel neu, damit die Änderungen wirksam werden.",
+                        "Neustart erforderlich",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information
+                    );
+                }
+            };
+            mpPanel.Controls.Add(btnConfigMP);
+            
+            // MP Status Display
+            string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "multiplayer.txt");
+            bool mpEnabled = File.Exists(configPath);
+            
+            var lblMpStatus = new Label
+            {
+                Text = mpEnabled 
+                    ? $"? Multiplayer aktiv ({(_gameManager.IsMultiplayerAdmin ? "Admin" : "Client")})" 
+                    : "?? Multiplayer inaktiv (Single-Player)",
+                Location = new Point(10, 140),
+                Size = new Size(530, 25),
+                Font = new Font("Segoe UI", 9F, FontStyle.Italic),
+                ForeColor = mpEnabled ? BrightGreen : Color.Gray
+            };
+            mpPanel.Controls.Add(lblMpStatus);
+            
+            if (mpEnabled && _gameManager.IsMultiplayerConnected)
+            {
+                var lblMpInfo = new Label
+                {
+                    Text = "?? Verbunden - Events werden synchronisiert!",
+                    Location = new Point(10, 165),
+                    Size = new Size(530, 20),
+                    Font = new Font("Segoe UI", 8F),
+                    ForeColor = BrightBlue
+                };
+                mpPanel.Controls.Add(lblMpInfo);
+            }
+            
+            this.Controls.Add(mpPanel);
+            
+            // Adjust form size to accommodate multiplayer settings
+            this.Height = Math.Max(this.Height, 660);
         }
     }
 }
