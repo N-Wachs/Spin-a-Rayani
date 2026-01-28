@@ -13,6 +13,7 @@
         private Button btnUpgrades;
         private Button btnQuests;
         private Button btnShop;
+        private Button btnOptions;
         private Label lblMoney;
         private Label lblGems;
         private Label lblRebirths;
@@ -42,6 +43,7 @@
             this.btnUpgrades = new Button();
             this.btnQuests = new Button();
             this.btnShop = new Button();
+            this.btnOptions = new Button();
             this.lblMoney = new Label();
             this.lblGems = new Label();
             this.lblRebirths = new Label();
@@ -253,6 +255,21 @@
             this.btnQuests.FlatAppearance.BorderColor = Color.FromArgb(80, 80, 85);
             this.btnQuests.Click += new EventHandler(this.btnQuests_Click);
             this.panelRight.Controls.Add(this.btnQuests);
+            
+            // 
+            // btnOptions
+            // 
+            this.btnOptions.Location = new Point(20, 300);
+            this.btnOptions.Size = new Size(260, 60);
+            this.btnOptions.BackColor = Color.FromArgb(60, 60, 65);
+            this.btnOptions.ForeColor = Color.FromArgb(230, 230, 230);
+            this.btnOptions.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            this.btnOptions.Text = "⚙️ OPTIONS";
+            this.btnOptions.FlatStyle = FlatStyle.Flat;
+            this.btnOptions.FlatAppearance.BorderSize = 1;
+            this.btnOptions.FlatAppearance.BorderColor = Color.FromArgb(80, 80, 85);
+            this.btnOptions.Click += new EventHandler(this.btnOptions_Click);
+            this.panelRight.Controls.Add(this.btnOptions);
             
             // 
             // MainForm

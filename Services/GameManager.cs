@@ -44,6 +44,7 @@ namespace SpinARayan.Services
         {
             UpdateFarming();
             Stats.PlayTimeMinutes += 1.0 / 60.0;
+            Stats.TotalPlayTimeMinutes += 1.0 / 60.0; // Track all-time
             _questService.UpdateProgress(Stats);
             
             // Check for event updates
@@ -75,7 +76,9 @@ namespace SpinARayan.Services
                 }
             }
 
-            Stats.Money += new BigInteger((double)incomePerSecond * Stats.MoneyMultiplier);
+            BigInteger earnedThisSecond = new BigInteger((double)incomePerSecond * Stats.MoneyMultiplier);
+            Stats.Money += earnedThisSecond;
+            Stats.TotalMoneyEarned += earnedThisSecond; // Track all-time
         }
 
         public void Roll()
@@ -107,6 +110,15 @@ namespace SpinARayan.Services
             var rayan = _rollService.Roll(totalLuck, _currentEvent);
             Stats.Inventory.Add(rayan);
             Stats.TotalRolls++;
+            Stats.TotalRollsAllTime++; // Track all-time
+            
+            // Track best rayan ever
+            if (rayan.Rarity > Stats.BestRayanEverRarity)
+            {
+                Stats.BestRayanEverName = rayan.FullName;
+                Stats.BestRayanEverRarity = rayan.Rarity;
+                Stats.BestRayanEverValue = rayan.TotalValue;
+            }
             
             // Reduce quantity for non-infinite dices
             if (!selectedDice.IsInfinite)
@@ -153,6 +165,7 @@ namespace SpinARayan.Services
                 Stats.Inventory.Clear();
                 Stats.EquippedRayanIndices.Clear();
                 Stats.Rebirths++;
+                Stats.TotalRebirthsAllTime++; // Track all-time
                 
                 // Plot Slots nur erhöhen wenn unter 10 (Maximum)
                 if (Stats.PlotSlots < 10)

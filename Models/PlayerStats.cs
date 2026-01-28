@@ -28,6 +28,35 @@ namespace SpinARayan.Models
         public bool AutoRollUnlocked { get; set; } = false;
         public bool AutoRollActive { get; set; } = false;
         public double PlayTimeMinutes { get; set; } = 0;
+        
+        // All-Time Stats (NEVER reset by Rebirth)
+        [XmlIgnore]
+        public BigInteger TotalMoneyEarned { get; set; } = 0;
+        
+        [XmlElement("TotalMoneyEarned")]
+        public string TotalMoneyEarnedString
+        {
+            get => TotalMoneyEarned.ToString();
+            set => TotalMoneyEarned = BigInteger.Parse(string.IsNullOrEmpty(value) ? "0" : value);
+        }
+        
+        public int TotalRollsAllTime { get; set; } = 0;
+        public int TotalRebirthsAllTime { get; set; } = 0;
+        public double TotalPlayTimeMinutes { get; set; } = 0;
+        
+        // Best Rayan Ever
+        public string BestRayanEverName { get; set; } = "";
+        public double BestRayanEverRarity { get; set; } = 0;
+        
+        [XmlIgnore]
+        public BigInteger BestRayanEverValue { get; set; } = 0;
+        
+        [XmlElement("BestRayanEverValue")]
+        public string BestRayanEverValueString
+        {
+            get => BestRayanEverValue.ToString();
+            set => BestRayanEverValue = BigInteger.Parse(string.IsNullOrEmpty(value) ? "0" : value);
+        }
 
         public List<Rayan> Inventory { get; set; } = new List<Rayan>();
         public List<int> EquippedRayanIndices { get; set; } = new List<int>(); // Indices in Inventory

@@ -666,6 +666,15 @@ namespace SpinARayan
             });
             diceShopForm.ShowDialog();
         }
+        
+        private void btnOptions_Click(object sender, EventArgs e)
+        {
+            var optionsForm = new OptionsForm(_gameManager, () =>
+            {
+                UpdateUI();
+            });
+            optionsForm.ShowDialog();
+        }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
