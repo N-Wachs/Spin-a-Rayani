@@ -77,14 +77,14 @@ namespace SpinARayan
             // lblTitle
             this.lblTitle.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
             this.lblTitle.Location = new Point(12, 12);
-            this.lblTitle.Size = new Size(660, 40);
+            this.lblTitle.Size = new Size(720, 40);
             this.lblTitle.Text = "?? OPTIONS & STATISTICS";
             this.lblTitle.TextAlign = ContentAlignment.MiddleCenter;
             
             // panelStats
             this.panelStats.BorderStyle = BorderStyle.FixedSingle;
             this.panelStats.Location = new Point(12, 60);
-            this.panelStats.Size = new Size(660, 550);
+            this.panelStats.Size = new Size(720, 550);
             this.panelStats.AutoScroll = true;
             
             // Stats Layout (3 columns)
@@ -180,7 +180,7 @@ namespace SpinARayan
             // panelActions
             this.panelActions.BorderStyle = BorderStyle.FixedSingle;
             this.panelActions.Location = new Point(12, 620);
-            this.panelActions.Size = new Size(660, 80);
+            this.panelActions.Size = new Size(720, 80);
             
             // btnResetGame
             this.btnResetGame.Location = new Point(20, 20);
@@ -208,7 +208,7 @@ namespace SpinARayan
             this.panelActions.Controls.Add(this.btnClose);
             
             // OptionsForm
-            this.ClientSize = new Size(684, 720);
+            this.ClientSize = new Size(744, 720);
             this.Controls.Add(this.lblTitle);
             this.Controls.Add(this.panelStats);
             this.Controls.Add(this.panelActions);

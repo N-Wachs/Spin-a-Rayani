@@ -5,6 +5,8 @@ namespace SpinARayan.Models
         public string Id { get; set; } = "";
         public string Description { get; set; } = "";
         public int Goal { get; set; }
+        public int InitialGoal { get; set; } // Speichert das ursprüngliche Ziel
+        public int GoalIncrement { get; set; } = 0; // Um wie viel erhöht sich das Goal bei Wiederholung
         public int CurrentProgress { get; set; }
         public int RewardGems { get; set; }
         public bool IsCompleted { get; set; } = false;
@@ -23,6 +25,12 @@ namespace SpinARayan.Models
             IsCompleted = false;
             IsClaimed = false;
             TimesCompleted++;
+            
+            // Erhöhe das Goal wenn es ein Increment gibt (progressive Quests)
+            if (GoalIncrement > 0)
+            {
+                Goal += GoalIncrement;
+            }
         }
     }
 }

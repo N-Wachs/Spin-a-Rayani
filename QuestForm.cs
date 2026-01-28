@@ -70,11 +70,15 @@ namespace SpinARayan
                 BackColor = panelColor
             };
 
-            // Zeige die Anzahl der Wiederholungen bei wiederholbaren Quests
+            // Zeige die Anzahl der Wiederholungen und aktuelles Goal bei wiederholbaren Quests
             string description = quest.Description;
             if (quest.IsRepeatable && quest.TimesCompleted > 0)
             {
-                description += $" (x{quest.TimesCompleted})";
+                description = $"{quest.Description.Replace($"{quest.InitialGoal:N0}", $"{quest.Goal:N0}")} (x{quest.TimesCompleted + 1})";
+            }
+            else if (quest.IsRepeatable)
+            {
+                description = $"{quest.Description} (Wiederholbar)";
             }
 
             var lblDescription = new Label

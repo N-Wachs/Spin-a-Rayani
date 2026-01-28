@@ -247,7 +247,7 @@ namespace SpinARayan
                 int seconds = suffixEvent.TimeRemaining.Seconds;
                 
                 string adminPrefix = _gameManager.AdminMode ? "[ADMIN] " : "";
-                _lblEventDisplay.Text = $"{adminPrefix}🔥 {suffixEvent.EventName} - {suffixEvent.SuffixName} 5x häufiger! ({minutes}:{seconds:D2} verbleibend)";
+                _lblEventDisplay.Text = $"{adminPrefix}🔥 {suffixEvent.EventName} - {suffixEvent.SuffixName} 20x häufiger! ({minutes}:{seconds:D2} verbleibend)";
                 _lblEventDisplay.BackColor = GetEventColor(suffixEvent.SuffixName);
                 _lblEventDisplay.Visible = true;
             }

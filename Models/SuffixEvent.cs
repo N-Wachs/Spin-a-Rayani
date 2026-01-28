@@ -7,7 +7,7 @@ namespace SpinARayan.Models
         public DateTime StartTime { get; set; }
         public DateTime EndTime { get; set; }
         public bool IsActive => DateTime.Now >= StartTime && DateTime.Now < EndTime;
-        public double BoostMultiplier { get; set; } = 5.0; // 5x häufiger
+        public double BoostMultiplier { get; set; } = 20.0; // 20x häufiger
         
         public TimeSpan TimeRemaining => IsActive ? EndTime - DateTime.Now : TimeSpan.Zero;
     }

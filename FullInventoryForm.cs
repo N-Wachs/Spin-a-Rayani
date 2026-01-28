@@ -36,10 +36,11 @@ namespace SpinARayan
 
         private void LoadInventory()
         {
-            // Clear existing panels
+            // Performance: Suspend layout während wir alle Panels erstellen
+            panelInventory.SuspendLayout();
             panelInventory.Controls.Clear();
 
-            // Group identical Rayans and sort by HIGHEST individual value descending (highest first)
+            // Group und sortiere EINMAL statt mehrmals
             var groupedRayans = _inventory
                 .GroupBy(r => new { r.Prefix, r.Suffix, r.Rarity, r.BaseValue })
                 .Select(g => new
@@ -52,13 +53,16 @@ namespace SpinARayan
                     Count = g.Count(),
                     MaxMultiplier = g.Max(r => r.Multiplier),
                     AvgMultiplier = g.Average(r => r.Multiplier),
-                    MaxValue = g.Max(r => (double)r.TotalValue), // Highest individual value for sorting
-                    AvgValue = g.Average(r => (double)r.TotalValue), // Average for display
-                    CanMerge = g.Count() >= 20 // Merge possible if 20+ Rayans of this type
+                    MaxValue = g.Max(r => (double)r.TotalValue),
+                    AvgValue = g.Average(r => (double)r.TotalValue),
+                    CanMerge = g.Count() >= 5
                 })
-                .OrderByDescending(x => x.MaxValue) // Sort by HIGHEST individual value
+                .OrderByDescending(x => x.MaxValue)
                 .ToList();
 
+            lblTotalRayans.Text = $"Gesamt Rayans: {_inventory.Count} (Unique: {groupedRayans.Count})";
+
+            // Erstelle alle Panels in einer Schleife
             int yPosition = 10;
             foreach (var group in groupedRayans)
             {
@@ -69,8 +73,9 @@ namespace SpinARayan
                 panelInventory.Controls.Add(rayanPanel);
                 yPosition += rayanPanel.Height + 10;
             }
-
-            lblTotalRayans.Text = $"Gesamt Rayans: {_inventory.Count} (Unique: {groupedRayans.Count})";
+            
+            // Performance: Resume layout - nur EIN UI-Update!
+            panelInventory.ResumeLayout();
         }
 
         private Panel CreateRayanPanel(string fullName, double rarity, int count, double avgMultiplier,
@@ -128,7 +133,7 @@ namespace SpinARayan
                 Location = new Point(420, 40),
                 Size = new Size(300, 30),
                 Font = new Font("Segoe UI", 9F),
-                Text = canMerge ? $"20x mergen ? 1x Merged (20x stärker)" : $"Benötigt 20 Stück",
+                Text = canMerge ? $"5x mergen ? 1x Merged (5x stärker)" : $"Benötigt 5 Stück",
                 Enabled = canMerge,
                 Tag = new { Prefix = prefix, Suffix = suffix, Rarity = rarity, BaseValue = baseValue },
                 BackColor = canMerge ? BrightBlue : DarkAccent,
@@ -181,29 +186,29 @@ namespace SpinARayan
 
         private void MergeRayans(string prefix, string suffix, double rarity, BigInteger baseValue)
         {
-            // Take ANY 20 Rayans of this type (not just 1x multiplier)
+            // Take ANY 5 Rayans of this type
             var matchingRayans = _inventory
                 .Where(r => r.Prefix == prefix && r.Suffix == suffix && r.Rarity == rarity
                     && r.BaseValue == baseValue)
-                .Take(20)
+                .Take(5)
                 .ToList();
 
-            if (matchingRayans.Count < 20)
+            if (matchingRayans.Count < 5)
             {
                 MessageBox.Show("Nicht genügend Rayans zum Mergen!", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
-            // Calculate average multiplier of the 20 Rayans being merged
+            // Calculate average multiplier of the 5 Rayans being merged
             double avgMultiplier = matchingRayans.Average(r => r.Multiplier);
             
-            // Remove 20 Rayans
+            // Remove 5 Rayans
             foreach (var rayan in matchingRayans)
             {
                 _inventory.Remove(rayan);
             }
 
-            // Create merged Rayan with 20x the average multiplier
+            // Create merged Rayan with 5x the average multiplier
             string newSuffix = string.IsNullOrEmpty(suffix) ? "Merged" : $"{suffix} Merged";
             
             var mergedRayan = new Rayan
@@ -212,15 +217,106 @@ namespace SpinARayan
                 Suffix = newSuffix,
                 Rarity = rarity,
                 BaseValue = baseValue,
-                Multiplier = avgMultiplier * 20 // 20x stronger than average
+                Multiplier = avgMultiplier * 5 // 5x stronger than average
             };
 
             _inventory.Add(mergedRayan);
 
-            MessageBox.Show($"20x {prefix} {(string.IsNullOrEmpty(suffix) ? "Rayan" : suffix)} wurden zu 1x {mergedRayan.FullName} gemerged!\n" +
-                           $"Neuer Multiplier: {mergedRayan.Multiplier:F1}x (20x stärker als Ø {avgMultiplier:F1}x)", 
+            MessageBox.Show($"5x {prefix} {(string.IsNullOrEmpty(suffix) ? "Rayan" : suffix)} wurden zu 1x {mergedRayan.FullName} gemerged!\n" +
+                           $"Neuer Multiplier: {mergedRayan.Multiplier:F1}x (5x stärker als Ø {avgMultiplier:F1}x)", 
                            "Erfolg", MessageBoxButtons.OK, MessageBoxIcon.Information);
 
+            LoadInventory();
+            _onInventoryChanged?.Invoke();
+        }
+        
+        private void btnMergeAll_Click(object? sender, EventArgs e)
+        {
+            // Find all groups that can be merged (5+ Rayans)
+            var mergeCandidates = _inventory
+                .GroupBy(r => new { r.Prefix, r.Suffix, r.Rarity, r.BaseValue })
+                .Where(g => g.Count() >= 5)
+                .OrderByDescending(g => g.Count()) // Merge groups with most Rayans first
+                .ToList();
+            
+            if (mergeCandidates.Count == 0)
+            {
+                MessageBox.Show("Keine Rayans zum Mergen gefunden!\n\nDu brauchst mindestens 5 gleiche Rayans pro Typ.",
+                    "Info", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                return;
+            }
+            
+            var result = MessageBox.Show(
+                $"Möchtest du {mergeCandidates.Count} Gruppen mergen?\n\n" +
+                $"Das erstellt {mergeCandidates.Count} neue Merged Rayans.\n\n" +
+                "Diese Aktion kann nicht rückgängig gemacht werden!",
+                "MERGE ALL",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question);
+            
+            if (result != DialogResult.Yes)
+                return;
+            
+            int totalMerged = 0;
+            int totalRayansUsed = 0;
+            
+            foreach (var group in mergeCandidates)
+            {
+                string prefix = group.Key.Prefix;
+                string suffix = group.Key.Suffix;
+                double rarity = group.Key.Rarity;
+                BigInteger baseValue = group.Key.BaseValue;
+                
+                // Merge as many times as possible (every 5 Rayans)
+                int mergeCount = group.Count() / 5;
+                
+                for (int i = 0; i < mergeCount; i++)
+                {
+                    // Take 5 Rayans
+                    var rayansToMerge = _inventory
+                        .Where(r => r.Prefix == prefix && r.Suffix == suffix && 
+                                   r.Rarity == rarity && r.BaseValue == baseValue)
+                        .Take(5)
+                        .ToList();
+                    
+                    if (rayansToMerge.Count < 5)
+                        break;
+                    
+                    // Calculate average multiplier
+                    double avgMultiplier = rayansToMerge.Average(r => r.Multiplier);
+                    
+                    // Remove 5 Rayans
+                    foreach (var rayan in rayansToMerge)
+                    {
+                        _inventory.Remove(rayan);
+                        totalRayansUsed++;
+                    }
+                    
+                    // Create merged Rayan
+                    string newSuffix = string.IsNullOrEmpty(suffix) ? "Merged" : $"{suffix} Merged";
+                    var mergedRayan = new Rayan
+                    {
+                        Prefix = prefix,
+                        Suffix = newSuffix,
+                        Rarity = rarity,
+                        BaseValue = baseValue,
+                        Multiplier = avgMultiplier * 5
+                    };
+                    
+                    _inventory.Add(mergedRayan);
+                    totalMerged++;
+                }
+            }
+            
+            MessageBox.Show(
+                $"? MERGE ALL abgeschlossen!\n\n" +
+                $"Merged: {totalMerged} neue Rayans erstellt\n" +
+                $"Verwendet: {totalRayansUsed} Rayans (je 5 pro Merge)\n" +
+                $"Übrig: {_inventory.Count} Rayans im Inventar",
+                "Erfolg",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+            
             LoadInventory();
             _onInventoryChanged?.Invoke();
         }

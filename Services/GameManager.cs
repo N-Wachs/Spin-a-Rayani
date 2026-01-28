@@ -32,7 +32,7 @@ namespace SpinARayan.Services
             _questService = new QuestService();
             Stats = _saveService.Load();
             _lastUpdate = DateTime.Now;
-            _nextEventTime = DateTime.Now.AddMinutes(10);
+            _nextEventTime = DateTime.Now.AddMinutes(5); // Erstes Event nach 5 Minuten
 
             _gameTimer = new System.Windows.Forms.Timer();
             _gameTimer.Interval = 1000; // 1 second
@@ -56,8 +56,8 @@ namespace SpinARayan.Services
                 OnEventChanged?.Invoke(_currentEvent);
             }
 
-            // Autosave every 10 minutes
-            if ((int)(Stats.PlayTimeMinutes * 60) % 600 == 0)
+            // Autosave every 60 seconds (1 minute)
+            if ((int)(Stats.PlayTimeMinutes * 60) % 60 == 0 && (int)(Stats.PlayTimeMinutes * 60) > 0)
             {
                 _saveService.Save(Stats);
             }
@@ -226,11 +226,11 @@ namespace SpinARayan.Services
                 OnEventChanged?.Invoke(null);
             }
             
-            // Start new event every 10 minutes
+            // Start new event every 5 minutes
             if (DateTime.Now >= _nextEventTime)
             {
                 StartRandomEvent();
-                _nextEventTime = DateTime.Now.AddMinutes(10);
+                _nextEventTime = DateTime.Now.AddMinutes(5);
             }
         }
         
@@ -267,8 +267,8 @@ namespace SpinARayan.Services
                 SuffixName = selectedSuffix.Suffix,
                 EventName = $"{selectedSuffix.Suffix} Event!",
                 StartTime = DateTime.Now,
-                EndTime = DateTime.Now.AddMinutes(5),
-                BoostMultiplier = 5.0
+                EndTime = DateTime.Now.AddMinutes(2.5), // 2.5 Minuten Dauer
+                BoostMultiplier = 20.0
             };
             
             OnEventChanged?.Invoke(_currentEvent);

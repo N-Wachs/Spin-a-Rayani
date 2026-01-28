@@ -52,7 +52,13 @@ namespace SpinARayan
             // 
             this.btnRefresh.Location = new System.Drawing.Point(12, 630);
             this.btnRefresh.Size = new System.Drawing.Size(570, 30);
-            this.btnRefresh.Text = "Aktualisieren";
+            this.btnRefresh.Text = "?? Aktualisieren";
+            this.btnRefresh.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.btnRefresh.BackColor = System.Drawing.Color.FromArgb(60, 60, 65);
+            this.btnRefresh.ForeColor = System.Drawing.Color.FromArgb(230, 230, 230);
+            this.btnRefresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btnRefresh.FlatAppearance.BorderSize = 1;
+            this.btnRefresh.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(80, 80, 85);
             this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
             // 
             // QuestForm

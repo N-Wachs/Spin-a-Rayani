@@ -15,17 +15,22 @@ Ein C# .NET 8 Windows Forms Idle/Incremental Game mit Dark Mode und 500+ einziga
   - Rare: Cosmic, Void, Divine, Infernal
   - Epic: Primordial, Ancient, Transcendent
   - Legendary: Legendary, Eternal, Omega
-- **Merge-System**: 20 gleiche Rayans → 1 Merged (20x stärker)
+- **Merge-System**: 5 gleiche Rayans → 1 Merged (5x stärker)
 
 ### 🎲 Dice System
-- **18 Würfel-Typen**: Basic bis Cosmic Dice (1x - 50x Luck)
+- **35+ Würfel-Typen**: Basic bis Supreme Dice (1x - 100.000x Luck!)
+- **Tier 1-6**: Silver bis Cosmic (1.5x - 50x)
+- **Tier 7**: Mythic (75x - 300x) - Millionen bis Milliarden
+- **Tier 8**: Transcendent (500x - 2.500x) - Milliarden bis Billionen
+- **Tier 9**: Ultimate (5.000x - 100.000x) - Billionen+
 - **Quantity-System**: Jeder Roll verbraucht einen Dice (außer Basic)
 - **Auto-Switch**: Automatischer Wechsel zu Basic Dice wenn leer
 - **MAX-Kauf**: Kaufe automatisch so viele wie möglich
 
 ### 🔥 Event-System
-- **Suffix-Events**: Alle 10 Minuten für 5 Minuten
-- **5x Boost**: Ausgewähltes Suffix erscheint 5x häufiger
+- **Suffix-Events**: Alle 5 Minuten für 2,5 Minuten
+- **20x Boost**: Ausgewähltes Suffix erscheint 20x häufiger!
+- **50% Uptime**: Events sind die Hälfte der Zeit aktiv
 - **Gewichtete Events**: Seltenere Suffixes = seltenere Events
 - **Live-Timer**: Countdown-Anzeige ganz oben
 - **Admin-Control**: Force Event mit 'E'-Taste
@@ -109,6 +114,13 @@ Ein C# .NET 8 Windows Forms Idle/Incremental Game mit Dark Mode und 500+ einziga
 - Vollständig gemergte Rayans
 - Alle Quests abgeschlossen
 
+### Ultra End Game (1000+ Rebirths)
+- Mythic Dices (75x-300x)
+- Transcendent Dices (500x-2.500x)
+- Ultimate Dices (5.000x-100.000x)
+- Trillionen+ Income pro Sekunde
+- Supreme Dice für maximales Glück
+
 ## 🎮 Gameplay-Tipps
 
 1. **Nutze Events**: Während Events aktiv rollen für seltene Suffixes!
@@ -138,13 +150,15 @@ Ein C# .NET 8 Windows Forms Idle/Incremental Game mit Dark Mode und 500+ einziga
 - [ ] Cloud-Save-Option
 
 ## 📝 Version
-**Aktuelle Version**: 1.3.0
-- Event-System komplett implementiert
+**Aktuelle Version**: 1.4.0
+- Event-Boost: 5x → **20x**! 
+- 35+ Dice-Typen (bis 100.000x Luck)
+- Billionen-Bereich Progression
+- All-Time Statistics
+- Options & Reset-Funktion
 - 500 einzigartige Rayans
-- 18 Dice-Typen
+- 20 Suffix-Typen
 - 7 Quests
-- Merge-System optimiert
-- Auto-Roll funktional
 
 ## 🙏 Credits
 Inspiriert von "Spin a Badie"

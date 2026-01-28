@@ -21,39 +21,61 @@ namespace SpinARayan
         private readonly Color BrightGreen = Color.FromArgb(0, 255, 127);
         private readonly Color BrightBlue = Color.FromArgb(0, 174, 255);
         private readonly Color BrightGold = Color.FromArgb(255, 215, 0);
+        private readonly Color BrightRed = Color.FromArgb(255, 69, 58);
         private readonly Color TextColor = Color.FromArgb(230, 230, 230);
 
         // Available Dices (templates for shop)
         private List<Dice> _availableDices = new List<Dice>
         {
-            // Tier 1: Starter
-            new Dice { Name = "Silver Dice", LuckMultiplier = 1.5, Cost = 2500 },
-            new Dice { Name = "Bronze Dice", LuckMultiplier = 1.8, Cost = 5000 },
+            // Tier 1: Starter (x3)
+            new Dice { Name = "Silver Dice", LuckMultiplier = 1.5, Cost = 7500 },
+            new Dice { Name = "Bronze Dice", LuckMultiplier = 1.8, Cost = 15000 },
             
-            // Tier 2: Common
-            new Dice { Name = "Golden Dice", LuckMultiplier = 2.0, Cost = 20000 },
-            new Dice { Name = "Copper Dice", LuckMultiplier = 2.3, Cost = 40000 },
-            new Dice { Name = "Iron Dice", LuckMultiplier = 2.6, Cost = 75000 },
+            // Tier 2: Common (x3)
+            new Dice { Name = "Golden Dice", LuckMultiplier = 2.0, Cost = 60000 },
+            new Dice { Name = "Copper Dice", LuckMultiplier = 2.3, Cost = 120000 },
+            new Dice { Name = "Iron Dice", LuckMultiplier = 2.6, Cost = 225000 },
             
-            // Tier 3: Uncommon
-            new Dice { Name = "Diamond Dice", LuckMultiplier = 3.0, Cost = 100000 },
-            new Dice { Name = "Ruby Dice", LuckMultiplier = 3.5, Cost = 200000 },
-            new Dice { Name = "Sapphire Dice", LuckMultiplier = 4.0, Cost = 350000 },
+            // Tier 3: Uncommon (x3)
+            new Dice { Name = "Diamond Dice", LuckMultiplier = 3.0, Cost = 300000 },
+            new Dice { Name = "Ruby Dice", LuckMultiplier = 3.5, Cost = 600000 },
+            new Dice { Name = "Sapphire Dice", LuckMultiplier = 4.0, Cost = 1050000 },
             
-            // Tier 4: Rare
-            new Dice { Name = "Platinum Dice", LuckMultiplier = 5.0, Cost = 500000 },
-            new Dice { Name = "Obsidian Dice", LuckMultiplier = 6.0, Cost = 800000 },
-            new Dice { Name = "Jade Dice", LuckMultiplier = 7.0, Cost = 1200000 },
+            // Tier 4: Rare (x3)
+            new Dice { Name = "Platinum Dice", LuckMultiplier = 5.0, Cost = 1500000 },
+            new Dice { Name = "Obsidian Dice", LuckMultiplier = 6.0, Cost = 2400000 },
+            new Dice { Name = "Jade Dice", LuckMultiplier = 7.0, Cost = 3600000 },
             
-            // Tier 5: Epic
-            new Dice { Name = "Emerald Dice", LuckMultiplier = 10.0, Cost = 2000000 },
-            new Dice { Name = "Amethyst Dice", LuckMultiplier = 12.0, Cost = 3500000 },
-            new Dice { Name = "Crystal Dice", LuckMultiplier = 15.0, Cost = 6000000 },
+            // Tier 5: Epic (x3)
+            new Dice { Name = "Emerald Dice", LuckMultiplier = 10.0, Cost = 6000000 },
+            new Dice { Name = "Amethyst Dice", LuckMultiplier = 12.0, Cost = 10500000 },
+            new Dice { Name = "Crystal Dice", LuckMultiplier = 15.0, Cost = 18000000 },
             
-            // Tier 6: Legendary
-            new Dice { Name = "Celestial Dice", LuckMultiplier = 20.0, Cost = 10000000 },
-            new Dice { Name = "Divine Dice", LuckMultiplier = 30.0, Cost = 25000000 },
-            new Dice { Name = "Cosmic Dice", LuckMultiplier = 50.0, Cost = 100000000 }
+            // Tier 6: Legendary (x3)
+            new Dice { Name = "Celestial Dice", LuckMultiplier = 20.0, Cost = 30000000 },
+            new Dice { Name = "Divine Dice", LuckMultiplier = 30.0, Cost = 75000000 },
+            new Dice { Name = "Cosmic Dice", LuckMultiplier = 50.0, Cost = 300000000 },
+            
+            // Tier 7: Mythic (x3)
+            new Dice { Name = "Quantum Dice", LuckMultiplier = 75.0, Cost = 750000000 },
+            new Dice { Name = "Void Dice", LuckMultiplier = 100.0, Cost = 1500000000 },
+            new Dice { Name = "Ethereal Dice", LuckMultiplier = 150.0, Cost = 3000000000 },
+            new Dice { Name = "Astral Dice", LuckMultiplier = 200.0, Cost = 7500000000 },
+            new Dice { Name = "Primordial Dice", LuckMultiplier = 300.0, Cost = 15000000000 },
+            
+            // Tier 8: Transcendent (x3)
+            new Dice { Name = "Eternal Dice", LuckMultiplier = 500.0, Cost = 30000000000 },
+            new Dice { Name = "Infinite Dice", LuckMultiplier = 750.0, Cost = 75000000000 },
+            new Dice { Name = "Absolute Dice", LuckMultiplier = 1000.0, Cost = 150000000000 },
+            new Dice { Name = "Omnipotent Dice", LuckMultiplier = 1500.0, Cost = 300000000000 },
+            new Dice { Name = "Godlike Dice", LuckMultiplier = 2500.0, Cost = 750000000000 },
+            
+            // Tier 9: Ultimate (x3)
+            new Dice { Name = "Alpha Dice", LuckMultiplier = 5000.0, Cost = 3000000000000 },
+            new Dice { Name = "Omega Dice", LuckMultiplier = 10000.0, Cost = 15000000000000 },
+            new Dice { Name = "Zenith Dice", LuckMultiplier = 25000.0, Cost = 75000000000000 },
+            new Dice { Name = "Apex Dice", LuckMultiplier = 50000.0, Cost = 300000000000000 },
+            new Dice { Name = "Supreme Dice", LuckMultiplier = 100000.0, Cost = 3000000000000000 }
         };
 
         public DiceShopForm(GameManager gameManager, Action onDicePurchased)
@@ -83,6 +105,8 @@ namespace SpinARayan
         private void LoadDiceShop()
         {
             lblMoney.Text = $"?? Money: {FormatBigInt(_gameManager.Stats.Money)}";
+            
+            panelDices.SuspendLayout(); // Verhindert Flackern
             panelDices.Controls.Clear();
 
             int yPosition = 10;
@@ -93,15 +117,41 @@ namespace SpinARayan
                 panelDices.Controls.Add(dicePanel);
                 yPosition += dicePanel.Height + 10;
             }
+            
+            panelDices.ResumeLayout(); // Aktiviert Layout wieder
+        }
+        
+        private void UpdateShopUI()
+        {
+            // Nur Geld und Button-States updaten, KEINE Panels neu erstellen
+            lblMoney.Text = $"?? Money: {FormatBigInt(_gameManager.Stats.Money)}";
+            
+            // Update button states in existing panels
+            foreach (Control control in panelDices.Controls)
+            {
+                if (control is Panel dicePanel && dicePanel.Tag is Dice dice)
+                {
+                    // Find and update buttons
+                    foreach (Control panelControl in dicePanel.Controls)
+                    {
+                        if (panelControl is Button btn)
+                        {
+                            bool canAfford = _gameManager.AdminMode || _gameManager.Stats.Money >= dice.Cost;
+                            btn.Enabled = canAfford;
+                        }
+                    }
+                }
+            }
         }
 
         private Panel CreateDicePanel(Dice dice)
         {
             var panel = new Panel
             {
-                Size = new Size(770, 80),
+                Size = new Size(770, 100),
                 BorderStyle = BorderStyle.FixedSingle,
-                BackColor = DarkPanel
+                BackColor = DarkPanel,
+                Tag = dice // Speichere dice reference für Updates
             };
 
             var lblName = new Label
@@ -136,9 +186,9 @@ namespace SpinARayan
 
             var btnBuy = new Button
             {
-                Location = new Point(570, 20),
-                Size = new Size(90, 40),
-                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                Location = new Point(570, 10),
+                Size = new Size(90, 35),
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 Text = _gameManager.AdminMode ? "FREE" : "BUY",
                 Enabled = _gameManager.AdminMode || _gameManager.Stats.Money >= dice.Cost,
                 BackColor = BrightGreen,
@@ -152,9 +202,9 @@ namespace SpinARayan
             
             var btnBuyMax = new Button
             {
-                Location = new Point(670, 20),
-                Size = new Size(80, 40),
-                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                Location = new Point(670, 10),
+                Size = new Size(80, 35),
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 Text = "MAX",
                 Enabled = _gameManager.AdminMode || _gameManager.Stats.Money >= dice.Cost,
                 BackColor = BrightGold,
@@ -165,6 +215,22 @@ namespace SpinARayan
             btnBuyMax.FlatAppearance.BorderSize = 0;
             btnBuyMax.Click += BtnBuyMax_Click;
             panel.Controls.Add(btnBuyMax);
+            
+            var btnCustom = new Button
+            {
+                Location = new Point(570, 55),
+                Size = new Size(180, 35),
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                Text = "CUSTOM",
+                Enabled = _gameManager.AdminMode || _gameManager.Stats.Money >= dice.Cost,
+                BackColor = BrightBlue,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Tag = dice
+            };
+            btnCustom.FlatAppearance.BorderSize = 0;
+            btnCustom.Click += BtnCustom_Click;
+            panel.Controls.Add(btnCustom);
 
             return panel;
         }
@@ -204,7 +270,7 @@ namespace SpinARayan
                 }
 
                 _gameManager.Save();
-                LoadDiceShop();
+                UpdateShopUI(); // Nur UI updaten, nicht neu laden!
                 _onDicePurchased?.Invoke();
             }
         }
@@ -213,12 +279,12 @@ namespace SpinARayan
         {
             if (sender is Button btn && btn.Tag is Dice templateDice)
             {
-                int quantityToBuy;
+                BigInteger quantityToBuy;
                 
                 if (_gameManager.AdminMode)
                 {
-                    // In Admin Mode: Buy 100 at once
-                    quantityToBuy = 100;
+                    // In Admin Mode: Buy 1000 at once
+                    quantityToBuy = 1000;
                 }
                 else
                 {
@@ -228,7 +294,7 @@ namespace SpinARayan
                         return;
                     }
                     
-                    quantityToBuy = (int)(_gameManager.Stats.Money / templateDice.Cost);
+                    quantityToBuy = _gameManager.Stats.Money / templateDice.Cost;
                     
                     if (quantityToBuy <= 0)
                     {
@@ -260,8 +326,146 @@ namespace SpinARayan
                 }
 
                 _gameManager.Save();
-                LoadDiceShop();
+                UpdateShopUI(); // Nur UI updaten!
                 _onDicePurchased?.Invoke();
+            }
+        }
+        
+        private void BtnCustom_Click(object? sender, EventArgs e)
+        {
+            if (sender is Button btn && btn.Tag is Dice templateDice)
+            {
+                // Ask user for custom amount
+                using (var inputForm = new Form())
+                {
+                    inputForm.Text = "Custom Amount";
+                    inputForm.Size = new Size(400, 180);
+                    inputForm.StartPosition = FormStartPosition.CenterParent;
+                    inputForm.BackColor = DarkBackground;
+                    inputForm.FormBorderStyle = FormBorderStyle.FixedDialog;
+                    inputForm.MaximizeBox = false;
+                    inputForm.MinimizeBox = false;
+
+                    var lblPrompt = new Label
+                    {
+                        Location = new Point(20, 20),
+                        Size = new Size(360, 30),
+                        Text = $"Wie viele {templateDice.Name} möchtest du kaufen?",
+                        Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                        ForeColor = TextColor
+                    };
+                    
+                    var txtAmount = new TextBox
+                    {
+                        Location = new Point(20, 60),
+                        Size = new Size(360, 30),
+                        Font = new Font("Segoe UI", 12F),
+                        Text = "1"
+                    };
+                    
+                    var lblCost = new Label
+                    {
+                        Location = new Point(20, 100),
+                        Size = new Size(360, 25),
+                        Font = new Font("Segoe UI", 10F),
+                        ForeColor = BrightBlue,
+                        Text = $"Kosten: {FormatBigInt(templateDice.Cost)}"
+                    };
+                    
+                    var btnOk = new Button
+                    {
+                        Location = new Point(120, 140),
+                        Size = new Size(80, 30),
+                        Text = "OK",
+                        DialogResult = DialogResult.OK,
+                        BackColor = BrightGreen,
+                        ForeColor = Color.White,
+                        FlatStyle = FlatStyle.Flat
+                    };
+                    btnOk.FlatAppearance.BorderSize = 0;
+                    
+                    var btnCancel = new Button
+                    {
+                        Location = new Point(210, 140),
+                        Size = new Size(80, 30),
+                        Text = "Cancel",
+                        DialogResult = DialogResult.Cancel,
+                        BackColor = DarkAccent,
+                        ForeColor = TextColor,
+                        FlatStyle = FlatStyle.Flat
+                    };
+                    btnCancel.FlatAppearance.BorderSize = 0;
+                    
+                    // Update cost label when amount changes
+                    txtAmount.TextChanged += (s, args) =>
+                    {
+                        if (BigInteger.TryParse(txtAmount.Text, out BigInteger amount) && amount > 0)
+                        {
+                            BigInteger totalCost = templateDice.Cost * amount;
+                            lblCost.Text = $"Kosten: {FormatBigInt(totalCost)}";
+                            lblCost.ForeColor = _gameManager.Stats.Money >= totalCost ? BrightGreen : BrightRed;
+                        }
+                        else
+                        {
+                            lblCost.Text = "Ungültige Eingabe";
+                            lblCost.ForeColor = BrightRed;
+                        }
+                    };
+
+                    inputForm.Controls.Add(lblPrompt);
+                    inputForm.Controls.Add(txtAmount);
+                    inputForm.Controls.Add(lblCost);
+                    inputForm.Controls.Add(btnOk);
+                    inputForm.Controls.Add(btnCancel);
+                    
+                    inputForm.AcceptButton = btnOk;
+                    inputForm.CancelButton = btnCancel;
+
+                    if (inputForm.ShowDialog() == DialogResult.OK)
+                    {
+                        if (BigInteger.TryParse(txtAmount.Text, out BigInteger quantityToBuy) && quantityToBuy > 0)
+                        {
+                            BigInteger totalCost = templateDice.Cost * quantityToBuy;
+                            
+                            if (!_gameManager.AdminMode)
+                            {
+                                if (_gameManager.Stats.Money < totalCost)
+                                {
+                                    MessageBox.Show("Nicht genug Geld!", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    return;
+                                }
+                                
+                                _gameManager.Stats.Money -= totalCost;
+                            }
+                            
+                            // Find existing dice or create new
+                            var existingDice = _gameManager.Stats.OwnedDices.FirstOrDefault(d => d.Name == templateDice.Name);
+                            if (existingDice != null)
+                            {
+                                existingDice.Quantity += quantityToBuy;
+                            }
+                            else
+                            {
+                                _gameManager.Stats.OwnedDices.Add(new Dice
+                                {
+                                    Name = templateDice.Name,
+                                    LuckMultiplier = templateDice.LuckMultiplier,
+                                    Cost = templateDice.Cost,
+                                    Quantity = quantityToBuy,
+                                    IsInfinite = false
+                                });
+                            }
+                            
+                            _gameManager.Save();
+                            UpdateShopUI(); // Nur UI updaten!
+                            _onDicePurchased?.Invoke();
+                        }
+                        else
+                        {
+                            MessageBox.Show("Ungültige Anzahl!", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                }
             }
         }
 
