@@ -63,9 +63,11 @@ namespace SpinARayan.Services
             // Autosave every 60 seconds (1 minute)
             if ((int)(Stats.PlayTimeMinutes * 60) % 60 == 0 && (int)(Stats.PlayTimeMinutes * 60) > 0)
             {
-                _saveService.Save(Stats);
+                Save();
             }
 
+            // PERFORMANCE: Only trigger OnStatsChanged, don't force full UI update
+            // The UI will decide what to update based on dirty flags
             OnStatsChanged?.Invoke();
         }
 

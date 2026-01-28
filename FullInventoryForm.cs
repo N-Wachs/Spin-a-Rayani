@@ -36,6 +36,14 @@ namespace SpinARayan
 
         private void LoadInventory()
         {
+            // CRITICAL FIX: Dispose old controls BEFORE clearing to prevent handle leak!
+            // When you have 100+ groups, each with 5 controls = 500+ handles!
+            // Without disposal, these handles accumulate until Windows runs out (limit: ~10,000)
+            foreach (Control control in panelInventory.Controls)
+            {
+                control.Dispose();
+            }
+            
             // Performance: Suspend layout während wir alle Panels erstellen
             panelInventory.SuspendLayout();
             panelInventory.Controls.Clear();
@@ -62,10 +70,21 @@ namespace SpinARayan
 
             lblTotalRayans.Text = $"Gesamt Rayans: {_inventory.Count} (Unique: {groupedRayans.Count})";
 
+            // PERFORMANCE: Limit display to prevent handle exhaustion
+            // If you have 1000+ unique Rayans, only show top 500
+            const int MAX_DISPLAY = 500;
+            int displayCount = Math.Min(groupedRayans.Count, MAX_DISPLAY);
+            
+            if (groupedRayans.Count > MAX_DISPLAY)
+            {
+                lblTotalRayans.Text += $" (Zeige Top {MAX_DISPLAY})";
+            }
+
             // Erstelle alle Panels in einer Schleife
             int yPosition = 10;
-            foreach (var group in groupedRayans)
+            for (int i = 0; i < displayCount; i++)
             {
+                var group = groupedRayans[i];
                 var rayanPanel = CreateRayanPanel(group.FullName, group.Rarity, group.Count,
                     group.AvgMultiplier, group.MaxMultiplier, group.AvgValue, group.CanMerge,
                     group.Prefix, group.Suffix, group.BaseValue);
@@ -222,10 +241,7 @@ namespace SpinARayan
 
             _inventory.Add(mergedRayan);
 
-            MessageBox.Show($"5x {prefix} {(string.IsNullOrEmpty(suffix) ? "Rayan" : suffix)} wurden zu 1x {mergedRayan.FullName} gemerged!\n" +
-                           $"Neuer Multiplier: {mergedRayan.Multiplier:F1}x (5x stärker als Ø {avgMultiplier:F1}x)", 
-                           "Erfolg", MessageBoxButtons.OK, MessageBoxIcon.Information);
-
+            // Reload inventory (MessageBox removed to prevent additional handle creation)
             LoadInventory();
             _onInventoryChanged?.Invoke();
         }

@@ -7,11 +7,22 @@ namespace SpinARayan.Services
     public class RollService
     {
         private readonly Random _random = new Random();
+        
+        // PERFORMANCE: Cache sorted lists - only sort ONCE!
+        private readonly List<(string Prefix, double Rarity, System.Numerics.BigInteger BaseValue)> _sortedPrefixes;
+        private readonly List<(string Suffix, double Chance, double Multiplier)> _sortedSuffixes;
+
+        public RollService()
+        {
+            // Sort ONCE in constructor instead of every roll
+            _sortedPrefixes = RayanData.Prefixes.OrderByDescending(x => x.Rarity).ToList();
+            _sortedSuffixes = RayanData.Suffixes.OrderByDescending(x => x.Chance).ToList();
+        }
 
         public Rayan Roll(double luckMultiplier, SuffixEvent? currentEvent = null)
         {
             // Roll for Prefix (affected by luck)
-            var prefixData = SelectFromList(RayanData.Prefixes, luckMultiplier);
+            var prefixData = SelectFromList(luckMultiplier);
 
             // Roll for Suffix (NOT affected by luck, only by events)
             var suffixData = SelectSuffix(currentEvent);
@@ -26,13 +37,10 @@ namespace SpinARayan.Services
             };
         }
 
-        private (string Prefix, double Rarity, System.Numerics.BigInteger BaseValue) SelectFromList(List<(string Prefix, double Rarity, System.Numerics.BigInteger BaseValue)> list, double luck)
+        private (string Prefix, double Rarity, System.Numerics.BigInteger BaseValue) SelectFromList(double luck)
         {
-            // Simple rarity logic: higher luck shifts the random value
-            // We sort by rarity descending to check rarest first
-            var sorted = list.OrderByDescending(x => x.Rarity).ToList();
-
-            foreach (var item in sorted)
+            // PERFORMANCE: Use cached sorted list
+            foreach (var item in _sortedPrefixes)
             {
                 double chance = 1.0 / (item.Rarity / luck);
                 if (_random.NextDouble() < chance)
@@ -41,18 +49,17 @@ namespace SpinARayan.Services
                 }
             }
 
-            return list[0]; // Default to Common
+            return _sortedPrefixes[^1]; // Last item (least rare)
         }
 
         private (string Suffix, double Chance, double Multiplier)? SelectSuffix(SuffixEvent? currentEvent)
         {
-            var sorted = RayanData.Suffixes.OrderByDescending(x => x.Chance).ToList();
-            
-            foreach (var item in sorted)
+            // PERFORMANCE: Use cached sorted list
+            foreach (var item in _sortedSuffixes)
             {
                 double baseChance = item.Chance;
                 
-                // If there's an active event for this suffix, make it 5x more likely
+                // If there's an active event for this suffix, make it 20x more likely
                 if (currentEvent != null && currentEvent.IsActive && currentEvent.SuffixName == item.Suffix)
                 {
                     baseChance /= currentEvent.BoostMultiplier; // Lower chance value = higher probability

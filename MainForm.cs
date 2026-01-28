@@ -22,6 +22,13 @@ namespace SpinARayan
         private Label? _lblDiceInfo; // Shows selected dice and quantity
         private Label? _lblEventDisplay; // Shows current suffix event
         private Label? _lblRebirthBonus; // Shows rebirth bonus
+        
+        // PERFORMANCE: Dirty flags to avoid unnecessary UI updates
+        private bool _plotsDirty = true;
+        private bool _inventoryDirty = false;
+        private BigInteger _lastMoney = 0;
+        private int _lastGems = 0;
+        private int _lastRebirths = 0;
 
         // Dark Mode Colors
         private readonly Color DarkBackground = Color.FromArgb(30, 30, 30);
@@ -52,8 +59,13 @@ namespace SpinARayan
 
             _gameManager = new GameManager();
             _gameManager.OnStatsChanged += UpdateUI;
-            _gameManager.OnRayanRolled += ShowNewRayan;
+            _gameManager.OnRayanRolled += OnRayanRolled_Handler;
             _gameManager.OnEventChanged += UpdateEventDisplay;
+            
+            // Initialize cached values
+            _lastMoney = _gameManager.Stats.Money;
+            _lastGems = _gameManager.Stats.Gems;
+            _lastRebirths = _gameManager.Stats.Rebirths;
 
             _rollCooldownTimer = new System.Windows.Forms.Timer();
             _rollCooldownTimer.Interval = 100;
@@ -71,7 +83,8 @@ namespace SpinARayan
             btnRebirth.Location = new Point(20, 580);
             btnRebirth.Size = new Size(260, 80);
             btnRebirth.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
-            btnRebirth.Text = "🔄 REBIRTH";
+            btnRebirth.Text = $"Rebirth\n{FormatBigInt(_gameManager.Stats.NextRebirthCost)}";
+            btnRebirth.Enabled = _gameManager.AdminMode || _gameManager.Stats.Money >= _gameManager.Stats.NextRebirthCost;
             panelRight.Controls.Add(btnRebirth);
             
             UpdateUI();
@@ -362,26 +375,50 @@ namespace SpinARayan
                 return;
             }
 
-            lblMoney.Text = $"💰 {FormatBigInt(_gameManager.Stats.Money)}";
-            lblGems.Text = $"💎 {_gameManager.Stats.Gems}";
-            lblRebirths.Text = $"Rebirths: {_gameManager.Stats.Rebirths}";
+            // PERFORMANCE: Only update labels that changed
+            if (_gameManager.Stats.Money != _lastMoney)
+            {
+                lblMoney.Text = $"💰 {FormatBigInt(_gameManager.Stats.Money)}";
+                _lastMoney = _gameManager.Stats.Money;
+                
+                // Update rebirth button enabled state when money changes
+                btnRebirth.Enabled = _gameManager.AdminMode || _gameManager.Stats.Money >= _gameManager.Stats.NextRebirthCost;
+            }
             
-            // Update Luck display
-            double luckBonus = _gameManager.GetTotalLuckBonus();
-            lblLuck.Text = $"🍀 Luck: +{luckBonus:F0}%";
+            if (_gameManager.Stats.Gems != _lastGems)
+            {
+                lblGems.Text = $"💎 {_gameManager.Stats.Gems}";
+                _lastGems = _gameManager.Stats.Gems;
+            }
             
-            // Update Rebirth Bonus display
-            double rebirthBonus = _gameManager.Stats.Rebirths * 50.0; // 50% per rebirth
-            lblRebirthBonus.Text = $"🔄 Rebirth: +{rebirthBonus:F0}%";
+            if (_gameManager.Stats.Rebirths != _lastRebirths)
+            {
+                lblRebirths.Text = $"Rebirths: {_gameManager.Stats.Rebirths}";
+                
+                // Update Luck display
+                double luckBonus = _gameManager.GetTotalLuckBonus();
+                lblLuck.Text = $"🍀 Luck: +{luckBonus:F0}%";
+                
+                // Update Rebirth Bonus display
+                double rebirthBonus = _gameManager.Stats.Rebirths * 50.0; // 50% per rebirth
+                lblRebirthBonus.Text = $"🔄 Rebirth: +{rebirthBonus:F0}%";
+                
+                // Update rebirth button text with NEW cost
+                btnRebirth.Text = $"Rebirth\n{FormatBigInt(_gameManager.Stats.NextRebirthCost)}";
+                btnRebirth.Enabled = _gameManager.AdminMode || _gameManager.Stats.Money >= _gameManager.Stats.NextRebirthCost;
+                
+                _lastRebirths = _gameManager.Stats.Rebirths;
+                _plotsDirty = true; // Rebirths change plot slots
+            }
 
-            btnRebirth.Text = $"Rebirth\n{FormatBigInt(_gameManager.Stats.NextRebirthCost)}";
-            btnRebirth.ForeColor = Color.FromArgb(255, 255, 255); // Weißer Text
-            btnRebirth.Enabled = _gameManager.AdminMode || _gameManager.Stats.Money >= _gameManager.Stats.NextRebirthCost;
+            // PERFORMANCE: Only update plots when inventory actually changed
+            if (_plotsDirty)
+            {
+                UpdatePlotDisplay();
+                _plotsDirty = false;
+            }
 
-            // Update Plot Display
-            UpdatePlotDisplay();
-
-            // Update Dice Info
+            // Update Dice Info (lightweight)
             UpdateDiceInfo();
 
             // Update AutoRoll indicator and Roll button state
@@ -606,6 +643,13 @@ namespace SpinARayan
             return DarkAccent;
         }
 
+        private void OnRayanRolled_Handler(Rayan rayan)
+        {
+            // PERFORMANCE: Mark plots as dirty when new Rayan added
+            _plotsDirty = true;
+            ShowNewRayan(rayan);
+        }
+
         private void ShowNewRayan(Rayan rayan)
         {
             lblLastRoll.Text = $"🎲 {rayan.FullName}\n1 in {rayan.Rarity:N0}";
@@ -631,11 +675,15 @@ namespace SpinARayan
         private void btnAutoEquip_Click(object sender, EventArgs e)
         {
             _gameManager.AutoEquipBest();
+            // PERFORMANCE: Mark plots as dirty when equipment changes
+            _plotsDirty = true;
         }
 
         private void btnRebirth_Click(object sender, EventArgs e)
         {
             _gameManager.Rebirth();
+            // PERFORMANCE: Mark plots as dirty after rebirth
+            _plotsDirty = true;
         }
 
         private void btnInventory_Click(object sender, EventArgs e)

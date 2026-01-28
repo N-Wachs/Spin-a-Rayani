@@ -94,7 +94,7 @@ namespace SpinARayan.Models
         }
 
         [XmlIgnore]
-        public BigInteger NextRebirthCost => Rebirths == 0 ? 100000 : BigInteger.Pow(8, Rebirths) * 10000;
+        public BigInteger NextRebirthCost => BigInteger.Pow(8, Rebirths) * 100000;
 
         [XmlElement("NextRebirthCost")]
         public string NextRebirthCostString => NextRebirthCost.ToString();
