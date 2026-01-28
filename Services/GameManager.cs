@@ -278,10 +278,21 @@ namespace SpinARayan.Services
         }
         
         /// <summary>
-        /// Apply remote event from multiplayer sync
+        /// Apply remote event from multiplayer sync - ALWAYS OVERRIDES local events!
         /// </summary>
         public void ApplyRemoteEvent(string suffixName, string adminName)
         {
+            Console.WriteLine($"[GameManager] ApplyRemoteEvent called:");
+            Console.WriteLine($"[GameManager]   Suffix: {suffixName}");
+            Console.WriteLine($"[GameManager]   Admin: {adminName}");
+            Console.WriteLine($"[GameManager]   IsMultiplayerAdmin: {IsMultiplayerAdmin}");
+            
+            // Check if we have an active local event that will be overridden
+            if (_currentEvent != null && _currentEvent.IsActive)
+            {
+                Console.WriteLine($"[GameManager]   Overriding active local event: {_currentEvent.SuffixName}");
+            }
+            
             _currentEvent = new SuffixEvent
             {
                 SuffixName = suffixName,
@@ -294,7 +305,11 @@ namespace SpinARayan.Services
             _nextEventTime = DateTime.Now.AddMinutes(5); // Reset local event timer
             OnEventChanged?.Invoke(_currentEvent);
             
-            Console.WriteLine($"[GameManager] ? Event applied: {suffixName} (Duration: 2.5 min)");
+            Console.WriteLine($"[GameManager] ? Event applied successfully!");
+            Console.WriteLine($"[GameManager]   Event Name: {_currentEvent.EventName}");
+            Console.WriteLine($"[GameManager]   Duration: 2.5 minutes");
+            Console.WriteLine($"[GameManager]   Boost: {_currentEvent.BoostMultiplier}x");
+            Console.WriteLine($"[GameManager]   Ends at: {_currentEvent.EndTime:HH:mm:ss}");
         }
         
         private void UpdateEvents()

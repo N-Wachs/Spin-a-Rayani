@@ -29,6 +29,7 @@ namespace SpinARayan
         private BigInteger _lastMoney = 0;
         private int _lastGems = 0;
         private int _lastRebirths = 0;
+        private int _lastLuckBoosterLevel = 0;
 
         // Dark Mode Colors
         private readonly Color DarkBackground = Color.FromArgb(30, 30, 30);
@@ -115,10 +116,11 @@ namespace SpinARayan
             _gameManager.OnRayanRolled += OnRayanRolled_Handler;
             _gameManager.OnEventChanged += UpdateEventDisplay;
             
-            // Initialize cached values
-            _lastMoney = _gameManager.Stats.Money;
-            _lastGems = _gameManager.Stats.Gems;
-            _lastRebirths = _gameManager.Stats.Rebirths;
+            // Initialize cached values to FORCE first update
+            _lastMoney = -1; // Force update on first call
+            _lastGems = -1; // Force update on first call
+            _lastRebirths = -1; // Force update on first call
+            _lastLuckBoosterLevel = -1; // Force update on first call
 
             _rollCooldownTimer = new System.Windows.Forms.Timer();
             _rollCooldownTimer.Interval = 100;
@@ -452,24 +454,30 @@ namespace SpinARayan
                 _lastGems = _gameManager.Stats.Gems;
             }
             
-            if (_gameManager.Stats.Rebirths != _lastRebirths)
+            if (_gameManager.Stats.Rebirths != _lastRebirths || _gameManager.Stats.LuckBoosterLevel != _lastLuckBoosterLevel)
             {
-                lblRebirths.Text = $"Rebirths: {_gameManager.Stats.Rebirths}";
+                // Update labels if either Rebirths OR LuckBoosterLevel changed
+                if (_gameManager.Stats.Rebirths != _lastRebirths)
+                {
+                    lblRebirths.Text = $"Rebirths: {_gameManager.Stats.Rebirths}";
+                    
+                    // Update Rebirth Bonus display
+                    double rebirthBonus = _gameManager.Stats.Rebirths * 50.0; // 50% per rebirth
+                    lblRebirthBonus.Text = $"🔄 Rebirth: +{rebirthBonus:F0}%";
+                    
+                    // Update rebirth button text with NEW cost
+                    btnRebirth.Text = $"Rebirth\n{FormatBigInt(_gameManager.Stats.NextRebirthCost)}";
+                    btnRebirth.Enabled = _gameManager.AdminMode || _gameManager.Stats.Money >= _gameManager.Stats.NextRebirthCost;
+                    
+                    _lastRebirths = _gameManager.Stats.Rebirths;
+                    _plotsDirty = true; // Rebirths change plot slots
+                }
                 
-                // Update Luck display
+                // Always update Luck display if either changed
                 double luckBonus = _gameManager.GetTotalLuckBonus();
                 lblLuck.Text = $"🍀 Luck: +{luckBonus:F0}%";
                 
-                // Update Rebirth Bonus display
-                double rebirthBonus = _gameManager.Stats.Rebirths * 50.0; // 50% per rebirth
-                lblRebirthBonus.Text = $"🔄 Rebirth: +{rebirthBonus:F0}%";
-                
-                // Update rebirth button text with NEW cost
-                btnRebirth.Text = $"Rebirth\n{FormatBigInt(_gameManager.Stats.NextRebirthCost)}";
-                btnRebirth.Enabled = _gameManager.AdminMode || _gameManager.Stats.Money >= _gameManager.Stats.NextRebirthCost;
-                
-                _lastRebirths = _gameManager.Stats.Rebirths;
-                _plotsDirty = true; // Rebirths change plot slots
+                _lastLuckBoosterLevel = _gameManager.Stats.LuckBoosterLevel;
             }
 
             // PERFORMANCE: Only update plots when inventory actually changed
