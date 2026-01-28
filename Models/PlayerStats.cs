@@ -64,6 +64,9 @@ namespace SpinARayan.Models
         // Dice System
         public List<Dice> OwnedDices { get; set; } = new List<Dice>();
         public int SelectedDiceIndex { get; set; } = 0; // Index in OwnedDices, 0 = Basic Dice
+        
+        // Quest System - Save quest progress
+        public List<Quest> SavedQuests { get; set; } = new List<Quest>();
 
         public double MoneyMultiplier => 1.0 + (Rebirths * 4.0);
         public double LuckMultiplier => 1.0 + (LuckBoosterLevel * 0.25);
@@ -91,7 +94,7 @@ namespace SpinARayan.Models
         }
 
         [XmlIgnore]
-        public BigInteger NextRebirthCost => BigInteger.Pow(8, Rebirths) * 10000;
+        public BigInteger NextRebirthCost => Rebirths == 0 ? 100000 : BigInteger.Pow(8, Rebirths) * 10000;
 
         [XmlElement("NextRebirthCost")]
         public string NextRebirthCostString => NextRebirthCost.ToString();

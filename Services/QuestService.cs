@@ -5,10 +5,43 @@ namespace SpinARayan.Services
     public class QuestService
     {
         public List<Quest> Quests { get; private set; } = new();
+        private PlayerStats? _stats;
 
         public QuestService()
         {
             InitializeQuests();
+        }
+        
+        public void LoadQuestsFromStats(PlayerStats stats)
+        {
+            _stats = stats;
+            
+            // If there are saved quests, restore them
+            if (stats.SavedQuests != null && stats.SavedQuests.Count > 0)
+            {
+                // Merge saved quest data with initialized quests
+                foreach (var savedQuest in stats.SavedQuests)
+                {
+                    var quest = Quests.FirstOrDefault(q => q.Id == savedQuest.Id);
+                    if (quest != null)
+                    {
+                        quest.CurrentProgress = savedQuest.CurrentProgress;
+                        quest.IsCompleted = savedQuest.IsCompleted;
+                        quest.IsClaimed = savedQuest.IsClaimed;
+                        quest.BaseProgress = savedQuest.BaseProgress;
+                        quest.TimesCompleted = savedQuest.TimesCompleted;
+                        quest.Goal = savedQuest.Goal;
+                    }
+                }
+            }
+        }
+        
+        public void SaveQuestsToStats()
+        {
+            if (_stats != null)
+            {
+                _stats.SavedQuests = new List<Quest>(Quests);
+            }
         }
 
         private void InitializeQuests()
@@ -127,6 +160,9 @@ namespace SpinARayan.Services
                 {
                     quest.Reset();
                 }
+                
+                // Save quest progress after claiming
+                SaveQuestsToStats();
             }
         }
     }

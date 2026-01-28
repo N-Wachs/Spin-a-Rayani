@@ -51,7 +51,29 @@ namespace SpinARayan.Services
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"Load error: {ex.Message}");
+                    // Show error message to user for corrupted/outdated savefiles
+                    System.Windows.Forms.MessageBox.Show(
+                        $"Der Spielstand konnte nicht geladen werden!\n\n" +
+                        $"Mögliche Ursachen:\n" +
+                        $"• Beschädigte Savefile\n" +
+                        $"• Veraltete Savefile-Version\n" +
+                        $"• Datei wurde manuell bearbeitet\n\n" +
+                        $"Ein neuer Spielstand wird erstellt.\n\n" +
+                        $"Fehler: {ex.Message}",
+                        "Savefile Fehler",
+                        System.Windows.Forms.MessageBoxButtons.OK,
+                        System.Windows.Forms.MessageBoxIcon.Error
+                    );
+                    
+                    // Backup corrupted savefile
+                    try
+                    {
+                        string backupPath = _filePath + ".corrupted_" + DateTime.Now.ToString("yyyyMMdd_HHmmss");
+                        File.Copy(_filePath, backupPath, true);
+                        Console.WriteLine($"Corrupted savefile backed up to: {backupPath}");
+                    }
+                    catch { }
+                    
                     stats = new PlayerStats();
                 }
             }

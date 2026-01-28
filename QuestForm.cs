@@ -136,18 +136,15 @@ namespace SpinARayan
             if (sender is Button btn && btn.Tag is Quest quest)
             {
                 var questService = _gameManager.GetQuestService();
-                string message = $"Quest abgeschlossen! {quest.RewardGems} Gems erhalten!";
                 
-                if (quest.IsRepeatable)
-                {
-                    message += "\n\nDiese Quest kann erneut abgeschlossen werden!";
-                }
-
                 questService.ClaimReward(quest, _gameManager.Stats);
                 _gameManager.Save();
+                
+                // Automatically refresh the quest display
                 LoadQuests();
+                
+                // Notify parent form to update
                 _onQuestClaimed?.Invoke();
-                MessageBox.Show(message, "Quest Belohnung", MessageBoxButtons.OK, MessageBoxIcon.Information);
             }
         }
 

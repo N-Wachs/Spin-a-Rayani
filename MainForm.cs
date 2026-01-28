@@ -291,6 +291,11 @@ namespace SpinARayan
                 "Eternal" => Color.FromArgb(100, 0, 100),        // Dark Magenta
                 "Omega" => Color.FromArgb(200, 0, 200),          // Bright Magenta
                 
+                // Tier 6: Ultra-Legendary (astronomische Farben)
+                "Unstoppable" => Color.FromArgb(255, 50, 0),     // Bright Red-Orange
+                "Infinite" => Color.FromArgb(0, 255, 255),       // Bright Cyan
+                "Absolute" => Color.FromArgb(255, 255, 255),     // Pure White
+                
                 _ => Color.FromArgb(80, 80, 80)                  // Dark Gray (fallback)
             };
         }
@@ -300,11 +305,14 @@ namespace SpinARayan
             if (_rollCooldownRemaining > 0)
             {
                 btnRoll.Text = $"ROLL\n{_rollCooldownRemaining:F1}s";
+                btnRoll.Enabled = false;
             }
             else
             {
                 var selectedDice = _gameManager.Stats.GetSelectedDice();
                 btnRoll.Text = $"🎲 ROLL\n{selectedDice.Name}";
+                // Only enable if AutoRoll is NOT active
+                btnRoll.Enabled = !_gameManager.Stats.AutoRollActive;
             }
         }
 

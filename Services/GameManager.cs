@@ -31,6 +31,10 @@ namespace SpinARayan.Services
             _rollService = new RollService();
             _questService = new QuestService();
             Stats = _saveService.Load();
+            
+            // Load saved quest progress
+            _questService.LoadQuestsFromStats(Stats);
+            
             _lastUpdate = DateTime.Now;
             _nextEventTime = DateTime.Now.AddMinutes(5); // Erstes Event nach 5 Minuten
 
@@ -198,7 +202,12 @@ namespace SpinARayan.Services
             }
         }
 
-        public void Save() => _saveService.Save(Stats);
+        public void Save()
+        {
+            // Save quest progress before saving stats
+            _questService.SaveQuestsToStats();
+            _saveService.Save(Stats);
+        }
         
         public double GetTotalLuckBonus()
         {
@@ -239,26 +248,9 @@ namespace SpinARayan.Services
             var random = new Random();
             var suffixes = RayanData.Suffixes;
             
-            // Weighted selection: rarer suffixes have rarer events
-            // Weight = 1 / sqrt(Chance) - so rarer suffixes have lower weights
-            var weights = suffixes.Select(s => 1.0 / Math.Sqrt(s.Chance)).ToList();
-            double totalWeight = weights.Sum();
-            
-            // Generate random number between 0 and totalWeight
-            double randomValue = random.NextDouble() * totalWeight;
-            
-            // Select suffix based on weighted probability
-            double cumulativeWeight = 0;
-            int selectedIndex = 0;
-            for (int i = 0; i < suffixes.Count; i++)
-            {
-                cumulativeWeight += weights[i];
-                if (randomValue <= cumulativeWeight)
-                {
-                    selectedIndex = i;
-                    break;
-                }
-            }
+            // Equal probability for all suffixes
+            // Each suffix has the same chance to get an event
+            int selectedIndex = random.Next(suffixes.Count);
             
             var selectedSuffix = suffixes[selectedIndex];
             
