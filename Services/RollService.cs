@@ -25,7 +25,7 @@ namespace SpinARayan.Services
             var prefixData = SelectFromList(luckMultiplier);
 
             // Roll for Suffix (NOT affected by luck, only by events)
-            var suffixData = SelectSuffix(currentEvent);
+            var suffixData = SelectSuffix(currentEvent, luckMultiplier);
 
             return new Rayan
             {
@@ -52,12 +52,14 @@ namespace SpinARayan.Services
             return _sortedPrefixes[^1]; // Last item (least rare)
         }
 
-        private (string Suffix, double Chance, double Multiplier)? SelectSuffix(SuffixEvent? currentEvent)
+        private (string Suffix, double Chance, double Multiplier)? SelectSuffix(SuffixEvent? currentEvent, double luckMultiplier)
         {
             // PERFORMANCE: Use cached sorted list
             foreach (var item in _sortedSuffixes)
             {
                 double baseChance = item.Chance;
+                // Suffixe leicht beeinflusst vom Glu00fcck (minimal)
+                baseChance /= (1.0 + (luckMultiplier - 1.0) * 0.1);
                 
                 // If there's an active event for this suffix, make it 20x more likely
                 if (currentEvent != null && currentEvent.IsActive && currentEvent.SuffixName == item.Suffix)

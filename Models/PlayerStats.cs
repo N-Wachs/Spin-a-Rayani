@@ -72,7 +72,7 @@ namespace SpinARayan.Models
         public string MultiplayerUsername { get; set; } = "";
 
 
-        public double MoneyMultiplier => 1.0 + (Rebirths * 4.0);
+        public double MoneyMultiplier => 1.0 + (Rebirths * 4.5);
         public double LuckMultiplier => 1.0 + (LuckBoosterLevel * 0.25);
         
         // Current Dice Luck Multiplier (from selected dice)
