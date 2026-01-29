@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Numerics;
@@ -20,6 +21,7 @@ namespace SpinARayan
         private List<Panel> _plotPanels = new List<Panel>();
         private Panel? _totalIncomePanel;
         private Label? _lblDiceInfo; // Shows selected dice and quantity
+        private PictureBox? _picDiceIcon; // Zeigt Würfelbild an
         private Label? _lblEventDisplay; // Shows current suffix event
         private Label? _lblRebirthBonus; // Shows rebirth bonus
         
@@ -270,6 +272,18 @@ namespace SpinARayan
             int labelWidth = 180;
             int labelX = (panelCenter.Width - labelWidth) / 2;
             
+            // Würfelbild hinzufügen (links neben dem Label)
+            _picDiceIcon = new PictureBox
+            {
+                Location = new Point(labelX - 45, 150),
+                Size = new Size(40, 40),
+                SizeMode = PictureBoxSizeMode.StretchImage,
+                BackColor = Color.Transparent,
+                Cursor = Cursors.Hand
+            };
+            _picDiceIcon.Click += (s, e) => OpenDiceSelection();
+            panelCenter.Controls.Add(_picDiceIcon);
+            
             _lblDiceInfo = new Label
             {
                 Location = new Point(labelX, 150),
@@ -399,6 +413,34 @@ namespace SpinARayan
             var selectedDice = _gameManager.Stats.GetSelectedDice();
             string quantityText = selectedDice.QuantityDisplay;
             _lblDiceInfo.Text = $"🎲 {selectedDice.Name}\nQuantity: {quantityText}\n(Click to change)";
+            
+            // Würfelbild aktualisieren
+            if (_picDiceIcon != null)
+            {
+                try
+                {
+                    string imageName = selectedDice.Name.ToLower().Replace(" ", "_");
+                    string imagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", $"dice_{imageName}.png");
+                    
+                    if (File.Exists(imagePath))
+                    {
+                        // Altes Bild freigeben falls vorhanden
+                        if (_picDiceIcon.Image != null)
+                        {
+                            var oldImage = _picDiceIcon.Image;
+                            _picDiceIcon.Image = null;
+                            oldImage.Dispose();
+                        }
+                        
+                        _picDiceIcon.Image = Image.FromFile(imagePath);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // Fehler beim Bildladen ignorieren
+                    Console.WriteLine($"Fehler beim Laden des Würfelbildes für {selectedDice.Name}: {ex.Message}");
+                }
+            }
         }
 
         private void AutoRollTimer_Tick(object? sender, EventArgs e)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using SpinARayan.Models;
@@ -101,10 +102,39 @@ namespace SpinARayan
                 BackColor = isSelected ? Color.FromArgb(0, 80, 120) : DarkPanel
             };
 
+            // Würfelbild hinzufügen
+            var pictureBox = new PictureBox
+            {
+                Location = new Point(10, 15),
+                Size = new Size(50, 50),
+                SizeMode = PictureBoxSizeMode.StretchImage,
+                BackColor = Color.Transparent
+            };
+            
+            // Bild laden basierend auf Würfelname
+            try
+            {
+                string imageName = dice.Name.ToLower().Replace(" ", "_");
+                string imagePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "Assets", $"dice_{imageName}.png");
+                
+                if (File.Exists(imagePath))
+                {
+                    pictureBox.Image = Image.FromFile(imagePath);
+                }
+            }
+            catch (Exception ex)
+            {
+                // Fehler beim Bildladen ignorieren - PictureBox bleibt leer
+                Console.WriteLine($"Fehler beim Laden des Würfelbildes für {dice.Name}: {ex.Message}");
+            }
+            
+            panel.Controls.Add(pictureBox);
+
+            // Labels nach rechts verschieben (Platz für Bild)
             var lblName = new Label
             {
-                Location = new Point(10, 10),
-                Size = new Size(300, 25),
+                Location = new Point(70, 10),
+                Size = new Size(260, 25),
                 Font = new Font("Segoe UI", 14F, FontStyle.Bold),
                 Text = dice.DisplayName,
                 ForeColor = dice.IsInfinite ? BrightGreen : BrightGold
@@ -113,8 +143,8 @@ namespace SpinARayan
 
             var lblDescription = new Label
             {
-                Location = new Point(10, 40),
-                Size = new Size(300, 20),
+                Location = new Point(70, 40),
+                Size = new Size(260, 20),
                 Font = new Font("Segoe UI", 10F),
                 Text = dice.Description,
                 ForeColor = BrightBlue
