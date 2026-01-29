@@ -432,7 +432,11 @@ namespace SpinARayan
                             oldImage.Dispose();
                         }
                         
-                        _picDiceIcon.Image = Image.FromFile(imagePath);
+                        // Bild über Stream laden um Datei-Lock zu vermeiden
+                        using (var stream = new FileStream(imagePath, FileMode.Open, FileAccess.Read))
+                        {
+                            _picDiceIcon.Image = Image.FromStream(stream);
+                        }
                     }
                 }
                 catch (Exception ex)
@@ -944,6 +948,12 @@ namespace SpinARayan
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
+            // Würfelbild freigeben
+            if (_picDiceIcon?.Image != null)
+            {
+                _picDiceIcon.Image.Dispose();
+            }
+            
             _gameManager.Save();
             base.OnFormClosing(e);
         }

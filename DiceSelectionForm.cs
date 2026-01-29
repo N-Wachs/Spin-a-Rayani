@@ -72,6 +72,21 @@ namespace SpinARayan
 
         private void LoadDices()
         {
+            // Bilder der alten Panels freigeben vor dem Löschen
+            foreach (Control control in panelDices.Controls)
+            {
+                if (control is Panel panel)
+                {
+                    foreach (Control innerControl in panel.Controls)
+                    {
+                        if (innerControl is PictureBox pictureBox && pictureBox.Image != null)
+                        {
+                            pictureBox.Image.Dispose();
+                        }
+                    }
+                }
+            }
+            
             panelDices.Controls.Clear();
 
             // Sort dices by LuckMultiplier descending (highest first)
@@ -119,7 +134,11 @@ namespace SpinARayan
                 
                 if (File.Exists(imagePath))
                 {
-                    pictureBox.Image = Image.FromFile(imagePath);
+                    // Bild über Stream laden um Datei-Lock zu vermeiden
+                    using (var stream = new FileStream(imagePath, FileMode.Open, FileAccess.Read))
+                    {
+                        pictureBox.Image = Image.FromStream(stream);
+                    }
                 }
             }
             catch (Exception ex)
