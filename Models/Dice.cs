@@ -29,6 +29,7 @@ namespace SpinARayan.Models
         }
         
         public bool IsInfinite { get; set; } = false; // True für Basic Dice (unendlich verfügbar)
+        public string ImagePath => $"/Assets/dice_{Name.ToLower().Replace(" ", "_")}.png";
         
         public string Description => IsInfinite ? "Always available" : $"+{(LuckMultiplier - 1.0) * 100:F0}% Luck";
         public string DisplayName => IsInfinite ? Name : $"?? {Name}";

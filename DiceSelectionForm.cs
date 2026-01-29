@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using SpinARayan.Models;
 using SpinARayan.Services;
-using System.Numerics;
 
 namespace SpinARayan
 {
@@ -13,10 +13,7 @@ namespace SpinARayan
     {
         private readonly GameManager _gameManager;
         private readonly Action _onDiceSelected;
-        private Panel panelDices;
-        private Label lblTitle;
         
-        // Dark Mode Colors
         private readonly Color DarkBackground = Color.FromArgb(30, 30, 30);
         private readonly Color DarkPanel = Color.FromArgb(45, 45, 48);
         private readonly Color DarkAccent = Color.FromArgb(60, 60, 65);
@@ -29,51 +26,20 @@ namespace SpinARayan
         {
             _gameManager = gameManager;
             _onDiceSelected = onDiceSelected;
-            InitializeComponents();
+            InitializeComponent();
             ApplyDarkMode();
             LoadDices();
-        }
-
-        private void InitializeComponents()
-        {
-            this.Text = "Select Dice";
-            this.Size = new Size(880, 750);
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
-            this.MaximizeBox = false;
-            this.MinimizeBox = false;
-            this.StartPosition = FormStartPosition.CenterParent;
-
-            lblTitle = new Label
-            {
-                Location = new Point(20, 20),
-                Size = new Size(400, 40),
-                Font = new Font("Segoe UI", 18F, FontStyle.Bold),
-                Text = "?? SELECT DICE"
-            };
-            this.Controls.Add(lblTitle);
-
-            panelDices = new Panel
-            {
-                Location = new Point(20, 70),
-                Size = new Size(820, 650),
-                AutoScroll = true,
-                BorderStyle = BorderStyle.FixedSingle
-            };
-            this.Controls.Add(panelDices);
         }
 
         private void ApplyDarkMode()
         {
             this.BackColor = DarkBackground;
-            lblTitle.ForeColor = BrightGold;
             panelDices.BackColor = DarkBackground;
         }
 
         private void LoadDices()
         {
             panelDices.Controls.Clear();
-
-            // Sort dices by LuckMultiplier descending (highest first)
             var sortedDices = _gameManager.Stats.OwnedDices
                 .Select((dice, index) => new { Dice = dice, OriginalIndex = index })
                 .Where(x => x.Dice.IsInfinite || x.Dice.Quantity > 0)
@@ -83,10 +49,10 @@ namespace SpinARayan
             int yPosition = 10;
             foreach (var item in sortedDices)
             {
-                var dicePanel = CreateDicePanel(item.Dice, item.OriginalIndex);
-                dicePanel.Location = new Point(10, yPosition);
-                panelDices.Controls.Add(dicePanel);
-                yPosition += dicePanel.Height + 10;
+                var panel = CreateDicePanel(item.Dice, item.OriginalIndex);
+                panel.Location = new Point(10, yPosition);
+                panelDices.Controls.Add(panel);
+                yPosition += panel.Height + 10;
             }
         }
 
@@ -96,14 +62,27 @@ namespace SpinARayan
             
             var panel = new Panel
             {
-                Size = new Size(750, 80),
+                Size = new Size(750, 100),
                 BorderStyle = BorderStyle.FixedSingle,
                 BackColor = isSelected ? Color.FromArgb(0, 80, 120) : DarkPanel
             };
 
+            string fullPath = Path.Combine(Application.StartupPath, dice.ImagePath.TrimStart('/'));
+            if (File.Exists(fullPath))
+            {
+                var pbDice = new PictureBox
+                {
+                    Location = new Point(10, 10),
+                    Size = new Size(80, 80),
+                    SizeMode = PictureBoxSizeMode.Zoom,
+                    Image = Image.FromFile(fullPath)
+                };
+                panel.Controls.Add(pbDice);
+            }
+
             var lblName = new Label
             {
-                Location = new Point(10, 10),
+                Location = new Point(100, 10),
                 Size = new Size(300, 25),
                 Font = new Font("Segoe UI", 14F, FontStyle.Bold),
                 Text = dice.DisplayName,
@@ -113,7 +92,7 @@ namespace SpinARayan
 
             var lblDescription = new Label
             {
-                Location = new Point(10, 40),
+                Location = new Point(100, 40),
                 Size = new Size(300, 20),
                 Font = new Font("Segoe UI", 10F),
                 Text = dice.Description,
@@ -123,52 +102,36 @@ namespace SpinARayan
 
             var lblQuantity = new Label
             {
-                Location = new Point(350, 10),
+                Location = new Point(400, 10),
                 Size = new Size(200, 25),
                 Font = new Font("Segoe UI", 14F, FontStyle.Bold),
                 Text = $"Quantity: {dice.QuantityDisplay}",
-                ForeColor = dice.IsInfinite ? BrightGreen : dice.Quantity > 0 ? TextColor : Color.Red
+                ForeColor = dice.IsInfinite ? BrightGreen : TextColor
             };
             panel.Controls.Add(lblQuantity);
 
-            var lblLuck = new Label
-            {
-                Location = new Point(350, 40),
-                Size = new Size(200, 20),
-                Font = new Font("Segoe UI", 10F),
-                Text = $"Luck: {dice.LuckMultiplier:F1}x",
-                ForeColor = BrightGold
-            };
-            panel.Controls.Add(lblLuck);
-
             var btnSelect = new Button
             {
-                Location = new Point(600, 20),
-                Size = new Size(130, 40),
-                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                Location = new Point(600, 25),
+                Size = new Size(130, 50),
+                Font = new Font("Segoe UI", 12F, FontStyle.Bold),
                 Text = isSelected ? "SELECTED" : "SELECT",
-                Enabled = !isSelected && (dice.IsInfinite || dice.Quantity > 0),
+                Enabled = !isSelected,
                 BackColor = isSelected ? DarkAccent : BrightBlue,
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat,
                 Tag = index
             };
             btnSelect.FlatAppearance.BorderSize = 0;
-            btnSelect.Click += BtnSelect_Click;
-            panel.Controls.Add(btnSelect);
-
-            return panel;
-        }
-
-        private void BtnSelect_Click(object? sender, EventArgs e)
-        {
-            if (sender is Button btn && btn.Tag is int index)
-            {
+            btnSelect.Click += (s, e) => {
                 _gameManager.Stats.SelectedDiceIndex = index;
                 _gameManager.Save();
                 LoadDices();
                 _onDiceSelected?.Invoke();
-            }
+            };
+            panel.Controls.Add(btnSelect);
+
+            return panel;
         }
     }
 }
