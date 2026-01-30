@@ -9,6 +9,8 @@ Spiele direkt im Browser: [https://n-wachs.github.io/Spin-a-Rayani/](https://n-w
 
 Die Web-Version läuft vollständig im Browser ohne Installation.
 
+> 📖 Für Entwickler: Siehe [GITHUB_PAGES.md](Documentation/GITHUB_PAGES.md) für Setup-Details
+
 ## ✨ Features
 
 ### 🎯 Core Gameplay
