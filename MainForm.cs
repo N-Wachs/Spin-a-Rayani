@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 using System.Numerics;
@@ -20,7 +21,10 @@ namespace SpinARayan
         private List<Panel> _plotPanels = new List<Panel>();
         private Panel? _totalIncomePanel;
         private Label? _lblDiceInfo; // Shows selected dice and quantity
-        private Label? _lblEventDisplay; // Shows current suffix event
+        private Panel? _eventDisplayPanel; // Main event display panel
+        private Label? _lblEventCount; // Shows event count
+        private ComboBox? _comboEventSelector; // Dropdown for event selection
+        private Label? _lblEventDetails; // Shows selected event details
         private Label? _lblRebirthBonus; // Shows rebirth bonus
         
         // PERFORMANCE: Dirty flags to avoid unnecessary UI updates
@@ -58,30 +62,111 @@ namespace SpinARayan
             SetDoubleBuffered(panelCenter);
             SetDoubleBuffered(panelRight);
 
-            // MULTIPLAYER CONFIG: Auto-setup or load existing
-            string? multiplayerFolder = null;
-            bool isMultiplayerAdmin = false;
+            // MULTIPLAYER CONFIG: Ask for username on first run or load existing
+            string? multiplayerUsername = null;
             
-            string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "multiplayer.txt");
+            string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "multiplayer_username.txt");
             
             // Check if config exists
             if (!File.Exists(configPath))
             {
-                // First run! Show setup dialog
-                using var setupDialog = new MultiplayerSetupDialog();
-                var result = setupDialog.ShowDialog();
-                
-                if (result == DialogResult.OK && setupDialog.SetupCompleted)
+                // First run! Ask for username
+                using var inputDialog = new Form
                 {
-                    multiplayerFolder = setupDialog.SharedFolder;
-                    isMultiplayerAdmin = setupDialog.IsAdmin;
-                    Console.WriteLine($"[MainForm] Multiplayer configured via dialog:");
-                    Console.WriteLine($"  Folder: {multiplayerFolder}");
-                    Console.WriteLine($"  Admin: {isMultiplayerAdmin}");
+                    Text = "🌐 Multiplayer Setup",
+                    Size = new Size(450, 270),
+                    FormBorderStyle = FormBorderStyle.FixedDialog,
+                    MaximizeBox = false,
+                    MinimizeBox = false,
+                    StartPosition = FormStartPosition.CenterScreen,
+                    BackColor = DarkBackground
+                };
+                
+                var lblInfo = new Label
+                {
+                    Text = "Möchtest du Multiplayer aktivieren?\n\n" +
+                           "Mit Multiplayer können Events mit anderen Spielern\n" +
+                           "automatisch synchronisiert werden.\n\n" +
+                           "Du kannst diese Einstellung später jederzeit ändern.",
+                    Location = new Point(20, 20),
+                    Size = new Size(410, 90),
+                    Font = new Font("Segoe UI", 9.5F),
+                    ForeColor = TextColor
+                };
+                inputDialog.Controls.Add(lblInfo);
+                
+                var lblUsername = new Label
+                {
+                    Text = "Dein Username:",
+                    Location = new Point(20, 125),
+                    Size = new Size(120, 25),
+                    Font = new Font("Segoe UI", 10F),
+                    ForeColor = TextColor
+                };
+                inputDialog.Controls.Add(lblUsername);
+                
+                var txtUsername = new TextBox
+                {
+                    Location = new Point(140, 123),
+                    Size = new Size(270, 25),
+                    Font = new Font("Segoe UI", 10F),
+                    Text = Environment.UserName,
+                    BackColor = DarkAccent,
+                    ForeColor = TextColor
+                };
+                inputDialog.Controls.Add(txtUsername);
+                
+                var btnOk = new Button
+                {
+                    Text = "✅ Aktivieren",
+                    Location = new Point(20, 170),
+                    Size = new Size(190, 40),
+                    Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                    BackColor = BrightGreen,
+                    ForeColor = Color.White,
+                    FlatStyle = FlatStyle.Flat,
+                    DialogResult = DialogResult.OK
+                };
+                btnOk.FlatAppearance.BorderSize = 0;
+                inputDialog.Controls.Add(btnOk);
+                
+                var btnSkip = new Button
+                {
+                    Text = "⏭️ Single-Player",
+                    Location = new Point(220, 170),
+                    Size = new Size(190, 40),
+                    Font = new Font("Segoe UI", 10F),
+                    BackColor = Color.Gray,
+                    ForeColor = Color.White,
+                    FlatStyle = FlatStyle.Flat,
+                    DialogResult = DialogResult.Cancel
+                };
+                btnSkip.FlatAppearance.BorderSize = 0;
+                inputDialog.Controls.Add(btnSkip);
+                
+                inputDialog.AcceptButton = btnOk;
+                inputDialog.CancelButton = btnSkip;
+                
+                var result = inputDialog.ShowDialog();
+                
+                if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(txtUsername.Text))
+                {
+                    multiplayerUsername = txtUsername.Text.Trim();
+                    
+                    // Save config
+                    try
+                    {
+                        File.WriteAllText(configPath, multiplayerUsername);
+                        Console.WriteLine($"[MainForm] Multiplayer enabled - Username: {multiplayerUsername}");
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[MainForm] Error saving multiplayer config: {ex.Message}");
+                    }
                 }
                 else
                 {
-                    Console.WriteLine("[MainForm] Multiplayer setup skipped - Single-Player mode");
+                    Console.WriteLine("[MainForm] Multiplayer skipped - Single-Player mode");
                 }
             }
             else
@@ -89,20 +174,11 @@ namespace SpinARayan
                 // Load existing config
                 try
                 {
-                    var lines = File.ReadAllLines(configPath);
-                    foreach (var line in lines)
-                    {
-                        if (line.StartsWith("FOLDER=", StringComparison.OrdinalIgnoreCase))
-                            multiplayerFolder = line.Substring(7).Trim();
-                        else if (line.StartsWith("ADMIN=", StringComparison.OrdinalIgnoreCase))
-                            isMultiplayerAdmin = bool.Parse(line.Substring(6).Trim());
-                    }
+                    multiplayerUsername = File.ReadAllText(configPath).Trim();
                     
-                    if (!string.IsNullOrEmpty(multiplayerFolder))
+                    if (!string.IsNullOrEmpty(multiplayerUsername))
                     {
-                        Console.WriteLine($"[MainForm] Multiplayer loaded from config:");
-                        Console.WriteLine($"  Folder: {multiplayerFolder}");
-                        Console.WriteLine($"  Admin: {isMultiplayerAdmin}");
+                        Console.WriteLine($"[MainForm] Multiplayer loaded - Username: {multiplayerUsername}");
                     }
                 }
                 catch (Exception ex)
@@ -111,10 +187,10 @@ namespace SpinARayan
                 }
             }
 
-            _gameManager = new GameManager(multiplayerFolder, isMultiplayerAdmin);
+            _gameManager = new GameManager(multiplayerUsername);
             _gameManager.OnStatsChanged += UpdateUI;
             _gameManager.OnRayanRolled += OnRayanRolled_Handler;
-            _gameManager.OnEventChanged += UpdateEventDisplay;
+            _gameManager.OnEventsChanged += UpdateEventDisplay;
             
             // Initialize cached values to FORCE first update
             _lastMoney = -1; // Force update on first call
@@ -141,6 +217,9 @@ namespace SpinARayan
             btnRebirth.Text = $"Rebirth\n{FormatBigInt(_gameManager.Stats.NextRebirthCost)}";
             btnRebirth.Enabled = _gameManager.AdminMode || _gameManager.Stats.Money >= _gameManager.Stats.NextRebirthCost;
             panelRight.Controls.Add(btnRebirth);
+            
+            // Add debug button for manual polling (Admin/Multiplayer only)
+            CreateDebugPollButton();
             
             UpdateUI();
 
@@ -211,8 +290,8 @@ namespace SpinARayan
                 e.Handled = true;
             }
             
-            // Multiplayer Admin: Press 'M' to force a multiplayer event
-            if (_gameManager.IsMultiplayerAdmin && e.KeyCode == Keys.M)
+            // Multiplayer: Press 'M' to publish a multiplayer event
+            if (_gameManager.IsMultiplayerEnabled && e.KeyCode == Keys.M)
             {
                 ShowEventSelectionDialog();
                 e.Handled = true;
@@ -285,6 +364,98 @@ namespace SpinARayan
             _lblDiceInfo.BringToFront();
             panelCenter.Controls.Add(_lblDiceInfo);
         }
+        
+        private void CreateDebugPollButton()
+        {
+            var btnDebugPoll = new Button
+            {
+                Text = "🔍 Debug: Poll Events",
+                Location = new Point(20, 520),
+                Size = new Size(260, 50),
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                BackColor = Color.FromArgb(100, 50, 150),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Visible = false,
+                Name = "btnDebugPoll"
+            };
+            btnDebugPoll.FlatAppearance.BorderSize = 0;
+            btnDebugPoll.Click += async (s, e) => await DebugPollEvents();
+            panelRight.Controls.Add(btnDebugPoll);
+        }
+        
+        private async System.Threading.Tasks.Task DebugPollEvents()
+        {
+            try
+            {
+                var eventSync = typeof(GameManager).GetField("_eventSync", 
+                    System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                    ?.GetValue(_gameManager) as EventSyncService;
+                
+                if (eventSync == null)
+                {
+                    MessageBox.Show(
+                        "❌ EventSync nicht initialisiert!\n\n" +
+                        "Multiplayer ist nicht aktiv.",
+                        "Debug: Poll Events",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+                    return;
+                }
+                
+                // Call PollForEventsAsync directly
+                await eventSync.PollForEventsAsync();
+                
+                // Show results
+                var activeEvents = _gameManager.CurrentEvents;
+                
+                string message = $"🔍 Debug: Event Poll Results\n\n" +
+                    $"Aktueller Zeitpunkt:\n" +
+                    $"  Lokal: {DateTime.Now:yyyy-MM-dd HH:mm:ss}\n" +
+                    $"  UTC: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}\n\n" +
+                    $"Aktive Events: {activeEvents.Count}\n";
+                
+                if (activeEvents.Any())
+                {
+                    message += "\nGefundene Events:\n";
+                    foreach (var evt in activeEvents)
+                    {
+                        message += $"\n• {evt.SuffixName} (ID: {evt.EventId})\n";
+                        message += $"  Von: {evt.CreatedBy}\n";
+                        message += $"  Verbleibend: {evt.TimeRemaining.TotalMinutes:F1} min\n";
+                        message += $"  Suffix Boost: {evt.BoostMultiplier}x\n";
+                        message += $"  Luck: {evt.LuckMultiplier}x\n";
+                        message += $"  Money: {evt.MoneyMultiplier}x\n";
+                        message += $"  Roll Speed: {evt.RollTimeModifier}x\n";
+                    }
+                }
+                else
+                {
+                    message += "\n⚠️ Keine aktiven Events gefunden.\n\n";
+                    message += "Mögliche Gründe:\n";
+                    message += "• Events sind bereits abgelaufen\n";
+                    message += "• Zeitzone-Problem (UTC vs Lokal)\n";
+                    message += "• Keine Events in DB vorhanden";
+                }
+                
+                MessageBox.Show(
+                    message,
+                    "Debug: Poll Events",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"❌ Debug Poll Error:\n\n{ex.Message}\n\n{ex.StackTrace}",
+                    "Debug: Poll Events",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+        }
 
         private void OpenDiceSelection()
         {
@@ -298,38 +469,150 @@ namespace SpinARayan
         
         private void CreateEventDisplay()
         {
-            _lblEventDisplay = new Label
+            // Main event panel with dark background
+            _eventDisplayPanel = new Panel
             {
                 Location = new Point(0, 0),
-                Size = new Size(1200, 40),
-                Font = new Font("Segoe UI", 14F, FontStyle.Bold),
-                ForeColor = Color.White,
-                BackColor = Color.Transparent,
-                TextAlign = ContentAlignment.MiddleCenter,
-                Text = "",
-                Visible = false
+                Size = new Size(1200, 50),
+                BackColor = Color.FromArgb(40, 40, 40),
+                Visible = false,
+                BorderStyle = BorderStyle.FixedSingle
             };
-            this.Controls.Add(_lblEventDisplay);
-            _lblEventDisplay.BringToFront();
+            this.Controls.Add(_eventDisplayPanel);
+            _eventDisplayPanel.BringToFront();
+            
+            // Event count label on left
+            _lblEventCount = new Label
+            {
+                Location = new Point(10, 5),
+                Size = new Size(200, 20),
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                ForeColor = BrightGold,
+                BackColor = Color.Transparent,
+                Text = "🔥 0 Events aktiv"
+            };
+            _eventDisplayPanel.Controls.Add(_lblEventCount);
+            
+            // Dropdown selector for events (darker, subtle styling)
+            _comboEventSelector = new ComboBox
+            {
+                Location = new Point(220, 10),
+                Size = new Size(300, 30),
+                Font = new Font("Segoe UI", 9F),
+                BackColor = Color.FromArgb(50, 50, 55),
+                ForeColor = Color.FromArgb(200, 200, 200),
+                DropDownStyle = ComboBoxStyle.DropDownList,
+                FlatStyle = FlatStyle.Flat,
+                DisplayMember = "DisplayText"
+            };
+            _comboEventSelector.SelectedIndexChanged += ComboEventSelector_SelectedIndexChanged;
+            _eventDisplayPanel.Controls.Add(_comboEventSelector);
+            
+            // Event details label on right (smaller font, less screaming)
+            _lblEventDetails = new Label
+            {
+                Location = new Point(530, 0),
+                Size = new Size(650, 50),
+                Font = new Font("Segoe UI", 9F),
+                ForeColor = Color.FromArgb(220, 220, 220),
+                BackColor = Color.Transparent,
+                TextAlign = ContentAlignment.MiddleLeft,
+                Text = ""
+            };
+            _eventDisplayPanel.Controls.Add(_lblEventDetails);
         }
         
-        private void UpdateEventDisplay(SuffixEvent? suffixEvent)
+        private void ComboEventSelector_SelectedIndexChanged(object? sender, EventArgs e)
         {
-            if (_lblEventDisplay == null) return;
+            if (_comboEventSelector == null || _lblEventDetails == null) return;
             
-            if (suffixEvent != null && suffixEvent.IsActive)
+            var selectedEvent = _comboEventSelector.SelectedItem as SuffixEvent;
+            if (selectedEvent != null)
             {
-                int minutes = (int)suffixEvent.TimeRemaining.TotalMinutes;
-                int seconds = suffixEvent.TimeRemaining.Seconds;
-                
-                string adminPrefix = _gameManager.AdminMode ? "[ADMIN] " : "";
-                _lblEventDisplay.Text = $"{adminPrefix}🔥 {suffixEvent.EventName} - {suffixEvent.SuffixName} 20x häufiger! ({minutes}:{seconds:D2} verbleibend)";
-                _lblEventDisplay.BackColor = GetEventColor(suffixEvent.SuffixName);
-                _lblEventDisplay.Visible = true;
+                UpdateEventDetailsLabel(selectedEvent);
             }
-            else
+        }
+        
+        private void UpdateEventDetailsLabel(SuffixEvent evt)
+        {
+            if (_lblEventDetails == null) return;
+            
+            int minutes = (int)evt.TimeRemaining.TotalMinutes;
+            int seconds = evt.TimeRemaining.Seconds;
+            
+            string creatorInfo = string.IsNullOrEmpty(evt.CreatedBy) || evt.CreatedBy == "Local" 
+                ? "" 
+                : $" (von {evt.CreatedBy})";
+            
+            // Build detailed event info with all multipliers
+            string eventInfo = $"{evt.EventName}{creatorInfo} | {minutes}:{seconds:D2} verbleibend\n";
+            
+            // Add multiplier info
+            var multipliers = new List<string>();
+            
+            if (!string.IsNullOrEmpty(evt.SuffixName))
+                multipliers.Add($"Suffix: {evt.SuffixName} {evt.BoostMultiplier}x");
+            
+            if (evt.LuckMultiplier != 1.0f)
+                multipliers.Add($"Luck: {evt.LuckMultiplier}x");
+            
+            if (evt.MoneyMultiplier != 1.0f)
+                multipliers.Add($"Money: {evt.MoneyMultiplier}x");
+            
+            if (evt.RollTimeModifier != 1.0f)
+                multipliers.Add($"Roll Speed: {evt.RollTimeModifier}x");
+            
+            if (multipliers.Any())
+                eventInfo += string.Join(" | ", multipliers);
+            
+            _lblEventDetails.Text = eventInfo;
+            
+            // Subtle color based on suffix (muted versions)
+            var baseColor = GetEventColor(evt.SuffixName);
+            _lblEventDetails.ForeColor = Color.FromArgb(
+                Math.Max(baseColor.R - 30, 150), 
+                Math.Max(baseColor.G - 30, 150), 
+                Math.Max(baseColor.B - 30, 150)
+            );
+        }
+        
+        private void UpdateEventDisplay(List<SuffixEvent> activeEvents)
+        {
+            if (_eventDisplayPanel == null || _lblEventCount == null || _comboEventSelector == null) return;
+            
+            // Hide panel if no active events (check for null, empty, or all inactive)
+            if (activeEvents == null || activeEvents.Count == 0 || !activeEvents.Any(e => e.IsActive))
             {
-                _lblEventDisplay.Visible = false;
+                _eventDisplayPanel.Visible = false;
+                return;
+            }
+            
+            _eventDisplayPanel.Visible = true;
+            
+            // Update count
+            string adminPrefix = _gameManager.AdminMode ? "[ADMIN] " : "";
+            _lblEventCount.Text = $"{adminPrefix}🔥 {activeEvents.Count} Event{(activeEvents.Count > 1 ? "s" : "")} aktiv";
+            
+            // Update dropdown (oldest first)
+            var sortedEvents = activeEvents.OrderBy(e => e.StartTime).ToList();
+            
+            // Save current selection
+            var currentSelection = _comboEventSelector.SelectedItem as SuffixEvent;
+            
+            _comboEventSelector.Items.Clear();
+            foreach (var evt in sortedEvents)
+            {
+                _comboEventSelector.Items.Add(evt);
+            }
+            
+            // Try to restore selection, or select first (oldest)
+            if (currentSelection != null && sortedEvents.Any(e => e.EventId == currentSelection.EventId))
+            {
+                _comboEventSelector.SelectedItem = sortedEvents.First(e => e.EventId == currentSelection.EventId);
+            }
+            else if (sortedEvents.Any())
+            {
+                _comboEventSelector.SelectedIndex = 0;
             }
         }
         
@@ -406,7 +689,7 @@ namespace SpinARayan
             if (_gameManager.Stats.AutoRollActive && _rollCooldownRemaining <= 0)
             {
                 _gameManager.Roll();
-                _rollCooldownRemaining = _gameManager.Stats.RollCooldown;
+                _rollCooldownRemaining = _gameManager.GetEffectiveRollCooldown();
                 _rollCooldownTimer.Start();
             }
         }
@@ -504,6 +787,13 @@ namespace SpinARayan
                 lblAutoRollStatus.Text = _gameManager.Stats.AutoRollUnlocked ? "AutoRoll: AUS" : "";
                 // Enable manual roll button only if no cooldown
                 btnRoll.Enabled = _rollCooldownRemaining <= 0;
+            }
+            
+            // Show/hide debug poll button based on Admin mode and Multiplayer
+            var btnDebugPoll = panelRight.Controls.Find("btnDebugPoll", false).FirstOrDefault();
+            if (btnDebugPoll != null)
+            {
+                btnDebugPoll.Visible = _gameManager.AdminMode && _gameManager.IsMultiplayerEnabled;
             }
         }
 
@@ -726,7 +1016,14 @@ namespace SpinARayan
         
         private void ShowEventSelectionDialog()
         {
-            // Create dark-themed selection dialog
+            // Admin mode: Show advanced event creation dialog
+            if (_gameManager.AdminMode)
+            {
+                ShowAdminEventCreationDialog();
+                return;
+            }
+            
+            // Regular mode: Simple suffix selection
             var dialog = new Form
             {
                 Text = _gameManager.IsMultiplayerConnected ? "Event starten (Multiplayer)" : "Event starten (Lokal)",
@@ -822,6 +1119,325 @@ namespace SpinARayan
             
             dialog.ShowDialog(this);
         }
+        
+        private void ShowAdminEventCreationDialog()
+        {
+            var dialog = new Form
+            {
+                Text = "[ADMIN] Event erstellen - Erweiterte Optionen",
+                Size = new Size(500, 700),
+                StartPosition = FormStartPosition.CenterParent,
+                FormBorderStyle = FormBorderStyle.FixedDialog,
+                MaximizeBox = false,
+                MinimizeBox = false,
+                BackColor = DarkBackground
+            };
+            
+            var titleLabel = new Label
+            {
+                Text = "⚙️ Admin Event Erstellung",
+                Location = new Point(20, 20),
+                Size = new Size(450, 30),
+                Font = new Font("Segoe UI", 14F, FontStyle.Bold),
+                ForeColor = BrightRed
+            };
+            dialog.Controls.Add(titleLabel);
+            
+            var infoLabel = new Label
+            {
+                Text = "Gib die exakten Werte für die SupaBase DB ein (leer = null):",
+                Location = new Point(20, 55),
+                Size = new Size(450, 25),
+                Font = new Font("Segoe UI", 9F),
+                ForeColor = TextColor
+            };
+            dialog.Controls.Add(infoLabel);
+            
+            int yPos = 90;
+            int labelWidth = 170;
+            int inputWidth = 280;
+            int spacing = 45;
+            
+            // Event Name
+            dialog.Controls.Add(CreateLabel("Event Name:", 20, yPos, labelWidth));
+            var txtEventName = CreateTextBox("Suffix Event", 195, yPos, inputWidth);
+            dialog.Controls.Add(txtEventName);
+            yPos += spacing;
+            
+            // Suffix Name (Dropdown mit null-Option)
+            dialog.Controls.Add(CreateLabel("Suffix Name:", 20, yPos, labelWidth));
+            var comboSuffix = new ComboBox
+            {
+                Location = new Point(195, yPos),
+                Size = new Size(inputWidth, 25),
+                Font = new Font("Segoe UI", 10F),
+                BackColor = DarkAccent,
+                ForeColor = TextColor,
+                DropDownStyle = ComboBoxStyle.DropDownList
+            };
+            
+            // Add "(kein Suffix)" as null option
+            comboSuffix.Items.Add("(kein Suffix)");
+            
+            // Add all suffixes from RayanData
+            foreach (var suffix in RayanData.Suffixes)
+            {
+                comboSuffix.Items.Add(suffix.Suffix);
+            }
+            
+            comboSuffix.SelectedIndex = 0; // Default to "(kein Suffix)"
+            dialog.Controls.Add(comboSuffix);
+            yPos += spacing;
+            
+            // Suffix Boost Multiplier (only visible if suffix is selected)
+            var lblSuffixBoost = CreateLabel("Suffix Boost (wenn gesetzt):", 20, yPos, labelWidth);
+            lblSuffixBoost.Visible = false;
+            dialog.Controls.Add(lblSuffixBoost);
+            
+            var numSuffixBoost = CreateNumericUpDown(20.0M, 195, yPos, inputWidth);
+            numSuffixBoost.Visible = false;
+            numSuffixBoost.Minimum = 1M;
+            numSuffixBoost.Maximum = 1000M;
+            numSuffixBoost.DecimalPlaces = 1;
+            dialog.Controls.Add(numSuffixBoost);
+            
+            // Show/hide suffix boost based on suffix selection
+            comboSuffix.SelectedIndexChanged += (s, e) =>
+            {
+                bool hasSuffix = comboSuffix.SelectedIndex > 0; // Index 0 is "(kein Suffix)"
+                lblSuffixBoost.Visible = hasSuffix;
+                numSuffixBoost.Visible = hasSuffix;
+            };
+            yPos += spacing;
+            
+            // Created From
+            dialog.Controls.Add(CreateLabel("Created From:", 20, yPos, labelWidth));
+            var txtCreatedFrom = CreateTextBox(_gameManager.MultiplayerUsername ?? Environment.UserName, 195, yPos, inputWidth);
+            dialog.Controls.Add(txtCreatedFrom);
+            yPos += spacing;
+            
+            // Starts At (DateTime) - Shows local time, will be converted to UTC on save
+            dialog.Controls.Add(CreateLabel("Starts At (Lokal):", 20, yPos, labelWidth));
+            var dtpStartsAt = new DateTimePicker
+            {
+                Location = new Point(195, yPos),
+                Size = new Size(inputWidth, 25),
+                Font = new Font("Segoe UI", 10F),
+                Format = DateTimePickerFormat.Custom,
+                CustomFormat = "yyyy-MM-dd HH:mm:ss",
+                Value = DateTime.Now // Current LOCAL time
+            };
+            dialog.Controls.Add(dtpStartsAt);
+            yPos += spacing;
+            
+            // Duration (Minutes)
+            dialog.Controls.Add(CreateLabel("Duration (Minutes):", 20, yPos, labelWidth));
+            var numDuration = new NumericUpDown
+            {
+                Location = new Point(195, yPos),
+                Size = new Size(inputWidth, 25),
+                Font = new Font("Segoe UI", 10F),
+                BackColor = DarkAccent,
+                ForeColor = TextColor,
+                DecimalPlaces = 1,
+                Increment = 0.5M,
+                Minimum = 0.5M,
+                Maximum = 1440M,
+                Value = 2.5M
+            };
+            dialog.Controls.Add(numDuration);
+            yPos += spacing;
+            
+            // Luck Multiplier (nullable)
+            dialog.Controls.Add(CreateLabel("Luck Multiplier (leer = null):", 20, yPos, labelWidth));
+            var txtLuckMult = CreateTextBox("", 195, yPos, inputWidth);
+            txtLuckMult.PlaceholderText = "z.B. 1.5 (leer = kein Effekt)";
+            dialog.Controls.Add(txtLuckMult);
+            yPos += spacing;
+            
+            // Money Multiplier (nullable)
+            dialog.Controls.Add(CreateLabel("Money Multiplier (leer = null):", 20, yPos, labelWidth));
+            var txtMoneyMult = CreateTextBox("", 195, yPos, inputWidth);
+            txtMoneyMult.PlaceholderText = "z.B. 2.0 (leer = kein Effekt)";
+            dialog.Controls.Add(txtMoneyMult);
+            yPos += spacing;
+            
+            // Roll Time (nullable) - Speed modifier
+            dialog.Controls.Add(CreateLabel("Roll Time (leer = null):", 20, yPos, labelWidth));
+            var txtRollTime = CreateTextBox("", 195, yPos, inputWidth);
+            txtRollTime.PlaceholderText = "z.B. 0.5 = doppelt so schnell";
+            dialog.Controls.Add(txtRollTime);
+            
+            var lblRollTimeHint = new Label
+            {
+                Text = "⚡ 0.5 = doppelt so schnell, 2.0 = halb so schnell",
+                Location = new Point(195, yPos + 28),
+                Size = new Size(inputWidth, 20),
+                Font = new Font("Segoe UI", 7.5F, FontStyle.Italic),
+                ForeColor = Color.Gray
+            };
+            dialog.Controls.Add(lblRollTimeHint);
+            yPos += spacing + 25;
+            
+            // Create Event button
+            var btnCreate = new Button
+            {
+                Text = "🚀 Event erstellen",
+                Location = new Point(20, yPos),
+                Size = new Size(220, 45),
+                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                BackColor = BrightGreen,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnCreate.FlatAppearance.BorderSize = 0;
+            btnCreate.Click += async (s, e) =>
+            {
+                try
+                {
+                    // Parse nullable fields
+                    float? luckMult = null;
+                    if (!string.IsNullOrWhiteSpace(txtLuckMult.Text) && 
+                        float.TryParse(txtLuckMult.Text, out float luckVal) && 
+                        luckVal != 1.0f)
+                    {
+                        luckMult = luckVal;
+                    }
+                    
+                    float? moneyMult = null;
+                    if (!string.IsNullOrWhiteSpace(txtMoneyMult.Text) && 
+                        float.TryParse(txtMoneyMult.Text, out float moneyVal) && 
+                        moneyVal != 1.0f)
+                    {
+                        moneyMult = moneyVal;
+                    }
+                    
+                    float? rollTime = null;
+                    if (!string.IsNullOrWhiteSpace(txtRollTime.Text) && 
+                        float.TryParse(txtRollTime.Text, out float rollVal) && 
+                        rollVal != 1.0f)
+                    {
+                        rollTime = rollVal;
+                    }
+                    
+                    string? suffixName = comboSuffix.SelectedIndex == 0 
+                        ? null 
+                        : comboSuffix.SelectedItem?.ToString();
+                    
+                    // Build SharedEventData object
+                    var eventData = new SharedEventData
+                    {
+                        EventName = txtEventName.Text,
+                        SuffixName = suffixName,
+                        SuffixBoostMultiplier = suffixName != null ? (double)numSuffixBoost.Value : null,
+                        CreatedFrom = txtCreatedFrom.Text,
+                        StartsAt = dtpStartsAt.Value.ToUniversalTime(),
+                        EndsAt = dtpStartsAt.Value.ToUniversalTime().AddMinutes((double)numDuration.Value),
+                        LuckMultiplier = luckMult,
+                        MoneyMultiplier = moneyMult,
+                        RollTime = rollTime
+                    };
+                    
+                    // Publish via EventSyncService
+                    if (_gameManager.IsMultiplayerEnabled)
+                    {
+                        var eventSync = typeof(GameManager).GetField("_eventSync", 
+                            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
+                            ?.GetValue(_gameManager) as EventSyncService;
+                        
+                        if (eventSync != null)
+                        {
+                            // Use PublishCustomEventAsync for full control over all fields
+                            // This will also apply the event immediately to this client
+                            await eventSync.PublishCustomEventAsync(eventData);
+                            
+                            dialog.Close();
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show(
+                            "❌ Multiplayer nicht aktiv!\n\n" +
+                            "Admin-Events können nur im Multiplayer-Modus erstellt werden.",
+                            "Fehler",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Error
+                        );
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        $"❌ Fehler beim Erstellen des Events:\n\n{ex.Message}",
+                        "Fehler",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                }
+            };
+            dialog.Controls.Add(btnCreate);
+            
+            // Cancel button
+            var btnCancel = new Button
+            {
+                Text = "Abbrechen",
+                Location = new Point(255, yPos),
+                Size = new Size(220, 45),
+                Font = new Font("Segoe UI", 11F),
+                BackColor = DarkAccent,
+                ForeColor = TextColor,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnCancel.FlatAppearance.BorderSize = 1;
+            btnCancel.FlatAppearance.BorderColor = Color.FromArgb(80, 80, 85);
+            btnCancel.Click += (s, e) => dialog.Close();
+            dialog.Controls.Add(btnCancel);
+            
+            dialog.ShowDialog(this);
+        }
+        
+        private Label CreateLabel(string text, int x, int y, int width)
+        {
+            return new Label
+            {
+                Text = text,
+                Location = new Point(x, y),
+                Size = new Size(width, 25),
+                Font = new Font("Segoe UI", 9.5F, FontStyle.Bold),
+                ForeColor = TextColor,
+                TextAlign = ContentAlignment.MiddleLeft
+            };
+        }
+        
+        private TextBox CreateTextBox(string text, int x, int y, int width)
+        {
+            return new TextBox
+            {
+                Text = text,
+                Location = new Point(x, y),
+                Size = new Size(width, 25),
+                Font = new Font("Segoe UI", 10F),
+                BackColor = DarkAccent,
+                ForeColor = TextColor
+            };
+        }
+        
+        private NumericUpDown CreateNumericUpDown(decimal value, int x, int y, int width)
+        {
+            return new NumericUpDown
+            {
+                Location = new Point(x, y),
+                Size = new Size(width, 25),
+                Font = new Font("Segoe UI", 10F),
+                BackColor = DarkAccent,
+                ForeColor = TextColor,
+                DecimalPlaces = 2,
+                Increment = 0.1M,
+                Minimum = 0.1M,
+                Maximum = 1000M,
+                Value = value
+            };
+        }
 
         private string FormatBigInt(BigInteger value)
         {
@@ -836,7 +1452,7 @@ namespace SpinARayan
         {
             _gameManager.Roll();
             btnRoll.Enabled = false;
-            _rollCooldownRemaining = _gameManager.Stats.RollCooldown;
+            _rollCooldownRemaining = _gameManager.GetEffectiveRollCooldown();
             _rollCooldownTimer.Start();
         }
 

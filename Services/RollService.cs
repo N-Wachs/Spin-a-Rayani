@@ -19,13 +19,13 @@ namespace SpinARayan.Services
             _sortedSuffixes = RayanData.Suffixes.OrderByDescending(x => x.Chance).ToList();
         }
 
-        public Rayan Roll(double luckMultiplier, SuffixEvent? currentEvent = null)
+        public Rayan Roll(double luckMultiplier, List<SuffixEvent>? activeEvents = null)
         {
             // Roll for Prefix (affected by luck)
             var prefixData = SelectFromList(luckMultiplier);
 
             // Roll for Suffix (NOT affected by luck, only by events)
-            var suffixData = SelectSuffix(currentEvent);
+            var suffixData = SelectSuffix(activeEvents);
 
             return new Rayan
             {
@@ -52,17 +52,22 @@ namespace SpinARayan.Services
             return _sortedPrefixes[^1]; // Last item (least rare)
         }
 
-        private (string Suffix, double Chance, double Multiplier)? SelectSuffix(SuffixEvent? currentEvent)
+        private (string Suffix, double Chance, double Multiplier)? SelectSuffix(List<SuffixEvent>? activeEvents)
         {
             // PERFORMANCE: Use cached sorted list
             foreach (var item in _sortedSuffixes)
             {
                 double baseChance = item.Chance;
                 
-                // If there's an active event for this suffix, make it 20x more likely
-                if (currentEvent != null && currentEvent.IsActive && currentEvent.SuffixName == item.Suffix)
+                // Check if ANY active event boosts this suffix
+                if (activeEvents != null && activeEvents.Any())
                 {
-                    baseChance /= currentEvent.BoostMultiplier; // Lower chance value = higher probability
+                    var matchingEvent = activeEvents.FirstOrDefault(e => e.IsActive && e.SuffixName == item.Suffix);
+                    if (matchingEvent != null)
+                    {
+                        baseChance /= matchingEvent.BoostMultiplier; // Lower chance value = higher probability
+                        Console.WriteLine($"[RollService] Boosting {item.Suffix} by {matchingEvent.BoostMultiplier}x (Event: {matchingEvent.EventName})");
+                    }
                 }
                 
                 double chance = 1.0 / baseChance;

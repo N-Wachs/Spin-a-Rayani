@@ -15,22 +15,23 @@ namespace SpinARayan.Services
         private System.Windows.Forms.Timer _gameTimer;
         private DateTime _lastUpdate;
         private DateTime _nextEventTime;
-        private SuffixEvent? _currentEvent;
+        private List<SuffixEvent> _currentEvents = new List<SuffixEvent>();
 
         public event Action? OnStatsChanged;
         public event Action<Rayan>? OnRayanRolled;
-        public event Action<SuffixEvent>? OnEventChanged;
+        public event Action<List<SuffixEvent>>? OnEventsChanged;
 
         // Admin Mode (Cheat Code)
         public bool AdminMode { get; set; } = false;
         
         // Multiplayer Mode
-        public bool IsMultiplayerAdmin { get; private set; } = false;
+        public bool IsMultiplayerEnabled => _eventSync != null;
         public bool IsMultiplayerConnected => _eventSync?.IsConnected ?? false;
+        public string? MultiplayerUsername => _eventSync?.Username;
         
-        public SuffixEvent? CurrentEvent => _currentEvent;
+        public List<SuffixEvent> CurrentEvents => _currentEvents.Where(e => e.IsActive).ToList();
 
-        public GameManager(string? sharedFolderPath = null, bool isMultiplayerAdmin = false)
+        public GameManager(string? multiplayerUsername = null)
         {
             _saveService = new SaveService();
             _rollService = new RollService();
@@ -40,19 +41,17 @@ namespace SpinARayan.Services
             // Load saved quest progress
             _questService.LoadQuestsFromStats(Stats);
             
-            IsMultiplayerAdmin = isMultiplayerAdmin;
-            
-            // Initialize multiplayer if enabled
-            if (!string.IsNullOrEmpty(sharedFolderPath))
+            // Initialize multiplayer if username provided
+            if (!string.IsNullOrEmpty(multiplayerUsername))
             {
                 try
                 {
-                    _eventSync = new EventSyncService(this, sharedFolderPath, isMultiplayerAdmin);
-                    Console.WriteLine($"[GameManager] Multiplayer enabled - Role: {(isMultiplayerAdmin ? "ADMIN" : "CLIENT")}");
+                    _eventSync = new EventSyncService(this, multiplayerUsername);
+                    Console.WriteLine($"[GameManager] Multiplayer enabled - Username: {multiplayerUsername}");
                 }
                 catch (Exception ex)
                 {
-                    Console.WriteLine($"[GameManager] Multiplayer disabled: {ex.Message}");
+                    Console.WriteLine($"[GameManager] Multiplayer initialization failed: {ex.Message}");
                     _eventSync = null;
                 }
             }
@@ -76,10 +75,13 @@ namespace SpinARayan.Services
             // Check for event updates
             UpdateEvents();
             
-            // Update event display every second (even if event didn't change)
-            if (_currentEvent != null && _currentEvent.IsActive)
+            // Remove expired events and update display
+            _currentEvents.RemoveAll(evt => !evt.IsActive);
+            
+            // Update event display every second if we have active events
+            if (_currentEvents.Any(e => e.IsActive))
             {
-                OnEventChanged?.Invoke(_currentEvent);
+                OnEventsChanged?.Invoke(_currentEvents.Where(e => e.IsActive).ToList());
             }
 
             // Autosave every 60 seconds (1 minute)
@@ -104,7 +106,14 @@ namespace SpinARayan.Services
                 }
             }
 
-            BigInteger earnedThisSecond = new BigInteger((double)incomePerSecond * Stats.MoneyMultiplier);
+            // Apply base money multiplier + event money multipliers
+            double totalMoneyMultiplier = Stats.MoneyMultiplier;
+            foreach (var evt in _currentEvents.Where(e => e.IsActive))
+            {
+                totalMoneyMultiplier *= evt.MoneyMultiplier;
+            }
+
+            BigInteger earnedThisSecond = new BigInteger((double)incomePerSecond * totalMoneyMultiplier);
             Stats.Money += earnedThisSecond;
             Stats.TotalMoneyEarned += earnedThisSecond; // Track all-time
         }
@@ -135,7 +144,9 @@ namespace SpinARayan.Services
             // Debug output
             Console.WriteLine($"Roll - Booster Luck: {luckFromBooster:F2}, Dice Luck: {luckFromDice:F2}, Rebirth Luck: {luckFromRebirths:F2}, Total: {totalLuck:F2}");
             
-            var rayan = _rollService.Roll(totalLuck, _currentEvent);
+            // Pass all active events to roll service
+            var activeEvents = _currentEvents.Where(e => e.IsActive).ToList();
+            var rayan = _rollService.Roll(totalLuck, activeEvents);
             Stats.Inventory.Add(rayan);
             Stats.TotalRolls++;
             Stats.TotalRollsAllTime++; // Track all-time
@@ -241,7 +252,30 @@ namespace SpinARayan.Services
             double luckFromDice = selectedDice.LuckMultiplier - 1.0; // Subtract base 1.0
             double luckFromRebirths = Stats.Rebirths * 0.5; // 50% per Rebirth
             
-            return (luckFromBooster + luckFromDice + luckFromRebirths) * 100; // Return as percentage
+            // Apply event luck multipliers
+            double luckFromEvents = 0.0;
+            foreach (var evt in _currentEvents.Where(e => e.IsActive))
+            {
+                luckFromEvents += (evt.LuckMultiplier - 1.0);
+            }
+            
+            return (luckFromBooster + luckFromDice + luckFromRebirths + luckFromEvents) * 100; // Return as percentage
+        }
+        
+        /// <summary>
+        /// Get effective roll cooldown with event modifiers applied
+        /// </summary>
+        public double GetEffectiveRollCooldown()
+        {
+            double baseCooldown = Stats.RollCooldown;
+            
+            // Apply event roll time modifiers
+            foreach (var evt in _currentEvents.Where(e => e.IsActive))
+            {
+                baseCooldown *= evt.RollTimeModifier;
+            }
+            
+            return baseCooldown;
         }
         
         public void ForceEvent()
@@ -251,75 +285,101 @@ namespace SpinARayan.Services
         }
         
         /// <summary>
-        /// Force a SPECIFIC event (Admin only) and publish to multiplayer if enabled
+        /// Force a SPECIFIC event and publish to multiplayer if enabled
         /// </summary>
-        public void ForceSpecificEvent(string suffixName)
+        public async void ForceSpecificEvent(string suffixName)
         {
-            if (!AdminMode && !IsMultiplayerAdmin)
-            {
-                Console.WriteLine("[GameManager] ERROR: Only admin can force specific events!");
-                return;
-            }
+            // Get username
+            string username = _eventSync?.Username ?? Environment.UserName;
             
-            // Get custom username or fallback to Windows username
-            string username = string.IsNullOrEmpty(Stats.MultiplayerUsername) 
-                ? Environment.UserName 
-                : Stats.MultiplayerUsername;
+            // Generate local event ID
+            long eventId = DateTime.Now.Ticks; // Use timestamp as unique ID
             
             // Publish to multiplayer if enabled
-            if (_eventSync != null && IsMultiplayerAdmin)
+            if (_eventSync != null)
             {
-                _eventSync.PublishEvent(suffixName, username);
+                await _eventSync.PublishEventAsync(suffixName, 2.5);
                 Console.WriteLine($"[GameManager] Published multiplayer event: {suffixName} from {username}");
+                // Note: Real DB ID will come from polling
+                return; // Let polling handle the event
             }
             
-            // Apply locally
-            ApplyRemoteEvent(suffixName, username);
+            // Apply locally if no multiplayer - create basic event
+            var localEvent = new SharedEventData
+            {
+                Id = eventId,
+                SuffixName = suffixName,
+                CreatedFrom = username,
+                StartsAt = DateTime.UtcNow,
+                EndsAt = DateTime.UtcNow.AddMinutes(2.5),
+                EventName = $"{suffixName} Event!"
+            };
+            ApplyRemoteEvent(localEvent);
         }
         
         /// <summary>
-        /// Apply remote event from multiplayer sync - ALWAYS OVERRIDES local events!
+        /// Apply remote event from multiplayer sync - Adds to active events list with full parameters!
         /// </summary>
-        public void ApplyRemoteEvent(string suffixName, string adminName)
+        public void ApplyRemoteEvent(SharedEventData eventData)
         {
             Console.WriteLine($"[GameManager] ApplyRemoteEvent called:");
-            Console.WriteLine($"[GameManager]   Suffix: {suffixName}");
-            Console.WriteLine($"[GameManager]   Admin: {adminName}");
-            Console.WriteLine($"[GameManager]   IsMultiplayerAdmin: {IsMultiplayerAdmin}");
+            Console.WriteLine($"[GameManager]   ID: {eventData.Id}");
+            Console.WriteLine($"[GameManager]   Suffix: {eventData.SuffixName}");
+            Console.WriteLine($"[GameManager]   Created by: {eventData.CreatedFrom}");
+            Console.WriteLine($"[GameManager]   Luck Multiplier: {eventData.LuckMultiplier}");
+            Console.WriteLine($"[GameManager]   Money Multiplier: {eventData.MoneyMultiplier}");
+            Console.WriteLine($"[GameManager]   Roll Time: {eventData.RollTime}");
+            Console.WriteLine($"[GameManager]   Suffix Boost: {eventData.SuffixBoostMultiplier}");
+            Console.WriteLine($"[GameManager]   Multiplayer enabled: {IsMultiplayerEnabled}");
             
-            // Check if we have an active local event that will be overridden
-            if (_currentEvent != null && _currentEvent.IsActive)
+            // Check if this event is already in the list
+            if (eventData.Id.HasValue && _currentEvents.Any(e => e.EventId == eventData.Id.Value))
             {
-                Console.WriteLine($"[GameManager]   Overriding active local event: {_currentEvent.SuffixName}");
+                Console.WriteLine($"[GameManager]   Event already exists in active list");
+                return;
             }
             
-            _currentEvent = new SuffixEvent
+            bool isOwnEvent = _eventSync != null && eventData.CreatedFrom == _eventSync.Username;
+            
+            // Calculate duration from timestamps
+            double durationMinutes = (eventData.EndsAt - eventData.StartsAt).TotalMinutes;
+            
+            // Use custom suffix boost or default 20x
+            double suffixBoost = eventData.SuffixBoostMultiplier ?? 20.0;
+            
+            var newEvent = new SuffixEvent
             {
-                SuffixName = suffixName,
-                EventName = IsMultiplayerAdmin ? $"{suffixName} Event!" : $"{suffixName} Event! (von {adminName})",
-                StartTime = DateTime.Now,
-                EndTime = DateTime.Now.AddMinutes(2.5),
-                BoostMultiplier = 20.0
+                EventId = eventData.Id ?? DateTime.Now.Ticks,
+                SuffixName = eventData.SuffixName ?? "Unknown",
+                EventName = isOwnEvent ? $"{eventData.EventName}" : $"{eventData.EventName} (von {eventData.CreatedFrom})",
+                CreatedBy = eventData.CreatedFrom,
+                StartTime = eventData.StartsAt.ToLocalTime(),
+                EndTime = eventData.EndsAt.ToLocalTime(),
+                BoostMultiplier = suffixBoost,
+                // Apply multipliers from event
+                LuckMultiplier = eventData.LuckMultiplier ?? 1.0f,
+                MoneyMultiplier = eventData.MoneyMultiplier ?? 1.0f,
+                RollTimeModifier = eventData.RollTime ?? 1.0f
             };
             
+            _currentEvents.Add(newEvent);
             _nextEventTime = DateTime.Now.AddMinutes(5); // Reset local event timer
-            OnEventChanged?.Invoke(_currentEvent);
+            OnEventsChanged?.Invoke(_currentEvents.Where(e => e.IsActive).ToList());
             
-            Console.WriteLine($"[GameManager] ? Event applied successfully!");
-            Console.WriteLine($"[GameManager]   Event Name: {_currentEvent.EventName}");
-            Console.WriteLine($"[GameManager]   Duration: 2.5 minutes");
-            Console.WriteLine($"[GameManager]   Boost: {_currentEvent.BoostMultiplier}x");
-            Console.WriteLine($"[GameManager]   Ends at: {_currentEvent.EndTime:HH:mm:ss}");
+            Console.WriteLine($"[GameManager] ? Event added to active list!");
+            Console.WriteLine($"[GameManager]   Event Name: {newEvent.EventName}");
+            Console.WriteLine($"[GameManager]   Duration: {durationMinutes:F1} minutes");
+            Console.WriteLine($"[GameManager]   Suffix Boost: {newEvent.BoostMultiplier}x");
+            Console.WriteLine($"[GameManager]   Luck Boost: {newEvent.LuckMultiplier}x");
+            Console.WriteLine($"[GameManager]   Money Boost: {newEvent.MoneyMultiplier}x");
+            Console.WriteLine($"[GameManager]   Roll Speed: {newEvent.RollTimeModifier}x");
+            Console.WriteLine($"[GameManager]   Active events: {_currentEvents.Count(e => e.IsActive)}");
         }
         
         private void UpdateEvents()
         {
-            // Check if current event expired
-            if (_currentEvent != null && !_currentEvent.IsActive)
-            {
-                _currentEvent = null;
-                OnEventChanged?.Invoke(null);
-            }
+            // Remove expired events
+            _currentEvents.RemoveAll(evt => !evt.IsActive);
             
             // Start new event every 5 minutes
             if (DateTime.Now >= _nextEventTime)
@@ -340,16 +400,19 @@ namespace SpinARayan.Services
             
             var selectedSuffix = suffixes[selectedIndex];
             
-            _currentEvent = new SuffixEvent
+            var newEvent = new SuffixEvent
             {
+                EventId = -1, // Local events get negative IDs
                 SuffixName = selectedSuffix.Suffix,
                 EventName = $"{selectedSuffix.Suffix} Event!",
+                CreatedBy = "Local",
                 StartTime = DateTime.Now,
                 EndTime = DateTime.Now.AddMinutes(2.5), // 2.5 Minuten Dauer
                 BoostMultiplier = 20.0
             };
             
-            OnEventChanged?.Invoke(_currentEvent);
+            _currentEvents.Add(newEvent);
+            OnEventsChanged?.Invoke(_currentEvents.Where(e => e.IsActive).ToList());
         }
 
     }

@@ -1,111 +1,160 @@
 using System;
-using System.IO;
+using System.Net.Http;
+using System.Text;
 using System.Text.Json;
+using System.Threading.Tasks;
+using System.Collections.Generic;
+using System.Linq;
 using SpinARayan.Models;
 
 namespace SpinARayan.Services
 {
     /// <summary>
-    /// Synchronizes events between multiple game instances using a shared cloud folder (OneDrive/Dropbox).
-    /// Admin can publish events, Clients receive and apply them automatically.
+    /// Synchronizes events between multiple game instances using SupaBase database.
+    /// All users can publish and receive events in real-time.
     /// </summary>
     public class EventSyncService : IDisposable
     {
         private readonly GameManager _gameManager;
-        private readonly System.Timers.Timer? _pollTimer;
-        private readonly string _sharedFolder;
-        private readonly string _eventFile;
-        private readonly bool _isAdmin;
-        private DateTime _lastEventPublish = DateTime.MinValue;
-        private long _lastProcessedTimestamp = 0; // Track last processed event to avoid duplicates
-        private DateTime _lastFileCheck = DateTime.MinValue;
+        private readonly System.Timers.Timer _pollTimer;
+        private readonly HttpClient _httpClient;
+        private readonly string _username;
+        
+        private const string SUPABASE_URL = "https://gflohnjhunyukdayaahn.supabase.co/rest/v1/Game%20Events";
+        private const string SUPABASE_KEY = "sb_publishable_dZXMv77hZa3_vZbQTYSKeQ_rZ49Ro9w";
+        private const int MAX_EVENTS_TO_FETCH = 50; // Limit DB query size
+        
+        private HashSet<long> _processedEventIds = new HashSet<long>();
+        private DateTime _lastPollTime = DateTime.MinValue;
 
-        public EventSyncService(GameManager gameManager, string sharedFolderPath, bool isAdmin = false)
+        public EventSyncService(GameManager gameManager, string username)
         {
             _gameManager = gameManager;
-            _isAdmin = isAdmin;
-            _sharedFolder = sharedFolderPath;
-            _eventFile = Path.Combine(_sharedFolder, "events.json");
+            _username = username;
 
-            // Create folder if not exists
-            try
-            {
-                Directory.CreateDirectory(_sharedFolder);
-                Console.WriteLine($"[EventSync] Initialized - Mode: {(isAdmin ? "ADMIN" : "CLIENT")}");
-                Console.WriteLine($"[EventSync] Folder: {_sharedFolder}");
-                Console.WriteLine($"[EventSync] Event File: {_eventFile}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[EventSync] ERROR creating folder: {ex.Message}");
-                throw;
-            }
+            // Setup HTTP client with SupaBase authentication
+            _httpClient = new HttpClient();
+            _httpClient.DefaultRequestHeaders.Add("apikey", SUPABASE_KEY);
+            _httpClient.DefaultRequestHeaders.Add("Authorization", $"Bearer {SUPABASE_KEY}");
 
-            // Setup POLLING Timer (better for OneDrive than FileWatcher!)
-            if (!_isAdmin)
-            {
-                try
-                {
-                    _pollTimer = new System.Timers.Timer(2000); // Check every 2 seconds
-                    _pollTimer.Elapsed += (s, e) => PollForEvents();
-                    _pollTimer.AutoReset = true;
-                    _pollTimer.Start();
-                    Console.WriteLine($"[EventSync] Polling active (every 2s) - OneDrive compatible mode");
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[EventSync] ERROR setting up polling: {ex.Message}");
-                    throw;
-                }
-            }
-            else
-            {
-                Console.WriteLine($"[EventSync] Admin mode - publishing only");
-            }
+            Console.WriteLine($"[EventSync] Initialized - Username: {_username}");
+            Console.WriteLine($"[EventSync] Connected to SupaBase");
+
+            // Setup polling timer - check every 10 seconds for new events
+            _pollTimer = new System.Timers.Timer(10000);
+            _pollTimer.Elapsed += async (s, e) => await PollForEventsAsync();
+            _pollTimer.AutoReset = true;
+            _pollTimer.Start();
+            
+            Console.WriteLine($"[EventSync] Polling active (every 10s)");
+            
+            // Initial poll on startup
+            Task.Run(async () => await PollForEventsAsync());
         }
 
         /// <summary>
-        /// Publish event to shared folder (Admin only!)
+        /// Publish a custom event with all parameters (Admin mode)
         /// </summary>
-        public void PublishEvent(string suffixName, string? customUsername = null)
+        public async Task PublishCustomEventAsync(SharedEventData eventData)
         {
-            if (!_isAdmin)
-            {
-                Console.WriteLine("[EventSync] ERROR: Only admin can publish events!");
-                return;
-            }
-
             try
             {
-                var eventData = new SharedEventData
-                {
-                    SuffixName = suffixName,
-                    StartTime = DateTime.UtcNow,
-                    DurationMinutes = 2.5,
-                    AdminName = customUsername ?? Environment.UserName,
-                    Timestamp = DateTime.UtcNow.Ticks // Für Duplikat-Erkennung
-                };
-
-                string json = JsonSerializer.Serialize(eventData, new JsonSerializerOptions 
+                var json = JsonSerializer.Serialize(eventData, new JsonSerializerOptions 
                 { 
-                    WriteIndented = true 
+                    WriteIndented = true,
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
                 });
 
-                File.WriteAllText(_eventFile, json);
-                _lastEventPublish = DateTime.UtcNow;
-                _lastProcessedTimestamp = eventData.Timestamp; // Admin skips own event in polling
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
                 
-                Console.WriteLine($"[EventSync] ? Published Event: {suffixName} from {eventData.AdminName} at {DateTime.Now:HH:mm:ss}");
-                Console.WriteLine($"[EventSync] File written to: {_eventFile}");
-                Console.WriteLine($"[EventSync] Event Timestamp: {eventData.Timestamp}");
-                Console.WriteLine($"[EventSync] Admin saved own timestamp to skip re-processing");
+                Console.WriteLine($"[EventSync] Publishing custom event: {eventData.EventName} by {eventData.CreatedFrom}");
+                Console.WriteLine($"[EventSync] Suffix: {eventData.SuffixName ?? "(none)"}");
+                Console.WriteLine($"[EventSync] JSON: {json}");
                 
-                if (File.Exists(_eventFile))
+                // Create request with Prefer header to get the created data back
+                var request = new HttpRequestMessage(HttpMethod.Post, SUPABASE_URL)
                 {
-                    var fileInfo = new FileInfo(_eventFile);
-                    Console.WriteLine($"[EventSync] File size: {fileInfo.Length} bytes");
-                    Console.WriteLine($"[EventSync] File modified: {fileInfo.LastWriteTime:HH:mm:ss.fff}");
-                    Console.WriteLine($"[EventSync] OneDrive should sync this to clients now...");
+                    Content = content
+                };
+                request.Headers.Add("Prefer", "return=representation");
+                
+                var response = await _httpClient.SendAsync(request);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseJson = await response.Content.ReadAsStringAsync();
+                    
+                    // Check if we got a response body
+                    if (!string.IsNullOrWhiteSpace(responseJson))
+                    {
+                        var createdEvent = JsonSerializer.Deserialize<SharedEventData[]>(responseJson);
+                        
+                        if (createdEvent != null && createdEvent.Length > 0 && createdEvent[0].Id.HasValue)
+                        {
+                            var createdData = createdEvent[0];
+                            _processedEventIds.Add(createdData.Id.Value);
+                            Console.WriteLine($"[EventSync] ? Custom event published successfully! ID: {createdData.Id.Value}");
+                            
+                            // ? Apply the event IMMEDIATELY to this client (don't wait for poll)
+                            _gameManager.ApplyRemoteEvent(createdData);
+                            Console.WriteLine($"[EventSync] ? Event applied locally!");
+                            
+                            // Build detailed summary
+                            var summary = $"? Event erfolgreich veröffentlicht!\n\n" +
+                                $"Event-ID: {createdData.Id.Value}\n" +
+                                $"Event: {eventData.EventName}\n" +
+                                $"Suffix: {eventData.SuffixName ?? "(kein Suffix)"}\n";
+                            
+                            if (eventData.LuckMultiplier.HasValue)
+                                summary += $"Luck: {eventData.LuckMultiplier.Value}x\n";
+                            if (eventData.MoneyMultiplier.HasValue)
+                                summary += $"Money: {eventData.MoneyMultiplier.Value}x\n";
+                            if (eventData.RollTime.HasValue)
+                                summary += $"Roll Speed: {eventData.RollTime.Value}x\n";
+                            if (eventData.SuffixBoostMultiplier.HasValue)
+                                summary += $"Suffix Boost: {eventData.SuffixBoostMultiplier.Value}x\n";
+                            
+                            var duration = (eventData.EndsAt - eventData.StartsAt).TotalMinutes;
+                            summary += $"Dauer: {duration:F1} Minuten\n\n";
+                            summary += "Das Event ist jetzt bei allen Spielern aktiv!";
+                            
+                            System.Windows.Forms.MessageBox.Show(
+                                summary,
+                                "Event veröffentlicht",
+                                System.Windows.Forms.MessageBoxButtons.OK,
+                                System.Windows.Forms.MessageBoxIcon.Information
+                            );
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[EventSync] ? Custom event published successfully (no response body)");
+                        
+                        System.Windows.Forms.MessageBox.Show(
+                            $"? Event erfolgreich veröffentlicht!\n\n" +
+                            $"Event: {eventData.EventName}\n" +
+                            $"Suffix: {eventData.SuffixName ?? "(kein Suffix)"}\n\n" +
+                            $"Das Event wird in wenigen Sekunden bei allen Spielern aktiv!",
+                            "Event veröffentlicht",
+                            System.Windows.Forms.MessageBoxButtons.OK,
+                            System.Windows.Forms.MessageBoxIcon.Information
+                        );
+                    }
+                }
+                else
+                {
+                    var error = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"[EventSync] ? Publish failed: {response.StatusCode}");
+                    Console.WriteLine($"[EventSync] Error: {error}");
+                    
+                    System.Windows.Forms.MessageBox.Show(
+                        $"Event konnte nicht veröffentlicht werden!\n\n" +
+                        $"Fehler: {response.StatusCode}\n" +
+                        $"Details: {error}",
+                        "Event-Sync Fehler",
+                        System.Windows.Forms.MessageBoxButtons.OK,
+                        System.Windows.Forms.MessageBoxIcon.Error
+                    );
                 }
             }
             catch (Exception ex)
@@ -114,9 +163,8 @@ namespace SpinARayan.Services
                 System.Windows.Forms.MessageBox.Show(
                     $"Event konnte nicht veröffentlicht werden!\n\n" +
                     $"Stelle sicher dass:\n" +
-                    $"• OneDrive läuft\n" +
-                    $"• Du Schreibzugriff hast\n" +
-                    $"• Der Ordner existiert\n\n" +
+                    $"• Du eine Internet-Verbindung hast\n" +
+                    $"• SupaBase erreichbar ist\n\n" +
                     $"Fehler: {ex.Message}",
                     "Event-Sync Fehler",
                     System.Windows.Forms.MessageBoxButtons.OK,
@@ -126,98 +174,212 @@ namespace SpinARayan.Services
         }
 
         /// <summary>
-        /// Polling method for OneDrive compatibility (better than FileWatcher)
-        /// Clients poll every 2 seconds for new events and OVERRIDE local events!
+        /// Publish a new event to SupaBase (available for all users)
         /// </summary>
-        private void PollForEvents()
+        public async Task PublishEventAsync(string suffixName, double durationMinutes = 2.5)
         {
             try
             {
-                // Throttle logging to once per 10 seconds
-                bool shouldLog = (DateTime.Now - _lastFileCheck).TotalSeconds >= 10;
-                
-                if (!File.Exists(_eventFile))
+                var eventData = new SharedEventData
                 {
-                    if (shouldLog)
+                    EventName = "Suffix Event",
+                    SuffixName = suffixName,
+                    CreatedFrom = _username,
+                    StartsAt = DateTime.UtcNow,
+                    EndsAt = DateTime.UtcNow.AddMinutes(durationMinutes)
+                };
+
+                var json = JsonSerializer.Serialize(eventData, new JsonSerializerOptions 
+                { 
+                    WriteIndented = true,
+                    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
+                });
+
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                
+                Console.WriteLine($"[EventSync] Publishing event: {suffixName} by {_username}");
+                Console.WriteLine($"[EventSync] Duration: {durationMinutes} minutes");
+                
+                // Create request with Prefer header to get the created data back
+                var request = new HttpRequestMessage(HttpMethod.Post, SUPABASE_URL)
+                {
+                    Content = content
+                };
+                request.Headers.Add("Prefer", "return=representation");
+                
+                var response = await _httpClient.SendAsync(request);
+                
+                if (response.IsSuccessStatusCode)
+                {
+                    var responseJson = await response.Content.ReadAsStringAsync();
+                    
+                    // Check if we got a response body
+                    if (!string.IsNullOrWhiteSpace(responseJson))
                     {
-                        Console.WriteLine($"[EventSync] Poll: No events.json found yet ({DateTime.Now:HH:mm:ss})");
-                        Console.WriteLine($"[EventSync] Waiting for admin to start first event...");
+                        var createdEvent = JsonSerializer.Deserialize<SharedEventData[]>(responseJson);
+                        
+                        if (createdEvent != null && createdEvent.Length > 0 && createdEvent[0].Id.HasValue)
+                        {
+                            var createdData = createdEvent[0];
+                            _processedEventIds.Add(createdData.Id.Value);
+                            Console.WriteLine($"[EventSync] ? Event published successfully! ID: {createdData.Id.Value}");
+                            
+                            // ? Apply the event IMMEDIATELY to this client (don't wait for poll)
+                            _gameManager.ApplyRemoteEvent(createdData);
+                            Console.WriteLine($"[EventSync] ? Event applied locally!");
+                            
+                            // Show success message to user
+                            System.Windows.Forms.MessageBox.Show(
+                                $"? Event erfolgreich veröffentlicht!\n\n" +
+                                $"Event-ID: {createdData.Id.Value}\n" +
+                                $"Suffix: {suffixName}\n" +
+                                $"Dauer: {durationMinutes} Minuten\n\n" +
+                                $"Das Event ist jetzt bei allen Spielern aktiv!",
+                                "Event veröffentlicht",
+                                System.Windows.Forms.MessageBoxButtons.OK,
+                                System.Windows.Forms.MessageBoxIcon.Information
+                            );
+                        }
                     }
-                    _lastFileCheck = DateTime.Now;
-                    return;
-                }
-
-                var fileInfo = new FileInfo(_eventFile);
-                
-                if (shouldLog)
-                {
-                    Console.WriteLine($"[EventSync] Poll: events.json found!");
-                    Console.WriteLine($"[EventSync]   Size: {fileInfo.Length} bytes");
-                    Console.WriteLine($"[EventSync]   Modified: {fileInfo.LastWriteTime:HH:mm:ss.fff}");
-                    Console.WriteLine($"[EventSync]   Checking for new events...");
-                }
-                
-                _lastFileCheck = DateTime.Now;
-                
-                // Read and parse event file
-                string json = File.ReadAllText(_eventFile);
-                var eventData = JsonSerializer.Deserialize<SharedEventData>(json);
-
-                if (eventData == null)
-                {
-                    Console.WriteLine("[EventSync] ERROR: Could not deserialize event data!");
-                    Console.WriteLine($"[EventSync] JSON: {json}");
-                    return;
-                }
-
-                // Skip if we already processed this exact event
-                if (eventData.Timestamp <= _lastProcessedTimestamp)
-                {
-                    if (shouldLog)
+                    else
                     {
-                        Console.WriteLine($"[EventSync] Event already processed (Timestamp: {eventData.Timestamp})");
+                        // Success but no response body (shouldn't happen with Prefer header, but just in case)
+                        Console.WriteLine($"[EventSync] ? Event published successfully (no response body)");
+                        
+                        System.Windows.Forms.MessageBox.Show(
+                            $"? Event erfolgreich veröffentlicht!\n\n" +
+                            $"Suffix: {suffixName}\n" +
+                            $"Dauer: {durationMinutes} Minuten\n\n" +
+                            $"Das Event wird in wenigen Sekunden bei allen Spielern aktiv!",
+                            "Event veröffentlicht",
+                            System.Windows.Forms.MessageBoxButtons.OK,
+                            System.Windows.Forms.MessageBoxIcon.Information
+                        );
                     }
-                    return; // Already processed, skip
                 }
-
-                // Check if event is still active (within duration)
-                var elapsed = DateTime.UtcNow - eventData.StartTime;
-                if (elapsed.TotalMinutes > eventData.DurationMinutes)
+                else
                 {
-                    if (shouldLog)
-                    {
-                        Console.WriteLine($"[EventSync] Event expired ({elapsed.TotalMinutes:F1} min old, max {eventData.DurationMinutes} min)");
-                    }
-                    // Update timestamp anyway to not spam expired messages
-                    _lastProcessedTimestamp = eventData.Timestamp;
-                    return;
+                    var error = await response.Content.ReadAsStringAsync();
+                    Console.WriteLine($"[EventSync] ? Publish failed: {response.StatusCode}");
+                    Console.WriteLine($"[EventSync] Error: {error}");
+                    
+                    System.Windows.Forms.MessageBox.Show(
+                        $"Event konnte nicht veröffentlicht werden!\n\n" +
+                        $"Fehler: {response.StatusCode}\n" +
+                        $"Details: {error}",
+                        "Event-Sync Fehler",
+                        System.Windows.Forms.MessageBoxButtons.OK,
+                        System.Windows.Forms.MessageBoxIcon.Error
+                    );
                 }
-
-                // ? NEW AND ACTIVE EVENT! Apply it NOW and OVERRIDE any local event!
-                Console.WriteLine($"[EventSync] ================================================");
-                Console.WriteLine($"[EventSync] ? NEW EVENT DETECTED!");
-                Console.WriteLine($"[EventSync]   Suffix: {eventData.SuffixName}");
-                Console.WriteLine($"[EventSync]   Admin: {eventData.AdminName}");
-                Console.WriteLine($"[EventSync]   Started: {eventData.StartTime:HH:mm:ss} UTC");
-                Console.WriteLine($"[EventSync]   Age: {elapsed.TotalSeconds:F1}s");
-                Console.WriteLine($"[EventSync]   Timestamp: {eventData.Timestamp}");
-                Console.WriteLine($"[EventSync]   Applying event and OVERRIDING any local event...");
-                
-                _lastProcessedTimestamp = eventData.Timestamp;
-                _gameManager.ApplyRemoteEvent(eventData.SuffixName, eventData.AdminName);
-                
-                Console.WriteLine($"[EventSync] ? Event successfully applied!");
-                Console.WriteLine($"[EventSync] ================================================");
             }
-            catch (IOException ioEx)
+            catch (Exception ex)
             {
-                // File locked by OneDrive - will retry on next poll (2s)
-                Console.WriteLine($"[EventSync] File locked by OneDrive, retrying in 2s... ({ioEx.Message})");
+                Console.WriteLine($"[EventSync] Publish ERROR: {ex.Message}");
+                System.Windows.Forms.MessageBox.Show(
+                    $"Event konnte nicht veröffentlicht werden!\n\n" +
+                    $"Stelle sicher dass:\n" +
+                    $"• Du eine Internet-Verbindung hast\n" +
+                    $"• SupaBase erreichbar ist\n\n" +
+                    $"Fehler: {ex.Message}",
+                    "Event-Sync Fehler",
+                    System.Windows.Forms.MessageBoxButtons.OK,
+                    System.Windows.Forms.MessageBoxIcon.Error
+                );
+            }
+        }
+
+        /// <summary>
+        /// Poll SupaBase for active events and apply all new ones (public for debugging)
+        /// </summary>
+        public async Task PollForEventsAsync()
+        {
+            try
+            {
+                bool shouldLog = (DateTime.Now - _lastPollTime).TotalSeconds >= 30;
+                
+                // Query for active events: starts_at <= now() AND ends_at > now()
+                // Format: ?starts_at=lte.{now}&ends_at=gt.{now}
+                // Ordered by starts_at ascending (oldest first), limit to MAX_EVENTS_TO_FETCH
+                var now = DateTime.UtcNow.ToString("O"); // ISO 8601 format
+                var url = $"{SUPABASE_URL}?starts_at=lte.{now}&ends_at=gt.{now}&order=starts_at.asc&limit={MAX_EVENTS_TO_FETCH}";
+                
+                // ALWAYS log for debugging
+                Console.WriteLine($"[EventSync] ================================================");
+                Console.WriteLine($"[EventSync] Polling for active events... ({DateTime.Now:HH:mm:ss})");
+                Console.WriteLine($"[EventSync] Current UTC time: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss}");
+                Console.WriteLine($"[EventSync] Query URL: {url}");
+                
+                var response = await _httpClient.GetAsync(url);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"[EventSync] ? Poll failed: {response.StatusCode}");
+                    Console.WriteLine($"[EventSync] ================================================");
+                    return;
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                Console.WriteLine($"[EventSync] Response JSON: {json}");
+                var events = JsonSerializer.Deserialize<List<SharedEventData>>(json);
+
+                if (events == null || events.Count == 0)
+                {
+                    Console.WriteLine($"[EventSync] No active events found");
+                    Console.WriteLine($"[EventSync] ================================================");
+                    _lastPollTime = DateTime.Now;
+                    return;
+                }
+
+                Console.WriteLine($"[EventSync] ? Found {events.Count} active event(s)!");
+
+                // Process all new events
+                int newEventCount = 0;
+                foreach (var eventData in events)
+                {
+                    if (!eventData.Id.HasValue) continue;
+                    
+                    // Skip if we already processed this event
+                    if (_processedEventIds.Contains(eventData.Id.Value))
+                    {
+                        continue;
+                    }
+
+                    // ? NEW EVENT! Apply it now
+                    Console.WriteLine($"[EventSync] ================================================");
+                    Console.WriteLine($"[EventSync] ? NEW EVENT DETECTED!");
+                    Console.WriteLine($"[EventSync]   ID: {eventData.Id.Value}");
+                    Console.WriteLine($"[EventSync]   Suffix: {eventData.SuffixName}");
+                    Console.WriteLine($"[EventSync]   Created by: {eventData.CreatedFrom}");
+                    Console.WriteLine($"[EventSync]   Started: {eventData.StartsAt:HH:mm:ss} UTC");
+                    Console.WriteLine($"[EventSync]   Ends: {eventData.EndsAt:HH:mm:ss} UTC");
+                    Console.WriteLine($"[EventSync]   Remaining: {eventData.RemainingTime.TotalMinutes:F1} min");
+                    
+                    _processedEventIds.Add(eventData.Id.Value);
+                    
+                    // Apply the event with ALL parameters
+                    _gameManager.ApplyRemoteEvent(eventData);
+                    newEventCount++;
+                    
+                    Console.WriteLine($"[EventSync] ? Event applied!");
+                    Console.WriteLine($"[EventSync] ================================================");
+                }
+                
+                if (newEventCount > 0 && shouldLog)
+                {
+                    Console.WriteLine($"[EventSync] Applied {newEventCount} new event(s)");
+                }
+                
+                _lastPollTime = DateTime.Now;
+            }
+            catch (HttpRequestException httpEx)
+            {
+                // Network error - retry on next poll
+                Console.WriteLine($"[EventSync] Network error, retrying in 3s... ({httpEx.Message})");
             }
             catch (JsonException jsonEx)
             {
                 Console.WriteLine($"[EventSync] JSON Parse ERROR: {jsonEx.Message}");
-                Console.WriteLine($"[EventSync] File might be corrupted or partially written by OneDrive");
             }
             catch (Exception ex)
             {
@@ -227,64 +389,74 @@ namespace SpinARayan.Services
         }
 
         /// <summary>
+        /// Get all currently active events (for UI display)
+        /// </summary>
+        public async Task<List<SharedEventData>> GetActiveEventsAsync()
+        {
+            try
+            {
+                var url = $"{SUPABASE_URL}?ends_at=gte.{DateTime.UtcNow:O}&order=id.desc";
+                var response = await _httpClient.GetAsync(url);
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    return new List<SharedEventData>();
+                }
+
+                var json = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<List<SharedEventData>>(json) ?? new List<SharedEventData>();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[EventSync] GetActiveEvents ERROR: {ex.Message}");
+                return new List<SharedEventData>();
+            }
+        }
+
+        /// <summary>
         /// Manual sync check for debugging
         /// </summary>
-        public void ForceSyncCheck()
+        public async Task ForceSyncCheckAsync()
         {
             Console.WriteLine($"[EventSync] === MANUAL SYNC CHECK ===");
-            Console.WriteLine($"[EventSync] Mode: {(_isAdmin ? "ADMIN" : "CLIENT")}");
-            Console.WriteLine($"[EventSync] Folder: {_sharedFolder}");
-            Console.WriteLine($"[EventSync] Folder exists: {Directory.Exists(_sharedFolder)}");
-            Console.WriteLine($"[EventSync] Event file: {_eventFile}");
-            Console.WriteLine($"[EventSync] Event file exists: {File.Exists(_eventFile)}");
+            Console.WriteLine($"[EventSync] Username: {_username}");
+            Console.WriteLine($"[EventSync] SupaBase URL: {SUPABASE_URL}");
+            Console.WriteLine($"[EventSync] Processed events: {_processedEventIds.Count}");
             
-            if (File.Exists(_eventFile))
+            
+            try
             {
-                var fileInfo = new FileInfo(_eventFile);
-                Console.WriteLine($"[EventSync] File size: {fileInfo.Length} bytes");
-                Console.WriteLine($"[EventSync] Last modified: {fileInfo.LastWriteTime:HH:mm:ss.fff}");
-                Console.WriteLine($"[EventSync] Last accessed: {fileInfo.LastAccessTime:HH:mm:ss.fff}");
+                var events = await GetActiveEventsAsync();
+                Console.WriteLine($"[EventSync] Active events found: {events.Count}");
                 
-                try
+                foreach (var evt in events)
                 {
-                    string json = File.ReadAllText(_eventFile);
-                    Console.WriteLine($"[EventSync] JSON Content:\n{json}");
-                    
-                    var eventData = JsonSerializer.Deserialize<SharedEventData>(json);
-                    if (eventData != null)
-                    {
-                        Console.WriteLine($"[EventSync] Parsed Event: {eventData.SuffixName} from {eventData.AdminName}");
-                        Console.WriteLine($"[EventSync] Event Timestamp: {eventData.Timestamp}");
-                        Console.WriteLine($"[EventSync] Last Processed: {_lastProcessedTimestamp}");
-                        Console.WriteLine($"[EventSync] Already processed: {eventData.Timestamp <= _lastProcessedTimestamp}");
-                        
-                        var elapsed = DateTime.UtcNow - eventData.StartTime;
-                        Console.WriteLine($"[EventSync] Event age: {elapsed.TotalSeconds:F1}s");
-                        Console.WriteLine($"[EventSync] Event active: {elapsed.TotalMinutes <= eventData.DurationMinutes}");
-                    }
+                    Console.WriteLine($"[EventSync]   - ID {evt.Id}: {evt.SuffixName} by {evt.CreatedFrom}");
+                    Console.WriteLine($"[EventSync]     Ends: {evt.EndsAt:HH:mm:ss}, Remaining: {evt.RemainingTime.TotalMinutes:F1} min");
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[EventSync] Error reading file: {ex.Message}");
-                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[EventSync] Sync check failed: {ex.Message}");
             }
             
             Console.WriteLine($"[EventSync] === END SYNC CHECK ===");
         }
 
         /// <summary>
-        /// Check if multiplayer is connected
+        /// Check if multiplayer is connected (always true if initialized)
         /// </summary>
-        public bool IsConnected => Directory.Exists(_sharedFolder);
+        public bool IsConnected => true;
+
+        public string Username => _username;
 
         public void Dispose()
         {
-            if (_pollTimer != null)
-            {
-                _pollTimer.Stop();
-                _pollTimer.Dispose();
-                Console.WriteLine("[EventSync] Disposed");
-            }
+            _pollTimer?.Stop();
+            _pollTimer?.Dispose();
+            _httpClient?.Dispose();
+            Console.WriteLine("[EventSync] Disposed");
         }
     }
 }
+
