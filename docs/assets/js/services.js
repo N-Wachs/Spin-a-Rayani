@@ -179,6 +179,93 @@ class QuestService {
 }
 
 // ========================================
+// Event Sync Service (Read-Only)
+// ========================================
+class EventSyncService {
+    constructor(gameManager) {
+        this.gameManager = gameManager;
+        this.processedEventIds = new Set();
+        this.SUPABASE_URL = 'https://gflohnjhunyukdayaahn.supabase.co/rest/v1/Game%20Events';
+        this.SUPABASE_KEY = 'sb_publishable_dZXMv77hZa3_vZbQTYSKeQ_rZ49Ro9w';
+        this.MAX_EVENTS_TO_FETCH = 50;
+        
+        console.log('[EventSync] Initialized (Web - Read-Only)');
+        console.log('[EventSync] Connected to SupaBase');
+        
+        // Start polling every 10 seconds
+        this.pollInterval = setInterval(() => this.pollForEvents(), 10000);
+        
+        // Initial poll on startup
+        this.pollForEvents();
+    }
+    
+    async pollForEvents() {
+        try {
+            // Query for active events: starts_at <= now() AND ends_at > now()
+            const now = new Date().toISOString();
+            const url = `${this.SUPABASE_URL}?starts_at=lte.${now}&ends_at=gt.${now}&order=starts_at.asc&limit=${this.MAX_EVENTS_TO_FETCH}`;
+            
+            console.log('[EventSync] Polling for active events...', new Date().toLocaleTimeString());
+            
+            const response = await fetch(url, {
+                headers: {
+                    'apikey': this.SUPABASE_KEY,
+                    'Authorization': `Bearer ${this.SUPABASE_KEY}`
+                }
+            });
+            
+            if (!response.ok) {
+                console.log(`[EventSync] Poll failed: ${response.status}`);
+                return;
+            }
+            
+            const events = await response.json();
+            
+            if (!events || events.length === 0) {
+                return;
+            }
+            
+            console.log(`[EventSync] Found ${events.length} active event(s)!`);
+            
+            // Process all new events
+            let newEventCount = 0;
+            for (const eventData of events) {
+                if (!eventData.id) continue;
+                
+                // Skip if already processed
+                if (this.processedEventIds.has(eventData.id)) {
+                    continue;
+                }
+                
+                console.log('[EventSync] NEW EVENT DETECTED!');
+                console.log(`[EventSync]   ID: ${eventData.id}`);
+                console.log(`[EventSync]   Suffix: ${eventData.suffix_name}`);
+                console.log(`[EventSync]   Created by: ${eventData.created_from}`);
+                
+                this.processedEventIds.add(eventData.id);
+                this.gameManager.applyRemoteEvent(eventData);
+                newEventCount++;
+                
+                console.log('[EventSync] Event applied!');
+            }
+            
+            if (newEventCount > 0) {
+                console.log(`[EventSync] Applied ${newEventCount} new event(s)`);
+            }
+        } catch (error) {
+            console.log(`[EventSync] Poll error: ${error.message}`);
+        }
+    }
+    
+    dispose() {
+        if (this.pollInterval) {
+            clearInterval(this.pollInterval);
+        }
+        console.log('[EventSync] Disposed');
+    }
+}
+
+// ========================================
 // Game Manager
 // ========================================
 class GameManager {
@@ -186,11 +273,11 @@ class GameManager {
         this.stats = SaveService.load();
         this.rollService = new RollService();
         this.questService = new QuestService();
+        this.eventSyncService = null;
         
         this.currentEvents = [];
         this.nextEventTime = Date.now() + 5 * 60 * 1000; // First event in 5 minutes
         
-        this.adminMode = false;
         this.lastUpdate = Date.now();
         
         // Event callbacks
@@ -204,6 +291,14 @@ class GameManager {
         // Ensure Basic Dice exists
         if (this.stats.ownedDices.length === 0) {
             this.stats.ownedDices.push(new Dice("Basic Dice", 1.0, BigInt(0), BigInt(0), true));
+        }
+
+        // Initialize event sync service (read-only for web)
+        try {
+            this.eventSyncService = new EventSyncService(this);
+            console.log('[GameManager] Event sync enabled');
+        } catch (error) {
+            console.log('[GameManager] Event sync initialization failed:', error.message);
         }
 
         // Start game timer
@@ -315,6 +410,65 @@ class GameManager {
         }
     }
 
+    applyRemoteEvent(eventData) {
+        console.log('[GameManager] applyRemoteEvent called:');
+        console.log(`[GameManager]   ID: ${eventData.id}`);
+        console.log(`[GameManager]   Suffix: ${eventData.suffix_name}`);
+        console.log(`[GameManager]   Created by: ${eventData.created_from}`);
+        
+        // Check if event already exists
+        if (eventData.id && this.currentEvents.some(e => e.eventId === eventData.id)) {
+            console.log('[GameManager]   Event already exists in active list');
+            return;
+        }
+        
+        // Parse timestamps
+        const startsAt = new Date(eventData.starts_at);
+        const endsAt = new Date(eventData.ends_at);
+        
+        // Calculate duration
+        const durationMinutes = (endsAt - startsAt) / (1000 * 60);
+        
+        // Use custom suffix boost or default 20x
+        const suffixBoost = eventData.suffix_multiplier ?? 20.0;
+        
+        // Create new event with data from database
+        const newEvent = new SuffixEvent(
+            eventData.suffix_name || 'Unknown',
+            `${eventData.event_name || 'Event'} (von ${eventData.created_from})`,
+            durationMinutes,
+            suffixBoost
+        );
+        
+        // Override timestamps to match database
+        newEvent.startTime = startsAt;
+        newEvent.endTime = endsAt;
+        newEvent.eventId = eventData.id;
+        
+        // Apply multipliers from event if present
+        if (eventData.luck_multiplier !== null && eventData.luck_multiplier !== undefined) {
+            newEvent.luckMultiplier = eventData.luck_multiplier;
+        }
+        if (eventData.money_multiplier !== null && eventData.money_multiplier !== undefined) {
+            newEvent.moneyMultiplier = eventData.money_multiplier;
+        }
+        if (eventData.roll_time !== null && eventData.roll_time !== undefined) {
+            newEvent.rollTimeModifier = eventData.roll_time;
+        }
+        
+        this.currentEvents.push(newEvent);
+        this.nextEventTime = Date.now() + 5 * 60 * 1000; // Reset local event timer
+        
+        if (this.onEventsChanged) {
+            this.onEventsChanged(this.currentEvents.filter(e => e.isActive));
+        }
+        
+        console.log('[GameManager] Event added to active list!');
+        console.log(`[GameManager]   Duration: ${durationMinutes.toFixed(1)} minutes`);
+        console.log(`[GameManager]   Suffix Boost: ${newEvent.boostMultiplier}x`);
+        console.log(`[GameManager]   Active events: ${this.currentEvents.filter(e => e.isActive).length}`);
+    }
+
     roll() {
         // Get selected dice
         let selectedDice = this.stats.getSelectedDice();
@@ -401,7 +555,7 @@ class GameManager {
     }
 
     rebirth() {
-        if (this.adminMode || this.stats.money >= this.stats.nextRebirthCost) {
+        if (this.stats.money >= this.stats.nextRebirthCost) {
             this.stats.money = BigInt(0);
             this.stats.inventory = [];
             this.stats.equippedRayanIndices = [];
@@ -518,13 +672,11 @@ class GameManager {
     buyDice(template, quantity = 1) {
         const totalCost = template.cost * BigInt(quantity);
         
-        if (!this.adminMode && this.stats.money < totalCost) {
+        if (this.stats.money < totalCost) {
             return false;
         }
 
-        if (!this.adminMode) {
-            this.stats.money -= totalCost;
-        }
+        this.stats.money -= totalCost;
 
         // Find existing dice or create new
         let existingDice = this.stats.ownedDices.find(d => d.name === template.name);
@@ -551,10 +703,6 @@ class GameManager {
     }
 
     buyMaxDice(template) {
-        if (this.adminMode) {
-            return this.buyDice(template, 1000);
-        }
-
         if (template.cost <= 0 || this.stats.money < template.cost) {
             return false;
         }
@@ -576,10 +724,8 @@ class GameManager {
 
     unlockAutoRoll() {
         const cost = 100;
-        if (this.adminMode || this.stats.gems >= cost) {
-            if (!this.adminMode) {
-                this.stats.gems -= cost;
-            }
+        if (this.stats.gems >= cost) {
+            this.stats.gems -= cost;
             this.stats.autoRollUnlocked = true;
             this.save();
             if (this.onStatsChanged) {
@@ -601,10 +747,8 @@ class GameManager {
 
     buyRollCooldownUpgrade() {
         const cost = this.getRollCooldownCost();
-        if ((this.adminMode || this.stats.gems >= cost) && this.stats.rollCooldown > 0.5) {
-            if (!this.adminMode) {
-                this.stats.gems -= cost;
-            }
+        if (this.stats.gems >= cost && this.stats.rollCooldown > 0.5) {
+            this.stats.gems -= cost;
             this.stats.rollCooldownLevel++;
             this.stats.rollCooldown = Math.max(0.5, this.stats.rollCooldown - 0.2);
             this.save();
@@ -623,10 +767,8 @@ class GameManager {
 
     buyLuckBooster() {
         const cost = this.getLuckBoosterCost();
-        if (this.adminMode || this.stats.money >= cost) {
-            if (!this.adminMode) {
-                this.stats.money -= cost;
-            }
+        if (this.stats.money >= cost) {
+            this.stats.money -= cost;
             this.stats.luckBoosterLevel++;
             this.save();
             if (this.onStatsChanged) {
@@ -673,13 +815,6 @@ class GameManager {
         SaveService.reset();
         this.stats = SaveService.load();
         this.questService.initializeQuests();
-        if (this.onStatsChanged) {
-            this.onStatsChanged();
-        }
-    }
-
-    toggleAdminMode() {
-        this.adminMode = !this.adminMode;
         if (this.onStatsChanged) {
             this.onStatsChanged();
         }

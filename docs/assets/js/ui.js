@@ -72,25 +72,6 @@ class UIManager {
         // Inventory search
         document.getElementById('inventorySearch').addEventListener('input', () => this.renderFullInventory());
         document.getElementById('inventorySort').addEventListener('change', () => this.renderFullInventory());
-        
-        // Admin mode cheat code (comma, minus, period)
-        let cheatBuffer = [];
-        document.addEventListener('keydown', (e) => {
-            cheatBuffer.push(e.key);
-            if (cheatBuffer.length > 3) cheatBuffer.shift();
-            
-            if (cheatBuffer.join('') === ',-.') {
-                this.game.toggleAdminMode();
-                this.updateAll();
-                this.showToast(this.game.adminMode ? 'Admin Mode aktiviert!' : 'Admin Mode deaktiviert!', 'info');
-            }
-            
-            // Force event with 'E' key in admin mode
-            if (e.key === 'e' && this.game.adminMode) {
-                this.game.forceEvent();
-                this.showToast('Event erzwungen!', 'info');
-            }
-        });
     }
 
     // ========================================
@@ -266,7 +247,7 @@ class UIManager {
         for (const template of DICE_TEMPLATES) {
             const owned = this.game.stats.ownedDices.find(d => d.name === template.name);
             const ownedQty = owned ? owned.quantity : BigInt(0);
-            const canAfford = this.game.adminMode || this.game.stats.money >= template.cost;
+            const canAfford = this.game.stats.money >= template.cost;
             
             const item = document.createElement('div');
             item.className = 'shop-item';
@@ -279,7 +260,7 @@ class UIManager {
                 <div class="shop-item-actions">
                     <div class="shop-item-cost">💰 ${formatBigInt(template.cost)}</div>
                     <button class="btn btn-primary btn-small buy-btn" ${!canAfford ? 'disabled' : ''}>
-                        ${this.game.adminMode ? 'FREE' : 'Kaufen'}
+                        Kaufen
                     </button>
                     <button class="btn btn-accent btn-small buy-max-btn" ${!canAfford ? 'disabled' : ''}>
                         MAX
@@ -342,14 +323,14 @@ class UIManager {
                 this.renderUpgrades();
             });
         } else {
-            const canAfford = this.game.adminMode || this.game.stats.gems >= 100;
+            const canAfford = this.game.stats.gems >= 100;
             autoRollItem.innerHTML = `
                 <div class="upgrade-item-info">
                     <div class="upgrade-item-name">⚡ Auto Roll</div>
                     <div class="upgrade-item-desc">Automatisches Rollen freischalten</div>
                 </div>
                 <button class="btn btn-primary" ${!canAfford ? 'disabled' : ''}>
-                    ${this.game.adminMode ? 'FREE' : '💎 100 Gems'}
+                    💎 100 Gems
                 </button>
             `;
             autoRollItem.querySelector('button').addEventListener('click', () => {
@@ -367,7 +348,7 @@ class UIManager {
         cooldownItem.className = 'upgrade-item';
         
         const cooldownCost = this.game.getRollCooldownCost();
-        const canAffordCooldown = (this.game.adminMode || this.game.stats.gems >= cooldownCost) && this.game.stats.rollCooldown > 0.5;
+        const canAffordCooldown = this.game.stats.gems >= cooldownCost && this.game.stats.rollCooldown > 0.5;
         const nextCooldown = Math.max(0.5, this.game.stats.rollCooldown - 0.2);
         
         cooldownItem.innerHTML = `
@@ -377,7 +358,7 @@ class UIManager {
                 <div class="upgrade-item-level">Level ${this.game.stats.rollCooldownLevel} (Min: 0.5s)</div>
             </div>
             <button class="btn btn-primary" ${!canAffordCooldown ? 'disabled' : ''}>
-                ${this.game.adminMode ? 'FREE' : `💎 ${cooldownCost} Gems`}
+                💎 ${cooldownCost} Gems
             </button>
         `;
         cooldownItem.querySelector('button').addEventListener('click', () => {
@@ -398,7 +379,7 @@ class UIManager {
         luckItem.className = 'upgrade-item';
         
         const luckCost = this.game.getLuckBoosterCost();
-        const canAfford = this.game.adminMode || this.game.stats.money >= luckCost;
+        const canAfford = this.game.stats.money >= luckCost;
         
         luckItem.innerHTML = `
             <div class="upgrade-item-info">
@@ -407,7 +388,7 @@ class UIManager {
                 <div class="upgrade-item-level">Level ${this.game.stats.luckBoosterLevel} (${(this.game.stats.luckMultiplier * 100 - 100).toFixed(0)}% Bonus)</div>
             </div>
             <button class="btn btn-success" ${!canAfford ? 'disabled' : ''}>
-                ${this.game.adminMode ? 'FREE' : `💰 ${formatBigInt(luckCost)}`}
+                💰 ${formatBigInt(luckCost)}
             </button>
         `;
         luckItem.querySelector('button').addEventListener('click', () => {
@@ -503,8 +484,8 @@ class UIManager {
         document.getElementById('rebirthCost').textContent = formatBigInt(this.game.stats.nextRebirthCost);
         
         const btn = document.getElementById('rebirthBtn');
-        btn.disabled = !this.game.adminMode && this.game.stats.money < this.game.stats.nextRebirthCost;
-        btn.textContent = this.game.adminMode ? '🔄 Rebirth (FREE)' : '🔄 Rebirth';
+        btn.disabled = this.game.stats.money < this.game.stats.nextRebirthCost;
+        btn.textContent = '🔄 Rebirth';
     }
 
     handleRebirth() {
@@ -663,7 +644,6 @@ class UIManager {
         this.updateInventoryPreview();
         this.updateDiceSelector();
         this.updateAutoRollButton();
-        this.updateAdminBadge();
         this.updateEvents();
     }
 
@@ -760,11 +740,6 @@ class UIManager {
             option.selected = i === this.game.stats.selectedDiceIndex;
             select.appendChild(option);
         }
-    }
-
-    updateAdminBadge() {
-        const badge = document.getElementById('adminBadge');
-        badge.classList.toggle('hidden', !this.game.adminMode);
     }
 
     updateEvents() {

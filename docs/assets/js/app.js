@@ -68,10 +68,6 @@ window.debug = {
         gameManager.stats.gems += amount;
         uiManager.updateAll();
     },
-    toggleAdmin: () => {
-        gameManager.toggleAdminMode();
-        uiManager.updateAll();
-    },
     forceEvent: (suffix) => {
         gameManager.forceEvent(suffix);
     },
