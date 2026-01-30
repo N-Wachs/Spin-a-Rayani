@@ -101,10 +101,40 @@ namespace SpinARayan
                 BackColor = isSelected ? Color.FromArgb(0, 80, 120) : DarkPanel
             };
 
+            // Try to load dice image from embedded resources
+            var picBox = new PictureBox
+            {
+                Location = new Point(10, 5),
+                Size = new Size(70, 70), // Square image, almost full height
+                SizeMode = PictureBoxSizeMode.StretchImage,
+                BackColor = Color.Transparent
+            };
+            
+            try
+            {
+                string imageName = "dice_" + dice.Name.ToLower().Replace(" dice", "").Replace(" ", "") + ".png";
+                string resourceName = $"Spin_a_Rayan.Assets.{imageName}";
+                
+                var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                using (var stream = assembly.GetManifestResourceStream(resourceName))
+                {
+                    if (stream != null)
+                    {
+                        picBox.Image = Image.FromStream(stream);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DiceSelection] Could not load image for {dice.Name}: {ex.Message}");
+            }
+            
+            panel.Controls.Add(picBox);
+
             var lblName = new Label
             {
-                Location = new Point(10, 10),
-                Size = new Size(300, 25),
+                Location = new Point(90, 10), // Moved right for image
+                Size = new Size(250, 25),
                 Font = new Font("Segoe UI", 14F, FontStyle.Bold),
                 Text = dice.DisplayName,
                 ForeColor = dice.IsInfinite ? BrightGreen : BrightGold
@@ -113,8 +143,8 @@ namespace SpinARayan
 
             var lblDescription = new Label
             {
-                Location = new Point(10, 40),
-                Size = new Size(300, 20),
+                Location = new Point(90, 40), // Moved right for image
+                Size = new Size(250, 20),
                 Font = new Font("Segoe UI", 10F),
                 Text = dice.Description,
                 ForeColor = BrightBlue

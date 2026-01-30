@@ -79,7 +79,7 @@
             // 
             // btnRoll
             // 
-            this.btnRoll.Location = new Point(150, 220);
+            this.btnRoll.Location = new Point(150, 270);
             this.btnRoll.Size = new Size(300, 120);
             this.btnRoll.BackColor = Color.FromArgb(0, 174, 255);
             this.btnRoll.ForeColor = Color.White;

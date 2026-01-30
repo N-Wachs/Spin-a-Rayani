@@ -154,10 +154,46 @@ namespace SpinARayan
                 Tag = dice // Speichere dice reference für Updates
             };
 
-            var lblName = new Label
+            // Try to load dice image from embedded resources
+            var picBox = new PictureBox
             {
                 Location = new Point(10, 10),
-                Size = new Size(300, 25),
+                Size = new Size(80, 80), // Square image, almost full height (100-20 margins)
+                SizeMode = PictureBoxSizeMode.StretchImage,
+                BackColor = Color.Transparent
+            };
+            
+            try
+            {
+                // Build resource name: Spin_a_Rayan.Assets.dice_<name>.png
+                string imageName = "dice_" + dice.Name.ToLower().Replace(" dice", "").Replace(" ", "") + ".png";
+                string resourceName = $"Spin_a_Rayan.Assets.{imageName}";
+                
+                var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                using (var stream = assembly.GetManifestResourceStream(resourceName))
+                {
+                    if (stream != null)
+                    {
+                        picBox.Image = Image.FromStream(stream);
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[DiceShop] Resource not found: {resourceName}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                // Silently fail if image not found
+                Console.WriteLine($"[DiceShop] Could not load image for {dice.Name}: {ex.Message}");
+            }
+            
+            panel.Controls.Add(picBox);
+
+            var lblName = new Label
+            {
+                Location = new Point(100, 10), // Moved right for image
+                Size = new Size(250, 25),
                 Font = new Font("Segoe UI", 14F, FontStyle.Bold),
                 Text = dice.DisplayName,
                 ForeColor = BrightGold
@@ -166,8 +202,8 @@ namespace SpinARayan
 
             var lblDescription = new Label
             {
-                Location = new Point(10, 40),
-                Size = new Size(300, 20),
+                Location = new Point(100, 40), // Moved right for image
+                Size = new Size(250, 20),
                 Font = new Font("Segoe UI", 10F),
                 Text = dice.Description,
                 ForeColor = BrightBlue

@@ -10,4 +10,9 @@
     <StartupObject>SpinARayan.Program</StartupObject>
   </PropertyGroup>
 
+  <ItemGroup>
+    <!-- Embed all Assets as embedded resources (standalone .exe) -->
+    <EmbeddedResource Include="Assets\**\*.*" />
+  </ItemGroup>
+
 </Project>

@@ -20,7 +20,8 @@ namespace SpinARayan
         private bool _plotDisplayInitialized = false;
         private List<Panel> _plotPanels = new List<Panel>();
         private Panel? _totalIncomePanel;
-        private Label? _lblDiceInfo; // Shows selected dice and quantity
+        private Label? _lblDiceInfo; // Shows selected dice quantity
+        private PictureBox? _picDiceSelector; // Shows dice image, clickable to open inventory
         private Panel? _eventDisplayPanel; // Main event display panel
         private Label? _lblEventCount; // Shows event count
         private ComboBox? _comboEventSelector; // Dropdown for event selection
@@ -34,6 +35,9 @@ namespace SpinARayan
         private int _lastGems = 0;
         private int _lastRebirths = 0;
         private int _lastLuckBoosterLevel = 0;
+        
+        // PERFORMANCE: Image cache for dice images (keep in RAM)
+        private Dictionary<string, Image> _diceImageCache = new Dictionary<string, Image>();
 
         // Dark Mode Colors
         private readonly Color DarkBackground = Color.FromArgb(30, 30, 30);
@@ -53,6 +57,33 @@ namespace SpinARayan
         public MainForm()
         {
             InitializeComponent();
+            
+            // Set application icon from embedded resource
+            try
+            {
+                string resourceName = "Spin_a_Rayan.Assets.app_icon.png";
+                var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                
+                using (var stream = assembly.GetManifestResourceStream(resourceName))
+                {
+                    if (stream != null)
+                    {
+                        using (var bmp = new Bitmap(stream))
+                        {
+                            var handle = bmp.GetHicon();
+                            this.Icon = Icon.FromHandle(handle);
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine($"[MainForm] Icon resource not found: {resourceName}");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MainForm] Could not load icon: {ex.Message}");
+            }
 
             // Apply Dark Mode
             ApplyDarkMode();
@@ -345,24 +376,36 @@ namespace SpinARayan
 
         private void CreateDiceInfoLabel()
         {
-            // Position label centered above roll button
-            int labelWidth = 180;
-            int labelX = (panelCenter.Width - labelWidth) / 2;
+            // Position centered above roll button (shifted down 50px)
+            int width = 180;
+            int centerX = panelCenter.Width / 2;
             
+            // DICE IMAGE - clickable, leads to inventory
+            _picDiceSelector = new PictureBox
+            {
+                Location = new Point(centerX - 50, 130), // Shifted down 50px (was 80)
+                Size = new Size(100, 100),
+                SizeMode = PictureBoxSizeMode.StretchImage,
+                BackColor = Color.Transparent,
+                Cursor = Cursors.Hand
+            };
+            _picDiceSelector.Click += (s, e) => OpenDiceSelection();
+            panelCenter.Controls.Add(_picDiceSelector);
+            _picDiceSelector.BringToFront();
+            
+            // QUANTITY LABEL - below image, not clickable
             _lblDiceInfo = new Label
             {
-                Location = new Point(labelX, 150),
-                Size = new Size(labelWidth, 50),
-                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                Location = new Point(centerX - 90, 235), // Shifted down 50px (was 185)
+                Size = new Size(width, 30),
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 ForeColor = BrightBlue,
                 BackColor = Color.Transparent,
                 TextAlign = ContentAlignment.TopCenter,
-                Text = "Click to select dice"
+                Text = "Quantity: ∞"
             };
-            _lblDiceInfo.Click += (s, e) => OpenDiceSelection();
-            _lblDiceInfo.Cursor = Cursors.Hand;
-            _lblDiceInfo.BringToFront();
             panelCenter.Controls.Add(_lblDiceInfo);
+            _lblDiceInfo.BringToFront();
         }
         
         private void CreateDebugPollButton()
@@ -677,11 +720,54 @@ namespace SpinARayan
 
         private void UpdateDiceInfo()
         {
-            if (_lblDiceInfo == null) return;
+            if (_lblDiceInfo == null || _picDiceSelector == null) return;
             
             var selectedDice = _gameManager.Stats.GetSelectedDice();
             string quantityText = selectedDice.QuantityDisplay;
-            _lblDiceInfo.Text = $"🎲 {selectedDice.Name}\nQuantity: {quantityText}\n(Click to change)";
+            
+            // Update label - only quantity
+            _lblDiceInfo.Text = $"Quantity: {quantityText}";
+            
+            // Update dice image - with caching!
+            var diceImage = LoadDiceImage(selectedDice.Name);
+            if (diceImage != null)
+            {
+                _picDiceSelector.Image = diceImage; // Don't dispose - it's cached!
+            }
+        }
+        
+        private Image? LoadDiceImage(string diceName)
+        {
+            // Check cache first
+            if (_diceImageCache.TryGetValue(diceName, out Image? cachedImage))
+            {
+                return cachedImage;
+            }
+            
+            try
+            {
+                string imageName = "dice_" + diceName.ToLower().Replace(" dice", "").Replace(" ", "") + ".png";
+                string resourceName = $"Spin_a_Rayan.Assets.{imageName}";
+                
+                var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                using (var stream = assembly.GetManifestResourceStream(resourceName))
+                {
+                    if (stream != null)
+                    {
+                        var image = Image.FromStream(stream);
+                        
+                        // Cache the image for future use
+                        _diceImageCache[diceName] = image;
+                        
+                        return image;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MainForm] Could not load dice image for {diceName}: {ex.Message}");
+            }
+            return null;
         }
 
         private void AutoRollTimer_Tick(object? sender, EventArgs e)
@@ -1519,6 +1605,14 @@ namespace SpinARayan
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             _gameManager.Save();
+            
+            // Clean up cached images
+            foreach (var image in _diceImageCache.Values)
+            {
+                image?.Dispose();
+            }
+            _diceImageCache.Clear();
+            
             base.OnFormClosing(e);
         }
 
