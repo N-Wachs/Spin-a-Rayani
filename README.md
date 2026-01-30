@@ -2,6 +2,13 @@
 
 Ein C# .NET 8 Windows Forms Idle/Incremental Game mit Dark Mode und 500+ einzigartigen Rayans!
 
+## 🌐 Web-Version
+
+**Jetzt auch als Web-Version verfügbar!** 
+Spiele direkt im Browser: [https://n-wachs.github.io/Spin-a-Rayani/](https://n-wachs.github.io/Spin-a-Rayani/)
+
+Die Web-Version läuft vollständig im Browser ohne Installation.
+
 ## ✨ Features
 
 ### 🎯 Core Gameplay
@@ -245,6 +252,27 @@ ADMIN=false
 2. Projekt in Visual Studio 2022 öffnen
 3. Build & Run (F5)
 4. Savegame: `savegame.xml` im Projektordner
+
+## 📁 Projektstruktur
+
+```
+Spin-a-Rayani/
+├── docs/              # GitHub Pages Website (Web-Version)
+│   ├── assets/
+│   │   ├── css/      # Stylesheets
+│   │   ├── js/       # JavaScript Game Logic
+│   │   └── images/   # Bilder und Icons
+│   └── index.html
+├── Forms/            # Windows Forms UI
+│   ├── Main/        # Hauptformular
+│   └── Dialogs/     # Dialog-Formulare
+├── Models/          # Game Models (Dice, Rayan, Quest, etc.)
+├── Services/        # Game Services (GameManager, SaveService, etc.)
+├── Assets/          # Embedded Resources (Dice Icons)
+├── Config/          # Konfigurationsdateien
+├── Documentation/   # Zusätzliche Dokumentation
+└── Program.cs       # Entry Point
+```
 
 ## 🎯 Geplante Features
 - [ ] Achievements-System
