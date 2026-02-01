@@ -8,6 +8,7 @@ using System.Numerics;
 using SpinARayan.Models;
 using SpinARayan.Services;
 using System.Reflection;
+using SpinARayan.Config;
 
 namespace SpinARayan
 {
@@ -40,16 +41,16 @@ namespace SpinARayan
         // PERFORMANCE: Image cache for dice images (keep in RAM)
         private Dictionary<string, Image> _diceImageCache = new Dictionary<string, Image>();
 
-        // Modern Theme Colors
-        private readonly Color DarkBackground = Color.FromArgb(30, 30, 30);        // BackgroundElevated
-        private readonly Color DarkPanel = Color.FromArgb(38, 38, 38);             // BackgroundPanel
-        private readonly Color DarkAccent = Color.FromArgb(48, 63, 159);           // PrimaryMedium
-        private readonly Color BrightGreen = Color.FromArgb(76, 175, 80);          // Success Green
-        private readonly Color BrightBlue = Color.FromArgb(33, 150, 243);          // AccentBlue
-        private readonly Color BrightGold = Color.FromArgb(255, 193, 7);           // Warning Amber
-        private readonly Color BrightRed = Color.FromArgb(244, 67, 54);            // Error Red
-        private readonly Color TextColor = Color.FromArgb(255, 255, 255);          // White
-        private readonly Color RebirthColor = Color.FromArgb(156, 39, 176);        // Rebirth Purple
+        // Modern Theme Colors (from ModernTheme.cs)
+        private readonly Color DarkBackground = ModernTheme.BackgroundElevated;
+        private readonly Color DarkPanel = ModernTheme.BackgroundPanel;
+        private readonly Color DarkAccent = ModernTheme.PrimaryMedium;
+        private readonly Color BrightGreen = ModernTheme.Success;
+        private readonly Color BrightBlue = ModernTheme.AccentBlue;
+        private readonly Color BrightGold = ModernTheme.Warning;
+        private readonly Color BrightRed = ModernTheme.Error;
+        private readonly Color TextColor = ModernTheme.TextPrimary;
+        private readonly Color RebirthColor = ModernTheme.Rebirth;
 
         // Cheat Code Detection
         private List<Keys> _cheatSequence = new List<Keys>();
