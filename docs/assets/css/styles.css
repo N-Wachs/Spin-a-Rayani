@@ -151,8 +151,8 @@ body::before {
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
-    text-shadow: 0 0 30px var(--accent-glow);
     letter-spacing: -0.02em;
+    filter: drop-shadow(0 0 20px var(--accent-glow));
 }
 
 .admin-badge {
@@ -431,10 +431,9 @@ body::before {
     padding: var(--spacing-md);
     background: rgba(51, 65, 85, 0.5);
     border-radius: var(--radius-md);
-    border-left: 3px solid var(--accent);
     transition: all var(--transition-fast);
     border: 1px solid rgba(71, 85, 105, 0.3);
-    border-left-width: 3px;
+    border-left: 3px solid var(--accent);
 }
 
 .plot-slot:hover {
@@ -749,7 +748,7 @@ body::before {
 .modal-close:hover {
     background: rgba(51, 65, 85, 0.6);
     color: var(--text-primary);
-    transform: rotate(90deg);
+    transform: scale(1.1);
 }
 
 .modal-body {
