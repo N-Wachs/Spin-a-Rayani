@@ -1,4 +1,5 @@
 using System.Text.Json;
+using SpinARayani.Core.Converters;
 using SpinARayani.Core.Interfaces;
 using SpinARayani.Core.Models;
 
@@ -7,6 +8,7 @@ namespace SpinARayani.Core.Services;
 public class SaveService : ISaveService
 {
     private readonly string _saveFilePath;
+    private readonly JsonSerializerOptions _jsonOptions;
 
     public SaveService()
     {
@@ -14,16 +16,19 @@ public class SaveService : ISaveService
         var saveFolderPath = Path.Combine(appDataPath, "SpinARayani");
         Directory.CreateDirectory(saveFolderPath);
         _saveFilePath = Path.Combine(saveFolderPath, "save.json");
+        
+        _jsonOptions = new JsonSerializerOptions
+        {
+            WriteIndented = true,
+            Converters = { new BigIntegerConverter() }
+        };
     }
 
     public void Save(PlayerStats stats)
     {
         try
         {
-            var json = JsonSerializer.Serialize(stats, new JsonSerializerOptions
-            {
-                WriteIndented = true
-            });
+            var json = JsonSerializer.Serialize(stats, _jsonOptions);
             File.WriteAllText(_saveFilePath, json);
         }
         catch (Exception ex)
@@ -39,7 +44,7 @@ public class SaveService : ISaveService
             if (File.Exists(_saveFilePath))
             {
                 var json = File.ReadAllText(_saveFilePath);
-                var stats = JsonSerializer.Deserialize<PlayerStats>(json);
+                var stats = JsonSerializer.Deserialize<PlayerStats>(json, _jsonOptions);
                 if (stats != null)
                 {
                     return stats;

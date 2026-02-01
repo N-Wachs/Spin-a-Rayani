@@ -12,6 +12,9 @@ public partial class MainViewModel : ObservableObject
     [ObservableProperty]
     private PlayerStats _stats;
 
+    [ObservableProperty]
+    private string _lastRoll = "???";
+
     public MainViewModel(IGameService gameService)
     {
         _gameService = gameService;
@@ -22,6 +25,11 @@ public partial class MainViewModel : ObservableObject
     private async Task Roll()
     {
         await _gameService.RollAsync();
+        if (Stats.Inventory.Count > 0)
+        {
+            var lastRayan = Stats.Inventory.Last();
+            LastRoll = lastRayan.FullName;
+        }
         OnPropertyChanged(nameof(Stats));
     }
 
