@@ -51,10 +51,11 @@ public class RollService : IRollService
     private (string Suffix, double Chance, double Multiplier)? RollSuffix(double luck)
     {
         // Determine if we get a suffix based on luck
+        // Chance represents "1 in X" odds, so we need to calculate probability
         foreach (var suffix in RayanData.Suffixes.OrderByDescending(s => s.Chance))
         {
-            double chance = suffix.Chance / 100.0 * luck;
-            if (_random.NextDouble() < chance / 1000.0)
+            double probability = (1.0 / suffix.Chance) * luck;
+            if (_random.NextDouble() < probability)
             {
                 return suffix;
             }

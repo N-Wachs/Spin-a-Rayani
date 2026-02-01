@@ -33,7 +33,8 @@ public class SaveService : ISaveService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error saving game: {ex.Message}");
+            // Re-throw with more context
+            throw new InvalidOperationException($"Failed to save game data to {_saveFilePath}", ex);
         }
     }
 
@@ -53,7 +54,8 @@ public class SaveService : ISaveService
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading game: {ex.Message}");
+            // Log and return default stats - don't crash the app on load failure
+            System.Diagnostics.Debug.WriteLine($"Error loading game: {ex.Message}");
         }
         
         // Return default stats if no save file exists or loading failed

@@ -25,11 +25,18 @@ public partial class MainViewModel : ObservableObject
     private async Task Roll()
     {
         await _gameService.RollAsync();
+        
+        // Update LastRoll display with the most recent roll
         if (Stats.Inventory.Count > 0)
         {
             var lastRayan = Stats.Inventory.Last();
             LastRoll = lastRayan.FullName;
         }
+        else
+        {
+            LastRoll = "No Rayans yet!";
+        }
+        
         OnPropertyChanged(nameof(Stats));
     }
 
