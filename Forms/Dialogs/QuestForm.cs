@@ -1,5 +1,6 @@
 using SpinARayan.Models;
 using SpinARayan.Services;
+using SpinARayan.Config;
 
 namespace SpinARayan
 {
@@ -8,14 +9,14 @@ namespace SpinARayan
         private readonly GameManager _gameManager;
         private readonly Action _onQuestClaimed;
 
-        // Dark Mode Colors
-        private readonly Color DarkBackground = Color.FromArgb(30, 30, 30);
-        private readonly Color DarkPanel = Color.FromArgb(45, 45, 48);
-        private readonly Color DarkAccent = Color.FromArgb(60, 60, 65);
-        private readonly Color BrightGreen = Color.FromArgb(0, 255, 127);
-        private readonly Color BrightBlue = Color.FromArgb(0, 174, 255);
-        private readonly Color BrightGold = Color.FromArgb(255, 215, 0);
-        private readonly Color TextColor = Color.FromArgb(230, 230, 230);
+        // Modern Theme Colors (from ModernTheme.cs)
+        private readonly Color DarkBackground = ModernTheme.BackgroundElevated;
+        private readonly Color DarkPanel = ModernTheme.BackgroundPanel;
+        private readonly Color DarkAccent = ModernTheme.PrimaryMedium;
+        private readonly Color BrightGreen = ModernTheme.Success;
+        private readonly Color BrightBlue = ModernTheme.AccentBlue;
+        private readonly Color BrightGold = ModernTheme.Warning;
+        private readonly Color TextColor = ModernTheme.TextPrimary;
 
         public QuestForm(GameManager gameManager, Action onQuestClaimed)
         {
@@ -49,7 +50,7 @@ namespace SpinARayan
                 yPosition += questPanel.Height + 10;
             }
 
-            lblTotalGems.Text = $"?? Verfügbare Gems: {_gameManager.Stats.Gems}";
+            lblTotalGems.Text = $"?? Verfï¿½gbare Gems: {_gameManager.Stats.Gems}";
             lblTotalGems.ForeColor = BrightBlue;
         }
 
@@ -113,7 +114,7 @@ namespace SpinARayan
                 Location = new Point(380, 60),
                 Size = new Size(150, 30),
                 Font = new Font("Segoe UI", 9F),
-                Text = quest.IsClaimed ? "Beansprucht ?" : quest.IsCompleted ? "Belohnung holen!" : "Nicht verfügbar",
+                Text = quest.IsClaimed ? "Beansprucht ?" : quest.IsCompleted ? "Belohnung holen!" : "Nicht verfï¿½gbar",
                 Enabled = quest.IsCompleted && !quest.IsClaimed,
                 Tag = quest,
                 BackColor = (quest.IsCompleted && !quest.IsClaimed) ? BrightGreen : DarkAccent,

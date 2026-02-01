@@ -30,8 +30,9 @@ namespace SpinARayan
             this.lblTitle.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
             this.lblTitle.Location = new System.Drawing.Point(12, 9);
             this.lblTitle.Size = new System.Drawing.Size(800, 40);
-            this.lblTitle.Text = "Vollst�ndiges Inventar";
+            this.lblTitle.Text = "📦 Vollständiges Inventar";
             this.lblTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblTitle.ForeColor = System.Drawing.Color.White;
             // 
             // lblTotalRayans
             // 
@@ -40,17 +41,19 @@ namespace SpinARayan
             this.lblTotalRayans.Size = new System.Drawing.Size(600, 30);
             this.lblTotalRayans.Text = "Gesamt Rayans: 0";
             this.lblTotalRayans.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            this.lblTotalRayans.ForeColor = System.Drawing.Color.FromArgb(189, 189, 189);
             // 
             // btnMergeAll
             // 
             this.btnMergeAll.Location = new System.Drawing.Point(620, 49);
             this.btnMergeAll.Size = new System.Drawing.Size(180, 30);
             this.btnMergeAll.Font = new System.Drawing.Font("Segoe UI", 11F, System.Drawing.FontStyle.Bold);
-            this.btnMergeAll.Text = "?? MERGE ALL";
-            this.btnMergeAll.BackColor = System.Drawing.Color.FromArgb(255, 215, 0);
+            this.btnMergeAll.Text = "⚡ MERGE ALL";
+            this.btnMergeAll.BackColor = System.Drawing.Color.FromArgb(255, 193, 7); // Warning Amber
             this.btnMergeAll.ForeColor = System.Drawing.Color.Black;
             this.btnMergeAll.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btnMergeAll.FlatAppearance.BorderSize = 0;
+            this.btnMergeAll.FlatAppearance.BorderSize = 1;
+            this.btnMergeAll.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(255, 213, 79);
             this.btnMergeAll.Click += new System.EventHandler(this.btnMergeAll_Click);
             // 
             // panelInventory
@@ -60,6 +63,7 @@ namespace SpinARayan
             this.panelInventory.Location = new System.Drawing.Point(12, 90);
             this.panelInventory.Size = new System.Drawing.Size(800, 630);
             this.panelInventory.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+            this.panelInventory.BackColor = System.Drawing.Color.FromArgb(30, 30, 30);
             // 
             // FullInventoryForm
             // 
@@ -68,8 +72,9 @@ namespace SpinARayan
             this.Controls.Add(this.lblTotalRayans);
             this.Controls.Add(this.btnMergeAll);
             this.Controls.Add(this.panelInventory);
-            this.Text = "Vollst�ndiges Inventar";
+            this.Text = "Vollständiges Inventar";
             this.StartPosition = FormStartPosition.CenterParent;
+            this.BackColor = System.Drawing.Color.FromArgb(18, 18, 18);
             this.ResumeLayout(false);
         }
     }

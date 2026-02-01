@@ -8,6 +8,7 @@ using System.Numerics;
 using SpinARayan.Models;
 using SpinARayan.Services;
 using System.Reflection;
+using SpinARayan.Config;
 
 namespace SpinARayan
 {
@@ -40,15 +41,16 @@ namespace SpinARayan
         // PERFORMANCE: Image cache for dice images (keep in RAM)
         private Dictionary<string, Image> _diceImageCache = new Dictionary<string, Image>();
 
-        // Dark Mode Colors
-        private readonly Color DarkBackground = Color.FromArgb(30, 30, 30);
-        private readonly Color DarkPanel = Color.FromArgb(45, 45, 48);
-        private readonly Color DarkAccent = Color.FromArgb(60, 60, 65);
-        private readonly Color BrightGreen = Color.FromArgb(0, 255, 127);
-        private readonly Color BrightBlue = Color.FromArgb(0, 174, 255);
-        private readonly Color BrightGold = Color.FromArgb(255, 215, 0);
-        private readonly Color BrightRed = Color.FromArgb(255, 69, 58);
-        private readonly Color TextColor = Color.FromArgb(230, 230, 230);
+        // Modern Theme Colors (from ModernTheme.cs)
+        private readonly Color DarkBackground = ModernTheme.BackgroundElevated;
+        private readonly Color DarkPanel = ModernTheme.BackgroundPanel;
+        private readonly Color DarkAccent = ModernTheme.PrimaryMedium;
+        private readonly Color BrightGreen = ModernTheme.Success;
+        private readonly Color BrightBlue = ModernTheme.AccentBlue;
+        private readonly Color BrightGold = ModernTheme.Warning;
+        private readonly Color BrightRed = ModernTheme.Error;
+        private readonly Color TextColor = ModernTheme.TextPrimary;
+        private readonly Color RebirthColor = ModernTheme.Rebirth;
 
         // Cheat Code Detection
         private List<Keys> _cheatSequence = new List<Keys>();

@@ -5,6 +5,7 @@ using System.Numerics;
 using System.Windows.Forms;
 using SpinARayan.Models;
 using SpinARayan.Services;
+using SpinARayan.Config;
 
 namespace SpinARayan
 {
@@ -13,15 +14,15 @@ namespace SpinARayan
         private readonly GameManager _gameManager;
         private readonly Action _onOptionsChanged;
         
-        // Dark Mode Colors
-        private readonly Color DarkBackground = Color.FromArgb(30, 30, 30);
-        private readonly Color DarkPanel = Color.FromArgb(45, 45, 48);
-        private readonly Color DarkAccent = Color.FromArgb(60, 60, 65);
-        private readonly Color BrightGreen = Color.FromArgb(0, 255, 127);
-        private readonly Color BrightBlue = Color.FromArgb(0, 174, 255);
-        private readonly Color BrightGold = Color.FromArgb(255, 215, 0);
-        private readonly Color BrightRed = Color.FromArgb(255, 69, 58);
-        private readonly Color TextColor = Color.FromArgb(230, 230, 230);
+        // Modern Theme Colors (from ModernTheme.cs)
+        private readonly Color DarkBackground = ModernTheme.BackgroundElevated;
+        private readonly Color DarkPanel = ModernTheme.BackgroundPanel;
+        private readonly Color DarkAccent = ModernTheme.PrimaryMedium;
+        private readonly Color BrightGreen = ModernTheme.Success;
+        private readonly Color BrightBlue = ModernTheme.AccentBlue;
+        private readonly Color BrightGold = ModernTheme.Warning;
+        private readonly Color BrightRed = ModernTheme.Error;
+        private readonly Color TextColor = ModernTheme.TextPrimary;
 
         public OptionsForm(GameManager gameManager, Action onOptionsChanged)
         {
@@ -93,7 +94,7 @@ namespace SpinARayan
             
             // Plot Stats (Current)
             lblPlotSlots.Text = $"Plot Slots: {stats.PlotSlots}/10";
-            lblEquipped.Text = $"Ausgerüstet: {stats.EquippedRayanIndices.Count}";
+            lblEquipped.Text = $"Ausgerï¿½stet: {stats.EquippedRayanIndices.Count}";
             
             // Income Stats (Current)
             BigInteger totalIncome = 0;
@@ -144,16 +145,16 @@ namespace SpinARayan
         {
             var result = MessageBox.Show(
                 "?? WARNUNG ??\n\n" +
-                "Möchtest du wirklich deinen KOMPLETTEN Spielstand löschen?\n\n" +
-                "Das löscht:\n" +
+                "Mï¿½chtest du wirklich deinen KOMPLETTEN Spielstand lï¿½schen?\n\n" +
+                "Das lï¿½scht:\n" +
                 "- Alle Rayans\n" +
                 "- Alles Geld & Gems\n" +
                 "- Alle Rebirths\n" +
                 "- Alle Upgrades\n" +
                 "- Alle Dices\n" +
                 "- Alle Quest-Fortschritte\n\n" +
-                "DIESE AKTION KANN NICHT RÜCKGÄNGIG GEMACHT WERDEN!",
-                "Spielstand zurücksetzen",
+                "DIESE AKTION KANN NICHT Rï¿½CKGï¿½NGIG GEMACHT WERDEN!",
+                "Spielstand zurï¿½cksetzen",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Warning,
                 MessageBoxDefaultButton.Button2
@@ -164,7 +165,7 @@ namespace SpinARayan
                 // Double confirmation
                 var doubleCheck = MessageBox.Show(
                     "Bist du dir ABSOLUT SICHER?\n\nDies ist deine letzte Chance!",
-                    "Letzte Bestätigung",
+                    "Letzte Bestï¿½tigung",
                     MessageBoxButtons.YesNo,
                     MessageBoxIcon.Exclamation,
                     MessageBoxDefaultButton.Button2
@@ -220,7 +221,7 @@ namespace SpinARayan
             _onOptionsChanged?.Invoke();
             
             MessageBox.Show(
-                "? Spielstand wurde erfolgreich zurückgesetzt!\n\nDas Spiel wird nun geschlossen.",
+                "? Spielstand wurde erfolgreich zurï¿½ckgesetzt!\n\nDas Spiel wird nun geschlossen.",
                 "Reset erfolgreich",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information

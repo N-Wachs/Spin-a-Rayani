@@ -1,5 +1,6 @@
 using System.Numerics;
 using SpinARayan.Models;
+using SpinARayan.Config;
 
 namespace SpinARayan
 {
@@ -8,14 +9,14 @@ namespace SpinARayan
         private readonly List<Rayan> _inventory;
         private readonly Action _onInventoryChanged;
 
-        // Dark Mode Colors
-        private readonly Color DarkBackground = Color.FromArgb(30, 30, 30);
-        private readonly Color DarkPanel = Color.FromArgb(45, 45, 48);
-        private readonly Color DarkAccent = Color.FromArgb(60, 60, 65);
-        private readonly Color BrightGreen = Color.FromArgb(0, 255, 127);
-        private readonly Color BrightBlue = Color.FromArgb(0, 174, 255);
-        private readonly Color BrightGold = Color.FromArgb(255, 215, 0);
-        private readonly Color TextColor = Color.FromArgb(230, 230, 230);
+        // Modern Theme Colors (from ModernTheme.cs)
+        private readonly Color DarkBackground = ModernTheme.BackgroundElevated;
+        private readonly Color DarkPanel = ModernTheme.BackgroundPanel;
+        private readonly Color DarkAccent = ModernTheme.PrimaryMedium;
+        private readonly Color BrightGreen = ModernTheme.Success;
+        private readonly Color BrightBlue = ModernTheme.AccentBlue;
+        private readonly Color BrightGold = ModernTheme.Warning;
+        private readonly Color TextColor = ModernTheme.TextPrimary;
 
         public FullInventoryForm(List<Rayan> inventory, Action onInventoryChanged)
         {
@@ -44,7 +45,7 @@ namespace SpinARayan
                 control.Dispose();
             }
             
-            // Performance: Suspend layout während wir alle Panels erstellen
+            // Performance: Suspend layout wï¿½hrend wir alle Panels erstellen
             panelInventory.SuspendLayout();
             panelInventory.Controls.Clear();
 
@@ -131,7 +132,7 @@ namespace SpinARayan
                 Font = new Font("Segoe UI", 9F),
                 Location = new Point(10, 55),
                 Size = new Size(250, 20),
-                Text = $"Anzahl: {count} (Ø {avgMultiplier:F1}x, max {maxMultiplier:F1}x)",
+                Text = $"Anzahl: {count} (ï¿½ {avgMultiplier:F1}x, max {maxMultiplier:F1}x)",
                 ForeColor = TextColor
             };
 
@@ -143,7 +144,7 @@ namespace SpinARayan
                 Font = new Font("Segoe UI", 9F),
                 Location = new Point(420, 10),
                 Size = new Size(300, 20),
-                Text = $"Ø Wert: {FormatBigInt(avgValueBigInt)}/s (Basis: {FormatBigInt(baseValue)})",
+                Text = $"ï¿½ Wert: {FormatBigInt(avgValueBigInt)}/s (Basis: {FormatBigInt(baseValue)})",
                 ForeColor = BrightGreen
             };
 
@@ -152,7 +153,7 @@ namespace SpinARayan
                 Location = new Point(420, 40),
                 Size = new Size(300, 30),
                 Font = new Font("Segoe UI", 9F),
-                Text = canMerge ? $"5x mergen ? 1x Merged (5x stärker)" : $"Benötigt 5 Stück",
+                Text = canMerge ? $"5x mergen ? 1x Merged (5x stï¿½rker)" : $"Benï¿½tigt 5 Stï¿½ck",
                 Enabled = canMerge,
                 Tag = new { Prefix = prefix, Suffix = suffix, Rarity = rarity, BaseValue = baseValue },
                 BackColor = canMerge ? BrightBlue : DarkAccent,
@@ -214,7 +215,7 @@ namespace SpinARayan
 
             if (matchingRayans.Count < 5)
             {
-                MessageBox.Show("Nicht genügend Rayans zum Mergen!", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Nicht genï¿½gend Rayans zum Mergen!", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return;
             }
 
@@ -263,9 +264,9 @@ namespace SpinARayan
             }
             
             var result = MessageBox.Show(
-                $"Möchtest du {mergeCandidates.Count} Gruppen mergen?\n\n" +
+                $"Mï¿½chtest du {mergeCandidates.Count} Gruppen mergen?\n\n" +
                 $"Das erstellt {mergeCandidates.Count} neue Merged Rayans.\n\n" +
-                "Diese Aktion kann nicht rückgängig gemacht werden!",
+                "Diese Aktion kann nicht rï¿½ckgï¿½ngig gemacht werden!",
                 "MERGE ALL",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question);
@@ -328,7 +329,7 @@ namespace SpinARayan
                 $"? MERGE ALL abgeschlossen!\n\n" +
                 $"Merged: {totalMerged} neue Rayans erstellt\n" +
                 $"Verwendet: {totalRayansUsed} Rayans (je 5 pro Merge)\n" +
-                $"Übrig: {_inventory.Count} Rayans im Inventar",
+                $"ï¿½brig: {_inventory.Count} Rayans im Inventar",
                 "Erfolg",
                 MessageBoxButtons.OK,
                 MessageBoxIcon.Information);

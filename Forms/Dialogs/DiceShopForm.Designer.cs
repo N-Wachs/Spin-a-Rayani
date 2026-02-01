@@ -28,16 +28,18 @@ namespace SpinARayan
             this.lblTitle.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold);
             this.lblTitle.Location = new System.Drawing.Point(12, 9);
             this.lblTitle.Size = new System.Drawing.Size(820, 40);
-            this.lblTitle.Text = "?? DICE SHOP";
+            this.lblTitle.Text = "🎲 DICE SHOP";
             this.lblTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblTitle.ForeColor = System.Drawing.Color.White;
             // 
             // lblMoney
             // 
             this.lblMoney.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
             this.lblMoney.Location = new System.Drawing.Point(12, 49);
             this.lblMoney.Size = new System.Drawing.Size(820, 30);
-            this.lblMoney.Text = "?? Money: 0";
+            this.lblMoney.Text = "💰 Money: 0";
             this.lblMoney.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblMoney.ForeColor = System.Drawing.Color.FromArgb(76, 175, 80);
             // 
             // panelDices
             // 
@@ -45,6 +47,7 @@ namespace SpinARayan
             this.panelDices.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panelDices.Location = new System.Drawing.Point(12, 90);
             this.panelDices.Size = new System.Drawing.Size(820, 680);
+            this.panelDices.BackColor = System.Drawing.Color.FromArgb(30, 30, 30);
             // 
             // DiceShopForm
             // 
@@ -56,6 +59,7 @@ namespace SpinARayan
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
+            this.BackColor = System.Drawing.Color.FromArgb(18, 18, 18);
             this.ResumeLayout(false);
         }
     }
