@@ -30,16 +30,18 @@ namespace SpinARayan
             this.lblTitle.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
             this.lblTitle.Location = new System.Drawing.Point(12, 9);
             this.lblTitle.Size = new System.Drawing.Size(570, 40);
-            this.lblTitle.Text = "Quests";
+            this.lblTitle.Text = "📋 Quests";
             this.lblTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblTitle.ForeColor = System.Drawing.Color.White;
             // 
             // lblTotalGems
             // 
             this.lblTotalGems.Font = new System.Drawing.Font("Segoe UI", 12F);
             this.lblTotalGems.Location = new System.Drawing.Point(12, 49);
             this.lblTotalGems.Size = new System.Drawing.Size(570, 30);
-            this.lblTotalGems.Text = "Verf�gbare Gems: 0";
+            this.lblTotalGems.Text = "Verfügbare Gems: 0";
             this.lblTotalGems.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblTotalGems.ForeColor = System.Drawing.Color.FromArgb(33, 150, 243);
             // 
             // panelQuests
             // 
@@ -47,18 +49,19 @@ namespace SpinARayan
             this.panelQuests.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.panelQuests.Location = new System.Drawing.Point(12, 90);
             this.panelQuests.Size = new System.Drawing.Size(570, 530);
+            this.panelQuests.BackColor = System.Drawing.Color.FromArgb(30, 30, 30);
             // 
             // btnRefresh
             // 
             this.btnRefresh.Location = new System.Drawing.Point(12, 630);
             this.btnRefresh.Size = new System.Drawing.Size(570, 30);
-            this.btnRefresh.Text = "?? Aktualisieren";
+            this.btnRefresh.Text = "🔄 Aktualisieren";
             this.btnRefresh.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
-            this.btnRefresh.BackColor = System.Drawing.Color.FromArgb(60, 60, 65);
-            this.btnRefresh.ForeColor = System.Drawing.Color.FromArgb(230, 230, 230);
+            this.btnRefresh.BackColor = System.Drawing.Color.FromArgb(48, 63, 159);
+            this.btnRefresh.ForeColor = System.Drawing.Color.White;
             this.btnRefresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btnRefresh.FlatAppearance.BorderSize = 1;
-            this.btnRefresh.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(80, 80, 85);
+            this.btnRefresh.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(92, 107, 192);
             this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
             // 
             // QuestForm
@@ -72,6 +75,7 @@ namespace SpinARayan
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
+            this.BackColor = System.Drawing.Color.FromArgb(18, 18, 18);
             this.ResumeLayout(false);
         }
     }

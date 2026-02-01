@@ -78,14 +78,16 @@ namespace SpinARayan
             this.lblTitle.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
             this.lblTitle.Location = new Point(12, 12);
             this.lblTitle.Size = new Size(720, 40);
-            this.lblTitle.Text = "?? OPTIONS & STATISTICS";
+            this.lblTitle.Text = "⚙️ OPTIONS & STATISTICS";
             this.lblTitle.TextAlign = ContentAlignment.MiddleCenter;
+            this.lblTitle.ForeColor = Color.White;
             
             // panelStats
             this.panelStats.BorderStyle = BorderStyle.FixedSingle;
             this.panelStats.Location = new Point(12, 60);
             this.panelStats.Size = new Size(720, 550);
             this.panelStats.AutoScroll = true;
+            this.panelStats.BackColor = Color.FromArgb(38, 38, 38);
             
             // Stats Layout (3 columns)
             int col1X = 20;
@@ -144,7 +146,7 @@ namespace SpinARayan
             yPos += lineHeight;
             
             AddStatLabel(lblPlotSlots, col2X, yPos, "Slots: 3/10");
-            AddStatLabel(lblEquipped, col2X, yPos += lineHeight, "Ausger�stet: 0");
+            AddStatLabel(lblEquipped, col2X, yPos += lineHeight, "Ausger�stet: 0");
             AddStatLabel(lblTotalIncome, col2X, yPos += lineHeight, "Income: 0/s");
             AddStatLabel(lblMoneyMultiplier, col2X, yPos += lineHeight, "Multiplier: 1.0x");
             
@@ -155,7 +157,8 @@ namespace SpinARayan
                 Location = new Point(col3X, yPos),
                 Size = new Size(180, 25),
                 Font = new Font("Segoe UI", 11F, FontStyle.Bold),
-                Text = "?? Gl�ck"
+                Text = "🍀 Glück",
+                ForeColor = Color.White
             };
             panelStats.Controls.Add(lblLuckHeader);
             yPos += lineHeight;
@@ -169,7 +172,8 @@ namespace SpinARayan
                 Location = new Point(col3X, yPos),
                 Size = new Size(180, 25),
                 Font = new Font("Segoe UI", 11F, FontStyle.Bold),
-                Text = "?? Dices"
+                Text = "🎲 Dices",
+                ForeColor = Color.White
             };
             panelStats.Controls.Add(lblDiceHeader);
             yPos += lineHeight;
@@ -181,16 +185,18 @@ namespace SpinARayan
             this.panelActions.BorderStyle = BorderStyle.FixedSingle;
             this.panelActions.Location = new Point(12, 620);
             this.panelActions.Size = new Size(720, 80);
+            this.panelActions.BackColor = Color.FromArgb(38, 38, 38);
             
             // btnResetGame
             this.btnResetGame.Location = new Point(20, 20);
             this.btnResetGame.Size = new Size(300, 40);
             this.btnResetGame.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            this.btnResetGame.Text = "?? SPIELSTAND ZUR�CKSETZEN";
-            this.btnResetGame.BackColor = Color.FromArgb(255, 69, 58);
+            this.btnResetGame.Text = "🔄 SPIELSTAND ZURÜCKSETZEN";
+            this.btnResetGame.BackColor = Color.FromArgb(244, 67, 54); // Error Red
             this.btnResetGame.ForeColor = Color.White;
             this.btnResetGame.FlatStyle = FlatStyle.Flat;
-            this.btnResetGame.FlatAppearance.BorderSize = 0;
+            this.btnResetGame.FlatAppearance.BorderSize = 1;
+            this.btnResetGame.FlatAppearance.BorderColor = Color.FromArgb(255, 99, 71);
             this.btnResetGame.Click += btnResetGame_Click;
             this.panelActions.Controls.Add(this.btnResetGame);
             
@@ -199,11 +205,11 @@ namespace SpinARayan
             this.btnClose.Size = new Size(300, 40);
             this.btnClose.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             this.btnClose.Text = "SCHLIESSEN";
-            this.btnClose.BackColor = Color.FromArgb(60, 60, 65);
-            this.btnClose.ForeColor = Color.FromArgb(230, 230, 230);
+            this.btnClose.BackColor = Color.FromArgb(48, 63, 159); // PrimaryMedium
+            this.btnClose.ForeColor = Color.White;
             this.btnClose.FlatStyle = FlatStyle.Flat;
             this.btnClose.FlatAppearance.BorderSize = 1;
-            this.btnClose.FlatAppearance.BorderColor = Color.FromArgb(80, 80, 85);
+            this.btnClose.FlatAppearance.BorderColor = Color.FromArgb(92, 107, 192); // PrimaryLight
             this.btnClose.Click += btnClose_Click;
             this.panelActions.Controls.Add(this.btnClose);
             
@@ -216,6 +222,7 @@ namespace SpinARayan
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
+            this.BackColor = Color.FromArgb(18, 18, 18);
             
             this.panelStats.ResumeLayout(false);
             this.panelActions.ResumeLayout(false);
@@ -227,6 +234,7 @@ namespace SpinARayan
             label.Location = new Point(x, y);
             label.Size = new Size(200, 25);
             label.Font = new Font("Segoe UI", 10F);
+            label.ForeColor = Color.FromArgb(189, 189, 189); // TextSecondary
             label.Text = text;
             panelStats.Controls.Add(label);
         }

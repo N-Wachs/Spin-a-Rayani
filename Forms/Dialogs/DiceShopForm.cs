@@ -14,15 +14,15 @@ namespace SpinARayan
         private readonly GameManager _gameManager;
         private readonly Action _onDicePurchased;
         
-        // Dark Mode Colors
-        private readonly Color DarkBackground = Color.FromArgb(30, 30, 30);
-        private readonly Color DarkPanel = Color.FromArgb(45, 45, 48);
-        private readonly Color DarkAccent = Color.FromArgb(60, 60, 65);
-        private readonly Color BrightGreen = Color.FromArgb(0, 255, 127);
-        private readonly Color BrightBlue = Color.FromArgb(0, 174, 255);
-        private readonly Color BrightGold = Color.FromArgb(255, 215, 0);
-        private readonly Color BrightRed = Color.FromArgb(255, 69, 58);
-        private readonly Color TextColor = Color.FromArgb(230, 230, 230);
+        // Modern Theme Colors
+        private readonly Color DarkBackground = Color.FromArgb(30, 30, 30);        // BackgroundElevated
+        private readonly Color DarkPanel = Color.FromArgb(38, 38, 38);             // BackgroundPanel
+        private readonly Color DarkAccent = Color.FromArgb(48, 63, 159);           // PrimaryMedium
+        private readonly Color BrightGreen = Color.FromArgb(76, 175, 80);          // Success Green
+        private readonly Color BrightBlue = Color.FromArgb(33, 150, 243);          // AccentBlue
+        private readonly Color BrightGold = Color.FromArgb(255, 193, 7);           // Warning Amber
+        private readonly Color BrightRed = Color.FromArgb(244, 67, 54);            // Error Red
+        private readonly Color TextColor = Color.FromArgb(255, 255, 255);          // White
 
         // Available Dices (templates for shop)
         private List<Dice> _availableDices = new List<Dice>
@@ -151,7 +151,7 @@ namespace SpinARayan
                 Size = new Size(770, 100),
                 BorderStyle = BorderStyle.FixedSingle,
                 BackColor = DarkPanel,
-                Tag = dice // Speichere dice reference für Updates
+                Tag = dice // Speichere dice reference fï¿½r Updates
             };
 
             // Try to load dice image from embedded resources
@@ -386,7 +386,7 @@ namespace SpinARayan
                     {
                         Location = new Point(20, 20),
                         Size = new Size(360, 30),
-                        Text = $"Wie viele {templateDice.Name} möchtest du kaufen?",
+                        Text = $"Wie viele {templateDice.Name} mï¿½chtest du kaufen?",
                         Font = new Font("Segoe UI", 11F, FontStyle.Bold),
                         ForeColor = TextColor
                     };
@@ -443,7 +443,7 @@ namespace SpinARayan
                         }
                         else
                         {
-                            lblCost.Text = "Ungültige Eingabe";
+                            lblCost.Text = "Ungï¿½ltige Eingabe";
                             lblCost.ForeColor = BrightRed;
                         }
                     };
@@ -498,7 +498,7 @@ namespace SpinARayan
                         }
                         else
                         {
-                            MessageBox.Show("Ungültige Anzahl!", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show("Ungï¿½ltige Anzahl!", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                     }
                 }
