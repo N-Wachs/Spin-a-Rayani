@@ -112,7 +112,8 @@ namespace SpinARayan
             
             try
             {
-                string imageName = "dice_" + dice.Name.ToLower().Replace(" dice", "").Replace(" ", "") + ".png";
+                // New naming system: "Absolute Dice.jpg"
+                string imageName = dice.Name + ".jpg";
                 string resourceName = $"Spin_a_Rayan.Assets.{imageName}";
                 
                 var assembly = System.Reflection.Assembly.GetExecutingAssembly();

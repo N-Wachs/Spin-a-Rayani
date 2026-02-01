@@ -61,22 +61,24 @@ namespace SpinARayan
             // Set application icon from embedded resource
             try
             {
-                string resourceName = "Spin_a_Rayan.Assets.app_icon.png";
+                string resourceName = "Spin_a_Rayan.Assets.app_icon.ico";
                 var assembly = System.Reflection.Assembly.GetExecutingAssembly();
                 
                 using (var stream = assembly.GetManifestResourceStream(resourceName))
                 {
                     if (stream != null)
                     {
-                        using (var bmp = new Bitmap(stream))
-                        {
-                            var handle = bmp.GetHicon();
-                            this.Icon = Icon.FromHandle(handle);
-                        }
+                        // Load .ico file directly - supports multiple resolutions
+                        this.Icon = new Icon(stream);
                     }
                     else
                     {
                         Console.WriteLine($"[MainForm] Icon resource not found: {resourceName}");
+                        Console.WriteLine("[MainForm] Available resources:");
+                        foreach (var res in assembly.GetManifestResourceNames())
+                        {
+                            Console.WriteLine($"  - {res}");
+                        }
                     }
                 }
             }
@@ -376,27 +378,30 @@ namespace SpinARayan
 
         private void CreateDiceInfoLabel()
         {
-            // Position centered above roll button (shifted down 50px)
+            // Position centered above roll button with more spacing
             int width = 180;
             int centerX = panelCenter.Width / 2;
             
-            // DICE IMAGE - clickable, leads to inventory
+            // DICE IMAGE - clickable, leads to inventory (larger size for better visibility)
+            // Add as background element - will be behind other controls
+            // Moved down to avoid overlap with lblLastRoll
             _picDiceSelector = new PictureBox
             {
-                Location = new Point(centerX - 50, 130), // Shifted down 50px (was 80)
-                Size = new Size(100, 100),
-                SizeMode = PictureBoxSizeMode.StretchImage,
+                Location = new Point(centerX - 75, 150), // Moved down from 100 to 150 for more spacing
+                Size = new Size(150, 150), // Increased from 100x100 to 150x150
+                SizeMode = PictureBoxSizeMode.Zoom, // Changed from StretchImage to Zoom for better quality
                 BackColor = Color.Transparent,
                 Cursor = Cursors.Hand
             };
             _picDiceSelector.Click += (s, e) => OpenDiceSelection();
             panelCenter.Controls.Add(_picDiceSelector);
-            _picDiceSelector.BringToFront();
+            _picDiceSelector.SendToBack(); // Send to background so other controls are visible on top
             
-            // QUANTITY LABEL - below image, not clickable
+            // QUANTITY LABEL - below image, should be visible on top
+            // Moved down to avoid overlap with roll button
             _lblDiceInfo = new Label
             {
-                Location = new Point(centerX - 90, 235), // Shifted down 50px (was 185)
+                Location = new Point(centerX - 90, 310), // Moved down from 255 to 310 for more spacing
                 Size = new Size(width, 30),
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 ForeColor = BrightBlue,
@@ -405,7 +410,7 @@ namespace SpinARayan
                 Text = "Quantity: ∞"
             };
             panelCenter.Controls.Add(_lblDiceInfo);
-            _lblDiceInfo.BringToFront();
+            _lblDiceInfo.BringToFront(); // Keep label in front
         }
         
         private void CreateDebugPollButton()
@@ -746,7 +751,8 @@ namespace SpinARayan
             
             try
             {
-                string imageName = "dice_" + diceName.ToLower().Replace(" dice", "").Replace(" ", "") + ".png";
+                // New naming system: "Absolute Dice.jpg"
+                string imageName = diceName + ".jpg";
                 string resourceName = $"Spin_a_Rayan.Assets.{imageName}";
                 
                 var assembly = System.Reflection.Assembly.GetExecutingAssembly();
