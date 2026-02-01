@@ -1,0 +1,57 @@
+<ui:FluentWindow x:Class="SpinARayani.UI.WPF.Views.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
+        Title="Spin a Rayani - Modern" Height="600" Width="1000"
+        Background="{ui:ThemeResource ApplicationBackgroundBrush}">
+    
+    <Grid Margin="20">
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="250"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="250"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Left Panel: Stats -->
+        <StackPanel Grid.Column="0" Spacing="10">
+            <ui:Card>
+                <StackPanel>
+                    <TextBlock Text="Guthaben" Variant="Caption"/>
+                    <TextBlock Text="{Binding Stats.Money}" Variant="Title" Foreground="LightGreen"/>
+                </StackPanel>
+            </ui:Card>
+            <ui:Card>
+                <StackPanel>
+                    <TextBlock Text="Gems" Variant="Caption"/>
+                    <TextBlock Text="{Binding Stats.Gems}" Variant="Title" Foreground="SkyBlue"/>
+                </StackPanel>
+            </ui:Card>
+            <ui:Card>
+                <StackPanel>
+                    <TextBlock Text="Rebirths" Variant="Caption"/>
+                    <TextBlock Text="{Binding Stats.Rebirths}" Variant="Title" Foreground="Gold"/>
+                </StackPanel>
+            </ui:Card>
+        </StackPanel>
+
+        <!-- Center Panel: Action -->
+        <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
+            <ui:Button Content="SPIN" 
+                       Command="{Binding RollCommand}"
+                       FontSize="32" Padding="40,20"
+                       Appearance="Primary"/>
+            
+            <TextBlock Text="Letzter Roll:" HorizontalAlignment="Center"/>
+            <TextBlock Text="???" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center"/>
+        </StackPanel>
+
+        <!-- Right Panel: Upgrades -->
+        <StackPanel Grid.Column="2" Spacing="10">
+            <ui:Button Content="Rebirth" 
+                       Command="{Binding RebirthCommand}"
+                       HorizontalAlignment="Stretch"/>
+            <ui:Button Content="Shop" HorizontalAlignment="Stretch"/>
+            <ui:Button Content="Inventory" HorizontalAlignment="Stretch"/>
+        </StackPanel>
+    </Grid>
+</ui:FluentWindow>
