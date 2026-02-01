@@ -8,6 +8,7 @@
     <UseWindowsForms>true</UseWindowsForms>
     <ImplicitUsings>enable</ImplicitUsings>
     <StartupObject>SpinARayan.Program</StartupObject>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
