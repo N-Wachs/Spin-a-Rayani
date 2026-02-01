@@ -1,4 +1,4 @@
-using System.Drawing;
+﻿using System.Drawing;
 using System.Windows.Forms;
 
 namespace SpinARayan
@@ -75,7 +75,7 @@ namespace SpinARayan
             this.SuspendLayout();
             
             // lblTitle
-            this.lblTitle.Font = new Font("Segoe UI", 18F, FontStyle.Bold);
+            this.lblTitle.Font = new Font("Segoe UI Emoji", 18F, FontStyle.Bold);
             this.lblTitle.Location = new Point(12, 12);
             this.lblTitle.Size = new Size(720, 40);
             this.lblTitle.Text = "⚙️ OPTIONS & STATISTICS";
@@ -109,8 +109,8 @@ namespace SpinARayan
             {
                 Location = new Point(col1X, yPos),
                 Size = new Size(200, 25),
-                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
-                Text = "?? Inventar"
+                Font = new Font("Segoe UI Emoji", 11F, FontStyle.Bold),
+                Text = "📦 Inventar"
             };
             panelStats.Controls.Add(lblInventoryHeader);
             yPos += lineHeight;
@@ -124,8 +124,8 @@ namespace SpinARayan
             {
                 Location = new Point(col2X, yPos),
                 Size = new Size(200, 25),
-                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
-                Text = "?? Bester Rayan"
+                Font = new Font("Segoe UI Emoji", 11F, FontStyle.Bold),
+                Text = "🏆 Bester Rayan"
             };
             panelStats.Controls.Add(lblBestHeader);
             yPos += lineHeight;
@@ -139,14 +139,14 @@ namespace SpinARayan
             {
                 Location = new Point(col2X, yPos),
                 Size = new Size(200, 25),
-                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
-                Text = "?? Plots"
+                Font = new Font("Segoe UI Emoji", 11F, FontStyle.Bold),
+                Text = "🌱 Plots"
             };
             panelStats.Controls.Add(lblPlotHeader);
             yPos += lineHeight;
             
             AddStatLabel(lblPlotSlots, col2X, yPos, "Slots: 3/10");
-            AddStatLabel(lblEquipped, col2X, yPos += lineHeight, "Ausger�stet: 0");
+            AddStatLabel(lblEquipped, col2X, yPos += lineHeight, "Ausgeruestet: 0");
             AddStatLabel(lblTotalIncome, col2X, yPos += lineHeight, "Income: 0/s");
             AddStatLabel(lblMoneyMultiplier, col2X, yPos += lineHeight, "Multiplier: 1.0x");
             
@@ -156,8 +156,8 @@ namespace SpinARayan
             {
                 Location = new Point(col3X, yPos),
                 Size = new Size(180, 25),
-                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
-                Text = "🍀 Glück",
+                Font = new Font("Segoe UI Emoji", 11F, FontStyle.Bold),
+                Text = "\U0001F340 Glueck",
                 ForeColor = Color.White
             };
             panelStats.Controls.Add(lblLuckHeader);
@@ -171,7 +171,7 @@ namespace SpinARayan
             {
                 Location = new Point(col3X, yPos),
                 Size = new Size(180, 25),
-                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                Font = new Font("Segoe UI Emoji", 11F, FontStyle.Bold),
                 Text = "🎲 Dices",
                 ForeColor = Color.White
             };
@@ -190,8 +190,8 @@ namespace SpinARayan
             // btnResetGame
             this.btnResetGame.Location = new Point(20, 20);
             this.btnResetGame.Size = new Size(300, 40);
-            this.btnResetGame.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            this.btnResetGame.Text = "🔄 SPIELSTAND ZURÜCKSETZEN";
+            this.btnResetGame.Font = new Font("Segoe UI Emoji", 12F, FontStyle.Bold);
+            this.btnResetGame.Text = "\U0001F504 SPIELSTAND ZURUECKSETZEN";
             this.btnResetGame.BackColor = Color.FromArgb(244, 67, 54); // Error Red
             this.btnResetGame.ForeColor = Color.White;
             this.btnResetGame.FlatStyle = FlatStyle.Flat;

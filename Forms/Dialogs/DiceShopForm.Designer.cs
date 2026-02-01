@@ -1,11 +1,11 @@
-namespace SpinARayan
+﻿namespace SpinARayan
 {
     partial class DiceShopForm
     {
         private System.ComponentModel.IContainer components = null;
-        private Label lblTitle;
-        private Label lblMoney;
-        private Panel panelDices;
+        private System.Windows.Forms.Label lblTitle;
+        private System.Windows.Forms.Label lblMoney;
+        private System.Windows.Forms.Panel panelDices;
 
         protected override void Dispose(bool disposing)
         {
@@ -25,16 +25,16 @@ namespace SpinARayan
             // 
             // lblTitle
             // 
-            this.lblTitle.Font = new System.Drawing.Font("Segoe UI", 18F, System.Drawing.FontStyle.Bold);
+            this.lblTitle.Font = new System.Drawing.Font("Segoe UI Emoji", 18F, System.Drawing.FontStyle.Bold);
             this.lblTitle.Location = new System.Drawing.Point(12, 9);
             this.lblTitle.Size = new System.Drawing.Size(820, 40);
-            this.lblTitle.Text = "🎲 DICE SHOP";
+            this.lblTitle.Text = "\U0001F3B2 DICE SHOP";
             this.lblTitle.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.lblTitle.ForeColor = System.Drawing.Color.White;
             // 
             // lblMoney
             // 
-            this.lblMoney.Font = new System.Drawing.Font("Segoe UI", 14F, System.Drawing.FontStyle.Bold);
+            this.lblMoney.Font = new System.Drawing.Font("Segoe UI Emoji", 14F, System.Drawing.FontStyle.Bold);
             this.lblMoney.Location = new System.Drawing.Point(12, 49);
             this.lblMoney.Size = new System.Drawing.Size(820, 30);
             this.lblMoney.Text = "💰 Money: 0";
@@ -56,8 +56,8 @@ namespace SpinARayan
             this.Controls.Add(this.lblMoney);
             this.Controls.Add(this.panelDices);
             this.Text = "Dice Shop";
-            this.StartPosition = FormStartPosition.CenterParent;
-            this.FormBorderStyle = FormBorderStyle.FixedDialog;
+            this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
+            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.BackColor = System.Drawing.Color.FromArgb(18, 18, 18);
             this.ResumeLayout(false);

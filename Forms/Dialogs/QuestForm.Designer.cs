@@ -1,4 +1,4 @@
-namespace SpinARayan
+﻿namespace SpinARayan
 {
     partial class QuestForm
     {
@@ -27,7 +27,7 @@ namespace SpinARayan
             // 
             // lblTitle
             // 
-            this.lblTitle.Font = new System.Drawing.Font("Segoe UI", 16F, System.Drawing.FontStyle.Bold);
+            this.lblTitle.Font = new System.Drawing.Font("Segoe UI Emoji", 16F, System.Drawing.FontStyle.Bold);
             this.lblTitle.Location = new System.Drawing.Point(12, 9);
             this.lblTitle.Size = new System.Drawing.Size(570, 40);
             this.lblTitle.Text = "📋 Quests";
@@ -39,7 +39,7 @@ namespace SpinARayan
             this.lblTotalGems.Font = new System.Drawing.Font("Segoe UI", 12F);
             this.lblTotalGems.Location = new System.Drawing.Point(12, 49);
             this.lblTotalGems.Size = new System.Drawing.Size(570, 30);
-            this.lblTotalGems.Text = "Verfügbare Gems: 0";
+            this.lblTotalGems.Text = "Verfuegbare Gems: 0";
             this.lblTotalGems.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.lblTotalGems.ForeColor = System.Drawing.Color.FromArgb(33, 150, 243);
             // 
@@ -55,8 +55,8 @@ namespace SpinARayan
             // 
             this.btnRefresh.Location = new System.Drawing.Point(12, 630);
             this.btnRefresh.Size = new System.Drawing.Size(570, 30);
-            this.btnRefresh.Text = "🔄 Aktualisieren";
-            this.btnRefresh.Font = new System.Drawing.Font("Segoe UI", 10F, System.Drawing.FontStyle.Bold);
+            this.btnRefresh.Text = "\U0001F504 Aktualisieren";
+            this.btnRefresh.Font = new System.Drawing.Font("Segoe UI Emoji", 10F, System.Drawing.FontStyle.Bold);
             this.btnRefresh.BackColor = System.Drawing.Color.FromArgb(48, 63, 159);
             this.btnRefresh.ForeColor = System.Drawing.Color.White;
             this.btnRefresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;

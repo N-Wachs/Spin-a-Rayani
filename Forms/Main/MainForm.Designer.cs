@@ -83,7 +83,7 @@
             this.btnRoll.Size = new Size(300, 120);
             this.btnRoll.BackColor = Color.FromArgb(33, 150, 243); // AccentBlue
             this.btnRoll.ForeColor = Color.White;
-            this.btnRoll.Font = new Font("Segoe UI", 24F, FontStyle.Bold);
+            this.btnRoll.Font = new Font("Segoe UI Emoji", 24F, FontStyle.Bold);
             this.btnRoll.Text = "🎲 ROLL\nDice 1";
             this.btnRoll.TextAlign = ContentAlignment.MiddleCenter;
             this.btnRoll.FlatStyle = FlatStyle.Flat;
@@ -128,7 +128,7 @@
             // 
             this.lblMoney.Location = new Point(20, 620);
             this.lblMoney.Size = new Size(260, 30);
-            this.lblMoney.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
+            this.lblMoney.Font = new Font("Segoe UI Emoji", 16F, FontStyle.Bold);
             this.lblMoney.ForeColor = Color.FromArgb(76, 175, 80); // Success Green
             this.lblMoney.Text = "💰 0";
             this.panelCenter.Controls.Add(this.lblMoney);
@@ -138,7 +138,7 @@
             // 
             this.lblGems.Location = new Point(20, 655);
             this.lblGems.Size = new Size(260, 30);
-            this.lblGems.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            this.lblGems.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
             this.lblGems.ForeColor = Color.FromArgb(33, 150, 243); // AccentBlue
             this.lblGems.Text = "💎 0";
             this.panelCenter.Controls.Add(this.lblGems);
@@ -148,7 +148,7 @@
             // 
             this.lblLuck.Location = new Point(320, 620);
             this.lblLuck.Size = new Size(260, 30);
-            this.lblLuck.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            this.lblLuck.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
             this.lblLuck.ForeColor = Color.FromArgb(255, 193, 7); // Warning Amber
             this.lblLuck.Text = "🍀 Luck: +0%";
             this.lblLuck.TextAlign = ContentAlignment.MiddleRight;
@@ -159,7 +159,7 @@
             // 
             this.lblRebirthBonus.Location = new Point(320, 655);
             this.lblRebirthBonus.Size = new Size(260, 30);
-            this.lblRebirthBonus.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            this.lblRebirthBonus.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
             this.lblRebirthBonus.ForeColor = Color.FromArgb(156, 39, 176); // Rebirth Purple
             this.lblRebirthBonus.Text = "🔄 Rebirth: +0%";
             this.lblRebirthBonus.TextAlign = ContentAlignment.MiddleRight;
@@ -170,7 +170,7 @@
             // 
             this.lblLastRoll.Location = new Point(50, 50);
             this.lblLastRoll.Size = new Size(500, 80);
-            this.lblLastRoll.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            this.lblLastRoll.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
             this.lblLastRoll.ForeColor = Color.FromArgb(255, 193, 7); // Warning Amber
             this.lblLastRoll.TextAlign = ContentAlignment.MiddleCenter;
             this.lblLastRoll.Text = "🎲 Waiting for roll...";
@@ -205,7 +205,7 @@
             this.btnInventory.Size = new Size(260, 60);
             this.btnInventory.BackColor = Color.FromArgb(48, 63, 159); // PrimaryMedium
             this.btnInventory.ForeColor = Color.White;
-            this.btnInventory.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            this.btnInventory.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
             this.btnInventory.Text = "📦 INVENTORY";
             this.btnInventory.FlatStyle = FlatStyle.Flat;
             this.btnInventory.FlatAppearance.BorderSize = 1;
@@ -220,7 +220,7 @@
             this.btnShop.Size = new Size(260, 60);
             this.btnShop.BackColor = Color.FromArgb(48, 63, 159); // PrimaryMedium
             this.btnShop.ForeColor = Color.White;
-            this.btnShop.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            this.btnShop.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
             this.btnShop.Text = "🎲 DICE SHOP";
             this.btnShop.FlatStyle = FlatStyle.Flat;
             this.btnShop.FlatAppearance.BorderSize = 1;
@@ -235,7 +235,7 @@
             this.btnUpgrades.Size = new Size(260, 60);
             this.btnUpgrades.BackColor = Color.FromArgb(48, 63, 159); // PrimaryMedium
             this.btnUpgrades.ForeColor = Color.White;
-            this.btnUpgrades.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            this.btnUpgrades.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
             this.btnUpgrades.Text = "⬆️ UPGRADES";
             this.btnUpgrades.FlatStyle = FlatStyle.Flat;
             this.btnUpgrades.FlatAppearance.BorderSize = 1;
@@ -250,7 +250,7 @@
             this.btnQuests.Size = new Size(260, 60);
             this.btnQuests.BackColor = Color.FromArgb(48, 63, 159); // PrimaryMedium
             this.btnQuests.ForeColor = Color.White;
-            this.btnQuests.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            this.btnQuests.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
             this.btnQuests.Text = "📋 QUESTS";
             this.btnQuests.FlatStyle = FlatStyle.Flat;
             this.btnQuests.FlatAppearance.BorderSize = 1;
@@ -265,7 +265,7 @@
             this.btnOptions.Size = new Size(260, 60);
             this.btnOptions.BackColor = Color.FromArgb(48, 63, 159); // PrimaryMedium
             this.btnOptions.ForeColor = Color.White;
-            this.btnOptions.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            this.btnOptions.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
             this.btnOptions.Text = "⚙️ OPTIONS";
             this.btnOptions.FlatStyle = FlatStyle.Flat;
             this.btnOptions.FlatAppearance.BorderSize = 1;

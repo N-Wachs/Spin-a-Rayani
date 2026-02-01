@@ -50,7 +50,7 @@ namespace SpinARayan
                 yPosition += questPanel.Height + 10;
             }
 
-            lblTotalGems.Text = $"?? Verf�gbare Gems: {_gameManager.Stats.Gems}";
+            lblTotalGems.Text = $"\U0001F48E Verfuegbare Gems: {_gameManager.Stats.Gems}";
             lblTotalGems.ForeColor = BrightBlue;
         }
 

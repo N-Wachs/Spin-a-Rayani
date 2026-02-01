@@ -9,6 +9,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <StartupObject>SpinARayan.Program</StartupObject>
     <LangVersion>latest</LangVersion>
+    <Utf8Output>true</Utf8Output>
   </PropertyGroup>
 
   <ItemGroup>

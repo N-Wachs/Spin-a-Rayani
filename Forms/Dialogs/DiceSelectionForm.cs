@@ -48,8 +48,8 @@ namespace SpinARayan
             {
                 Location = new Point(20, 20),
                 Size = new Size(400, 40),
-                Font = new Font("Segoe UI", 18F, FontStyle.Bold),
-                Text = "?? SELECT DICE"
+                Font = new Font("Segoe UI Emoji", 18F, FontStyle.Bold),
+                Text = "\U0001F3B2 SELECT DICE"
             };
             this.Controls.Add(lblTitle);
 

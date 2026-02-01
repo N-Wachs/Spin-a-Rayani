@@ -1,4 +1,4 @@
-namespace SpinARayan
+﻿namespace SpinARayan
 {
     partial class DiceSelectionForm
     {

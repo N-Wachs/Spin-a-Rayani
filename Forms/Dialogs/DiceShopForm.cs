@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -105,7 +105,7 @@ namespace SpinARayan
 
         private void LoadDiceShop()
         {
-            lblMoney.Text = $"?? Money: {FormatBigInt(_gameManager.Stats.Money)}";
+            lblMoney.Text = $"\U0001F4B0 Money: {FormatBigInt(_gameManager.Stats.Money)}";
             
             panelDices.SuspendLayout(); // Verhindert Flackern
             panelDices.Controls.Clear();
@@ -125,7 +125,7 @@ namespace SpinARayan
         private void UpdateShopUI()
         {
             // Nur Geld und Button-States updaten, KEINE Panels neu erstellen
-            lblMoney.Text = $"?? Money: {FormatBigInt(_gameManager.Stats.Money)}";
+            lblMoney.Text = $"\U0001F4B0 Money: {FormatBigInt(_gameManager.Stats.Money)}";
             
             // Update button states in existing panels
             foreach (Control control in panelDices.Controls)
@@ -152,7 +152,7 @@ namespace SpinARayan
                 Size = new Size(770, 100),
                 BorderStyle = BorderStyle.FixedSingle,
                 BackColor = DarkPanel,
-                Tag = dice // Speichere dice reference f�r Updates
+                Tag = dice // Speichere dice reference fuer Updates
             };
 
             // Try to load dice image from embedded resources
@@ -387,7 +387,7 @@ namespace SpinARayan
                     {
                         Location = new Point(20, 20),
                         Size = new Size(360, 30),
-                        Text = $"Wie viele {templateDice.Name} m�chtest du kaufen?",
+                        Text = $"Wie viele {templateDice.Name} moechtest du kaufen?",
                         Font = new Font("Segoe UI", 11F, FontStyle.Bold),
                         ForeColor = TextColor
                     };
@@ -444,7 +444,7 @@ namespace SpinARayan
                         }
                         else
                         {
-                            lblCost.Text = "Ung�ltige Eingabe";
+                            lblCost.Text = "Ungueltige Eingabe";
                             lblCost.ForeColor = BrightRed;
                         }
                     };
@@ -499,7 +499,7 @@ namespace SpinARayan
                         }
                         else
                         {
-                            MessageBox.Show("Ung�ltige Anzahl!", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            MessageBox.Show("Ungueltige Anzahl!", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         }
                     }
                 }

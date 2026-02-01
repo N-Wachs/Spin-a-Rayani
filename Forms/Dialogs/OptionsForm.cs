@@ -144,17 +144,17 @@ namespace SpinARayan
         private void btnResetGame_Click(object sender, EventArgs e)
         {
             var result = MessageBox.Show(
-                "?? WARNUNG ??\n\n" +
-                "M�chtest du wirklich deinen KOMPLETTEN Spielstand l�schen?\n\n" +
-                "Das l�scht:\n" +
+                "\U000026A0 WARNUNG \U000026A0\n\n" +
+                "Moechtest du wirklich deinen KOMPLETTEN Spielstand loeschen?\n\n" +
+                "Das loescht:\n" +
                 "- Alle Rayans\n" +
                 "- Alles Geld & Gems\n" +
                 "- Alle Rebirths\n" +
                 "- Alle Upgrades\n" +
                 "- Alle Dices\n" +
                 "- Alle Quest-Fortschritte\n\n" +
-                "DIESE AKTION KANN NICHT R�CKG�NGIG GEMACHT WERDEN!",
-                "Spielstand zur�cksetzen",
+                "DIESE AKTION KANN NICHT RUECKGAENGIG GEMACHT WERDEN!",
+                "Spielstand zuruecksetzen",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Warning,
                 MessageBoxDefaultButton.Button2
@@ -250,10 +250,10 @@ namespace SpinARayan
             
             var lblMpTitle = new Label
             {
-                Text = "?? Multiplayer Einstellungen",
+                Text = "\U00002699\U0000FE0F Multiplayer Einstellungen",
                 Location = new Point(10, 10),
                 Size = new Size(540, 30),
-                Font = new Font("Segoe UI", 12F, FontStyle.Bold),
+                Font = new Font("Segoe UI Emoji", 12F, FontStyle.Bold),
                 ForeColor = BrightBlue
             };
             mpPanel.Controls.Add(lblMpTitle);
@@ -264,11 +264,11 @@ namespace SpinARayan
             var lblMpStatus = new Label
             {
                 Text = mpEnabled 
-                    ? $"? Multiplayer aktiv - Username: {_gameManager.MultiplayerUsername}" 
-                    : "? Multiplayer inaktiv",
+                    ? $"\U00002705 Multiplayer aktiv - Username: {_gameManager.MultiplayerUsername}" 
+                    : "\U0000274C Multiplayer inaktiv",
                 Location = new Point(10, 50),
                 Size = new Size(530, 25),
-                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                Font = new Font("Segoe UI Emoji", 9F, FontStyle.Bold),
                 ForeColor = mpEnabled ? BrightGreen : Color.Gray
             };
             mpPanel.Controls.Add(lblMpStatus);
@@ -277,20 +277,20 @@ namespace SpinARayan
             {
                 var lblMpInfo = new Label
                 {
-                    Text = "?? Events werden automatisch mit allen Spielern synchronisiert!",
+                    Text = "\U00002139\U0000FE0F Events werden automatisch mit allen Spielern synchronisiert!",
                     Location = new Point(10, 80),
                     Size = new Size(530, 20),
-                    Font = new Font("Segoe UI", 8F),
+                    Font = new Font("Segoe UI Emoji", 8F),
                     ForeColor = BrightBlue
                 };
                 mpPanel.Controls.Add(lblMpInfo);
                 
                 var lblMpHint = new Label
                 {
-                    Text = "?? Hinweis: Multiplayer-Einstellung wird beim Start festgelegt",
+                    Text = "\U00002139\U0000FE0F Hinweis: Multiplayer-Einstellung wird beim Start festgelegt",
                     Location = new Point(10, 105),
                     Size = new Size(530, 20),
-                    Font = new Font("Segoe UI", 8F, FontStyle.Italic),
+                    Font = new Font("Segoe UI Emoji", 8F, FontStyle.Italic),
                     ForeColor = TextColor
                 };
                 mpPanel.Controls.Add(lblMpHint);
@@ -299,10 +299,10 @@ namespace SpinARayan
             {
                 var lblMpHint = new Label
                 {
-                    Text = "?? Tipp: Starte das Spiel neu, um Multiplayer zu aktivieren.\n    Du wirst nach deinem Username gefragt.",
+                    Text = "\U0001F4A1 Tipp: Starte das Spiel neu, um Multiplayer zu aktivieren.\n    Du wirst nach deinem Username gefragt.",
                     Location = new Point(10, 80),
                     Size = new Size(530, 40),
-                    Font = new Font("Segoe UI", 8F),
+                    Font = new Font("Segoe UI Emoji", 8F),
                     ForeColor = TextColor
                 };
                 mpPanel.Controls.Add(lblMpHint);
