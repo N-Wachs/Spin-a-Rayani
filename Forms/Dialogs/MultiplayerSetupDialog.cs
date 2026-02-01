@@ -14,13 +14,13 @@ namespace SpinARayan
         private Button btnSkip;
         private Button btnBrowse;
         
-        // Dark Mode Colors
-        private readonly Color DarkBackground = Color.FromArgb(30, 30, 30);
-        private readonly Color DarkPanel = Color.FromArgb(45, 45, 48);
-        private readonly Color DarkAccent = Color.FromArgb(60, 60, 65);
-        private readonly Color BrightBlue = Color.FromArgb(0, 174, 255);
-        private readonly Color BrightGold = Color.FromArgb(255, 215, 0);
-        private readonly Color TextColor = Color.FromArgb(230, 230, 230);
+        // Modern Theme Colors
+        private readonly Color DarkBackground = Color.FromArgb(30, 30, 30);        // BackgroundElevated
+        private readonly Color DarkPanel = Color.FromArgb(38, 38, 38);             // BackgroundPanel
+        private readonly Color DarkAccent = Color.FromArgb(48, 63, 159);           // PrimaryMedium
+        private readonly Color BrightBlue = Color.FromArgb(33, 150, 243);          // AccentBlue
+        private readonly Color BrightGold = Color.FromArgb(255, 193, 7);           // Warning Amber
+        private readonly Color TextColor = Color.FromArgb(255, 255, 255);          // White
 
         public string? SharedFolder { get; private set; }
         public bool IsAdmin { get; private set; }
@@ -44,7 +44,7 @@ namespace SpinARayan
             // Title
             var lblTitle = new Label
             {
-                Text = "?? Multiplayer Konfiguration",
+                Text = "üåê Multiplayer Konfiguration",
                 Location = new Point(20, 20),
                 Size = new Size(550, 40),
                 Font = new Font("Segoe UI", 16F, FontStyle.Bold),
@@ -55,8 +55,8 @@ namespace SpinARayan
             // Description
             var lblDesc = new Label
             {
-                Text = "Mˆchtest du Multiplayer aktivieren?\n" +
-                       "Admin kann Events f¸r alle Spieler starten, Clients empfangen Events.",
+                Text = "MÔøΩchtest du Multiplayer aktivieren?\n" +
+                       "Admin kann Events fÔøΩr alle Spieler starten, Clients empfangen Events.",
                 Location = new Point(20, 70),
                 Size = new Size(550, 50),
                 Font = new Font("Segoe UI", 10F),
@@ -67,7 +67,7 @@ namespace SpinARayan
             // Role Selection
             var lblRole = new Label
             {
-                Text = "W‰hle deine Rolle:",
+                Text = "WÔøΩhle deine Rolle:",
                 Location = new Point(20, 140),
                 Size = new Size(200, 25),
                 Font = new Font("Segoe UI", 11F, FontStyle.Bold),
@@ -120,7 +120,7 @@ namespace SpinARayan
 
             btnBrowse = new Button
             {
-                Text = "??",
+                Text = "üìÅ",
                 Location = new Point(490, 270),
                 Size = new Size(80, 30),
                 Font = new Font("Segoe UI", 12F),
@@ -129,7 +129,7 @@ namespace SpinARayan
                 FlatStyle = FlatStyle.Flat
             };
             btnBrowse.FlatAppearance.BorderSize = 1;
-            btnBrowse.FlatAppearance.BorderColor = Color.FromArgb(80, 80, 85);
+            btnBrowse.FlatAppearance.BorderColor = Color.FromArgb(92, 107, 192); // PrimaryLight
             btnBrowse.Click += BtnBrowse_Click;
             this.Controls.Add(btnBrowse);
 
@@ -147,7 +147,7 @@ namespace SpinARayan
             // Save Button
             btnSave = new Button
             {
-                Text = "? Multiplayer aktivieren",
+                Text = "‚úì Multiplayer aktivieren",
                 Location = new Point(20, 350),
                 Size = new Size(270, 50),
                 Font = new Font("Segoe UI", 12F, FontStyle.Bold),
@@ -155,14 +155,15 @@ namespace SpinARayan
                 ForeColor = Color.White,
                 FlatStyle = FlatStyle.Flat
             };
-            btnSave.FlatAppearance.BorderSize = 0;
+            btnSave.FlatAppearance.BorderSize = 1;
+            btnSave.FlatAppearance.BorderColor = Color.FromArgb(66, 165, 245); // AccentBlueLight
             btnSave.Click += BtnSave_Click;
             this.Controls.Add(btnSave);
 
             // Skip Button
             btnSkip = new Button
             {
-                Text = "Sp‰ter / Single-Player",
+                Text = "Sp√§ter / Single-Player",
                 Location = new Point(300, 350),
                 Size = new Size(270, 50),
                 Font = new Font("Segoe UI", 11F),
@@ -171,7 +172,7 @@ namespace SpinARayan
                 FlatStyle = FlatStyle.Flat
             };
             btnSkip.FlatAppearance.BorderSize = 1;
-            btnSkip.FlatAppearance.BorderColor = Color.FromArgb(80, 80, 85);
+            btnSkip.FlatAppearance.BorderColor = Color.FromArgb(92, 107, 192); // PrimaryLight
             btnSkip.Click += BtnSkip_Click;
             this.Controls.Add(btnSkip);
         }
@@ -207,7 +208,7 @@ namespace SpinARayan
         {
             using var folderDialog = new FolderBrowserDialog
             {
-                Description = "W‰hle deinen OneDrive/Dropbox Ordner f¸r Multiplayer:",
+                Description = "WÔøΩhle deinen OneDrive/Dropbox Ordner fÔøΩr Multiplayer:",
                 ShowNewFolderButton = true
             };
 
@@ -269,7 +270,7 @@ namespace SpinARayan
             {
                 MessageBox.Show(
                     $"Fehler beim Erstellen des Ordners:\n{ex.Message}\n\n" +
-                    "Bitte erstelle den Ordner manuell oder w‰hle einen anderen Pfad.",
+                    "Bitte erstelle den Ordner manuell oder wÔøΩhle einen anderen Pfad.",
                     "Fehler",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error
@@ -291,7 +292,7 @@ namespace SpinARayan
                                       $"FOLDER={folder}\n" +
                                       $"ADMIN={IsAdmin.ToString().ToLower()}\n\n" +
                                       $"# Role: {(IsAdmin ? "ADMIN" : "CLIENT")}\n" +
-                                      $"# {(IsAdmin ? "Du kannst Events starten mit 'E' oder 'M'" : "Du empf‰ngst Events vom Admin")}\n";
+                                      $"# {(IsAdmin ? "Du kannst Events starten mit 'E' oder 'M'" : "Du empfÔøΩngst Events vom Admin")}\n";
 
                 File.WriteAllText(configPath, configContent);
 
@@ -300,7 +301,7 @@ namespace SpinARayan
                     $"Rolle: {(IsAdmin ? "Admin (Events starten)" : "Client (Events empfangen)")}\n" +
                     $"Ordner: {folder}\n\n" +
                     $"Config gespeichert unter:\n{configPath}\n\n" +
-                    (IsAdmin ? "Dr¸cke 'E' oder 'M' im Spiel um Events zu starten!" : "Warte auf Events vom Admin!"),
+                    (IsAdmin ? "DrÔøΩcke 'E' oder 'M' im Spiel um Events zu starten!" : "Warte auf Events vom Admin!"),
                     "Setup abgeschlossen",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information
@@ -323,10 +324,10 @@ namespace SpinARayan
         private void BtnSkip_Click(object? sender, EventArgs e)
         {
             var result = MessageBox.Show(
-                "Multiplayer-Setup ¸berspringen?\n\n" +
-                "Du kannst es sp‰ter aktivieren indem du\n" +
+                "Multiplayer-Setup ÔøΩberspringen?\n\n" +
+                "Du kannst es spÔøΩter aktivieren indem du\n" +
                 "eine 'multiplayer.txt' Datei erstellst.",
-                "Setup ¸berspringen",
+                "Setup ÔøΩberspringen",
                 MessageBoxButtons.YesNo,
                 MessageBoxIcon.Question
             );

@@ -16,14 +16,14 @@ namespace SpinARayan
         private Panel panelDices;
         private Label lblTitle;
         
-        // Dark Mode Colors
-        private readonly Color DarkBackground = Color.FromArgb(30, 30, 30);
-        private readonly Color DarkPanel = Color.FromArgb(45, 45, 48);
-        private readonly Color DarkAccent = Color.FromArgb(60, 60, 65);
-        private readonly Color BrightGreen = Color.FromArgb(0, 255, 127);
-        private readonly Color BrightBlue = Color.FromArgb(0, 174, 255);
-        private readonly Color BrightGold = Color.FromArgb(255, 215, 0);
-        private readonly Color TextColor = Color.FromArgb(230, 230, 230);
+        // Modern Theme Colors
+        private readonly Color DarkBackground = Color.FromArgb(30, 30, 30);        // BackgroundElevated
+        private readonly Color DarkPanel = Color.FromArgb(38, 38, 38);             // BackgroundPanel
+        private readonly Color DarkAccent = Color.FromArgb(48, 63, 159);           // PrimaryMedium
+        private readonly Color BrightGreen = Color.FromArgb(76, 175, 80);          // Success Green
+        private readonly Color BrightBlue = Color.FromArgb(33, 150, 243);          // AccentBlue
+        private readonly Color BrightGold = Color.FromArgb(255, 193, 7);           // Warning Amber
+        private readonly Color TextColor = Color.FromArgb(255, 255, 255);          // White
 
         public DiceSelectionForm(GameManager gameManager, Action onDiceSelected)
         {
