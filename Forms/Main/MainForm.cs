@@ -16,6 +16,7 @@ namespace SpinARayan
         private readonly GameManager _gameManager;
         private System.Windows.Forms.Timer _rollCooldownTimer;
         private System.Windows.Forms.Timer _autoRollTimer;
+        private System.Windows.Forms.Timer _autoSaveTimer; // Auto-save every 20 seconds
         private double _rollCooldownRemaining = 0;
         private bool _plotDisplayInitialized = false;
         private List<Panel> _plotPanels = new List<Panel>();
@@ -238,6 +239,13 @@ namespace SpinARayan
             _autoRollTimer = new System.Windows.Forms.Timer();
             _autoRollTimer.Interval = 100;
             _autoRollTimer.Tick += AutoRollTimer_Tick;
+
+            // Auto-save timer: Save every 20 seconds for data safety
+            _autoSaveTimer = new System.Windows.Forms.Timer();
+            _autoSaveTimer.Interval = 20000; // 20 seconds
+            _autoSaveTimer.Tick += AutoSaveTimer_Tick;
+            _autoSaveTimer.Start();
+            Console.WriteLine("[MainForm] Auto-save timer started (every 20 seconds)");
 
             CreateDiceInfoLabel();
             CreateEventDisplay();
@@ -802,6 +810,19 @@ namespace SpinARayan
             else
             {
                 btnRoll.Text = $"ROLL\n{_rollCooldownRemaining:F1}s";
+            }
+        }
+
+        private void AutoSaveTimer_Tick(object? sender, EventArgs e)
+        {
+            try
+            {
+                _gameManager.Save();
+                Console.WriteLine($"[MainForm] Auto-saved at {DateTime.Now:HH:mm:ss}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MainForm] Auto-save failed: {ex.Message}");
             }
         }
 
@@ -1610,7 +1631,21 @@ namespace SpinARayan
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
-            _gameManager.Save();
+            try
+            {
+                // Stop all timers
+                _rollCooldownTimer?.Stop();
+                _autoRollTimer?.Stop();
+                _autoSaveTimer?.Stop();
+                
+                // Final save before closing
+                _gameManager.Save();
+                Console.WriteLine("[MainForm] Final save completed on form closing");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[MainForm] Error during form closing: {ex.Message}");
+            }
             
             // Clean up cached images
             foreach (var image in _diceImageCache.Values)

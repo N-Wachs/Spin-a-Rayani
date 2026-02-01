@@ -16,6 +16,7 @@ namespace SpinARayan.Services
         private DateTime _lastUpdate;
         private DateTime _nextEventTime;
         private List<SuffixEvent> _currentEvents = new List<SuffixEvent>();
+        private readonly System.Threading.SynchronizationContext? _uiContext;
 
         public event Action? OnStatsChanged;
         public event Action<Rayan>? OnRayanRolled;
@@ -33,6 +34,9 @@ namespace SpinARayan.Services
 
         public GameManager(string? multiplayerUsername = null)
         {
+            // Capture UI synchronization context for cross-thread safety
+            _uiContext = System.Threading.SynchronizationContext.Current;
+            
             _saveService = new SaveService();
             _rollService = new RollService();
             _questService = new QuestService();
@@ -81,13 +85,19 @@ namespace SpinARayan.Services
             // Update event display every second if we have active events
             if (_currentEvents.Any(e => e.IsActive))
             {
-                OnEventsChanged?.Invoke(_currentEvents.Where(e => e.IsActive).ToList());
+                // THREAD-SAFE: Always invoke on UI thread
+                var activeEventsList = _currentEvents.Where(e => e.IsActive).ToList();
+                InvokeOnUIThread(() =>
+                {
+                    OnEventsChanged?.Invoke(activeEventsList);
+                });
             }
 
-            // Autosave every 60 seconds (1 minute)
-            if ((int)(Stats.PlayTimeMinutes * 60) % 60 == 0 && (int)(Stats.PlayTimeMinutes * 60) > 0)
+            // Autosave every 20 seconds for data safety
+            if ((int)(Stats.PlayTimeMinutes * 60) % 20 == 0 && (int)(Stats.PlayTimeMinutes * 60) > 0)
             {
                 Save();
+                Console.WriteLine($"[GameManager] Auto-saved at {DateTime.Now:HH:mm:ss}");
             }
 
             // PERFORMANCE: Only trigger OnStatsChanged, don't force full UI update
@@ -319,6 +329,7 @@ namespace SpinARayan.Services
         
         /// <summary>
         /// Apply remote event from multiplayer sync - Adds to active events list with full parameters!
+        /// THREAD-SAFE: Can be called from background threads
         /// </summary>
         public void ApplyRemoteEvent(SharedEventData eventData)
         {
@@ -364,7 +375,6 @@ namespace SpinARayan.Services
             
             _currentEvents.Add(newEvent);
             _nextEventTime = DateTime.Now.AddMinutes(5); // Reset local event timer
-            OnEventsChanged?.Invoke(_currentEvents.Where(e => e.IsActive).ToList());
             
             Console.WriteLine($"[GameManager] ? Event added to active list!");
             Console.WriteLine($"[GameManager]   Event Name: {newEvent.EventName}");
@@ -374,6 +384,28 @@ namespace SpinARayan.Services
             Console.WriteLine($"[GameManager]   Money Boost: {newEvent.MoneyMultiplier}x");
             Console.WriteLine($"[GameManager]   Roll Speed: {newEvent.RollTimeModifier}x");
             Console.WriteLine($"[GameManager]   Active events: {_currentEvents.Count(e => e.IsActive)}");
+            
+            // THREAD-SAFE: Invoke event on UI thread to prevent crashes
+            InvokeOnUIThread(() =>
+            {
+                OnEventsChanged?.Invoke(_currentEvents.Where(e => e.IsActive).ToList());
+            });
+        }
+        
+        /// <summary>
+        /// Helper method to safely invoke actions on UI thread
+        /// </summary>
+        private void InvokeOnUIThread(Action action)
+        {
+            if (_uiContext != null)
+            {
+                _uiContext.Post(_ => action(), null);
+            }
+            else
+            {
+                // Fallback: run directly if no UI context captured
+                action();
+            }
         }
         
         private void UpdateEvents()
@@ -412,7 +444,13 @@ namespace SpinARayan.Services
             };
             
             _currentEvents.Add(newEvent);
-            OnEventsChanged?.Invoke(_currentEvents.Where(e => e.IsActive).ToList());
+            
+            // THREAD-SAFE: Invoke on UI thread
+            var activeEventsList = _currentEvents.Where(e => e.IsActive).ToList();
+            InvokeOnUIThread(() =>
+            {
+                OnEventsChanged?.Invoke(activeEventsList);
+            });
         }
 
     }
