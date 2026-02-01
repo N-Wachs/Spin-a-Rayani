@@ -21,6 +21,8 @@ public partial class App : Application
     private void ConfigureServices(IServiceCollection services)
     {
         // Services
+        services.AddSingleton<IRollService, RollService>();
+        services.AddSingleton<ISaveService, SaveService>();
         services.AddSingleton<IGameService, GameService>();
         // ViewModels
         services.AddSingleton<MainViewModel>();

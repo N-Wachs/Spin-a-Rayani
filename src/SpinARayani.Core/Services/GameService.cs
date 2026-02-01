@@ -48,6 +48,3 @@ public partial class GameService : ObservableObject, IGameService
     public void SaveGame() => _saveService.Save(Stats);
     public void LoadGame() => Stats = _saveService.Load();
 }
-
-public interface IRollService { Rayan Roll(double luck); }
-public interface ISaveService { void Save(PlayerStats stats); PlayerStats Load(); }

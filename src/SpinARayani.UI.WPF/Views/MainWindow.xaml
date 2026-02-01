@@ -13,44 +13,46 @@
         </Grid.ColumnDefinitions>
 
         <!-- Left Panel: Stats -->
-        <StackPanel Grid.Column="0" Spacing="10">
-            <ui:Card>
+        <StackPanel Grid.Column="0">
+            <ui:Card Margin="0,0,0,10">
                 <StackPanel>
-                    <TextBlock Text="Guthaben" Variant="Caption"/>
-                    <TextBlock Text="{Binding Stats.Money}" Variant="Title" Foreground="LightGreen"/>
+                    <TextBlock Text="Guthaben" FontSize="12" Opacity="0.7"/>
+                    <TextBlock Text="{Binding Stats.Money}" FontSize="20" FontWeight="Bold" Foreground="LightGreen"/>
                 </StackPanel>
             </ui:Card>
-            <ui:Card>
+            <ui:Card Margin="0,0,0,10">
                 <StackPanel>
-                    <TextBlock Text="Gems" Variant="Caption"/>
-                    <TextBlock Text="{Binding Stats.Gems}" Variant="Title" Foreground="SkyBlue"/>
+                    <TextBlock Text="Gems" FontSize="12" Opacity="0.7"/>
+                    <TextBlock Text="{Binding Stats.Gems}" FontSize="20" FontWeight="Bold" Foreground="SkyBlue"/>
                 </StackPanel>
             </ui:Card>
-            <ui:Card>
+            <ui:Card Margin="0,0,0,10">
                 <StackPanel>
-                    <TextBlock Text="Rebirths" Variant="Caption"/>
-                    <TextBlock Text="{Binding Stats.Rebirths}" Variant="Title" Foreground="Gold"/>
+                    <TextBlock Text="Rebirths" FontSize="12" Opacity="0.7"/>
+                    <TextBlock Text="{Binding Stats.Rebirths}" FontSize="20" FontWeight="Bold" Foreground="Gold"/>
                 </StackPanel>
             </ui:Card>
         </StackPanel>
 
         <!-- Center Panel: Action -->
-        <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="20">
+        <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Center">
             <ui:Button Content="SPIN" 
                        Command="{Binding RollCommand}"
                        FontSize="32" Padding="40,20"
-                       Appearance="Primary"/>
+                       Appearance="Primary"
+                       Margin="0,0,0,20"/>
             
             <TextBlock Text="Letzter Roll:" HorizontalAlignment="Center"/>
             <TextBlock Text="???" FontSize="24" FontWeight="Bold" HorizontalAlignment="Center"/>
         </StackPanel>
 
         <!-- Right Panel: Upgrades -->
-        <StackPanel Grid.Column="2" Spacing="10">
+        <StackPanel Grid.Column="2">
             <ui:Button Content="Rebirth" 
                        Command="{Binding RebirthCommand}"
-                       HorizontalAlignment="Stretch"/>
-            <ui:Button Content="Shop" HorizontalAlignment="Stretch"/>
+                       HorizontalAlignment="Stretch"
+                       Margin="0,0,0,10"/>
+            <ui:Button Content="Shop" HorizontalAlignment="Stretch" Margin="0,0,0,10"/>
             <ui:Button Content="Inventory" HorizontalAlignment="Stretch"/>
         </StackPanel>
     </Grid>
