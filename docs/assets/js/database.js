@@ -457,11 +457,78 @@ class DatabaseService {
         stats.bestRayanEverValue = BigInt(data.best_rayan_value || '0');
         stats.selectedDiceIndex = data.selected_dice_index || 0;
 
-        // Deserialize arrays
-        stats.inventory = JSON.parse(data.inventory || '[]').map(obj => Rayan.fromObject(obj));
-        stats.equippedRayanIndices = JSON.parse(data.equipped_rayan_indices || '[]');
-        stats.ownedDices = JSON.parse(data.owned_dice || '[]').map(obj => Dice.fromObject(obj));
-        stats.savedQuests = JSON.parse(data.saved_quests || '[]').map(obj => Quest.fromObject(obj));
+        // Deserialize arrays - Convert C# PascalCase to JS camelCase
+        try {
+            const rayans = JSON.parse(data.inventory || '[]');
+            stats.inventory = rayans.map(obj => {
+                // Convert C# property names to JS property names
+                return Rayan.fromObject({
+                    prefix: obj.Prefix || obj.prefix || '',
+                    suffix: obj.Suffix || obj.suffix || '',
+                    rarity: obj.Rarity || obj.rarity || 1,
+                    baseValue: obj.BaseValue || obj.baseValue || '0',
+                    multiplier: obj.Multiplier || obj.multiplier || 1.0
+                });
+            });
+            console.log('[DB] Loaded inventory:', stats.inventory.length, 'rayans');
+        } catch (e) {
+            console.error('[DB] Error parsing inventory:', e);
+            stats.inventory = [];
+        }
+
+        try {
+            stats.equippedRayanIndices = JSON.parse(data.equipped_rayan_indices || '[]');
+        } catch (e) {
+            console.error('[DB] Error parsing equipped indices:', e);
+            stats.equippedRayanIndices = [];
+        }
+
+        try {
+            const dices = JSON.parse(data.owned_dice || '[]');
+            stats.ownedDices = dices.map(obj => {
+                // Convert C# property names to JS property names
+                return Dice.fromObject({
+                    name: obj.Name || obj.name || 'Basic Dice',
+                    luckMultiplier: obj.LuckMultiplier || obj.luckMultiplier || 1.0,
+                    cost: obj.Cost || obj.cost || '0',
+                    quantity: obj.Quantity || obj.quantity || '0',
+                    isInfinite: obj.IsInfinite !== undefined ? obj.IsInfinite : (obj.isInfinite || false)
+                });
+            });
+            console.log('[DB] Loaded dices:', stats.ownedDices.length, 'dices');
+        } catch (e) {
+            console.error('[DB] Error parsing owned dices:', e);
+            stats.ownedDices = [new Dice("Basic Dice", 1.0, BigInt(0), BigInt(0), true)];
+        }
+
+        try {
+            // Quests need special handling - we need to match with QUEST_DEFINITIONS
+            const savedQuests = JSON.parse(data.saved_quests || '[]');
+            stats.savedQuests = savedQuests.map(obj => {
+                // Find the quest definition by ID (handle both C# and JS property names)
+                const questId = obj.Id || obj.id;
+                const definition = QUEST_DEFINITIONS.find(q => q.id === questId);
+                if (definition) {
+                    // Convert C# property names to JS property names
+                    return Quest.fromObject({
+                        id: questId,
+                        currentProgress: obj.CurrentProgress || obj.currentProgress || 0,
+                        isCompleted: obj.IsCompleted !== undefined ? obj.IsCompleted : (obj.isCompleted || false),
+                        isClaimed: obj.IsClaimed !== undefined ? obj.IsClaimed : (obj.isClaimed || false),
+                        timesCompleted: obj.TimesCompleted || obj.timesCompleted || 0,
+                        baseProgress: obj.BaseProgress || obj.baseProgress || 0,
+                        goal: obj.Goal || obj.goal || definition.goal
+                    }, definition);
+                } else {
+                    console.warn('[DB] Quest definition not found for ID:', questId);
+                    return null;
+                }
+            }).filter(q => q !== null); // Remove null entries
+            console.log('[DB] Loaded quests:', stats.savedQuests.length, 'quests');
+        } catch (e) {
+            console.error('[DB] Error parsing quests:', e);
+            stats.savedQuests = [];
+        }
 
         return stats;
     }

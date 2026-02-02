@@ -74,11 +74,12 @@ namespace SpinARayan
         {
             panelDices.Controls.Clear();
 
-            // Sort dices by LuckMultiplier descending (highest first)
+            // Sort dices: Basic Dice first, then by LuckMultiplier descending
             var sortedDices = _gameManager.Stats.OwnedDices
                 .Select((dice, index) => new { Dice = dice, OriginalIndex = index })
                 .Where(x => x.Dice.IsInfinite || x.Dice.Quantity > 0)
-                .OrderByDescending(x => x.Dice.LuckMultiplier)
+                .OrderBy(x => x.Dice.IsInfinite ? 0 : 1) // Infinite (Basic) first
+                .ThenByDescending(x => x.Dice.LuckMultiplier) // Then by luck
                 .ToList();
 
             int yPosition = 10;
