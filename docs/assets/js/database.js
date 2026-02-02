@@ -143,7 +143,12 @@ class DatabaseService {
 
             const saveData = savefiles[0];
             this.currentSavefileId = savefileId;
-            this.adminUsedThisSession = saveData.admin_used;
+            
+            // Track if admin was used (never downgrade from true to false)
+            if (saveData.admin_used && !this.adminUsedThisSession) {
+                this.adminUsedThisSession = true;
+                console.log('[DB] Admin flag loaded from savefile (was already used)');
+            }
 
             console.log(`[DB] Loaded savefile: ${savefileId}`);
             return this._convertDbToStats(saveData);

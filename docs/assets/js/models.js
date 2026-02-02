@@ -343,29 +343,95 @@ function formatBigInt(value) {
 }
 
 function getRarityClass(rarity) {
-    if (rarity < 10) return 'rarity-common';
-    if (rarity < 100) return 'rarity-uncommon';
-    if (rarity < 1000) return 'rarity-rare';
-    if (rarity < 10000) return 'rarity-epic';
-    if (rarity < 100000) return 'rarity-legendary';
-    if (rarity < 1000000) return 'rarity-mythic';
-    if (rarity < 10000000) return 'rarity-divine';
-    if (rarity < 100000000) return 'rarity-transcendent';
-    if (rarity < 1000000000) return 'rarity-cosmic';
-    return 'rarity-ultimate';
+    // Ultra-Extreme Tiers (1 Quintillion+)
+    if (rarity >= 1000000000000000000) return 'rarity-pure-energy';     // Pure Magenta
+    if (rarity >= 100000000000000000) return 'rarity-infinite-light';   // Pure Cyan
+    if (rarity >= 10000000000000000) return 'rarity-radiant-sun';       // Pure Yellow
+    
+    // Hyper-Legendary Tiers (1 Trillion - 1 Quadrillion)
+    if (rarity >= 1000000000000000) return 'rarity-cosmic-aura';        // Light Magenta
+    if (rarity >= 100000000000000) return 'rarity-astral-glow';         // Light Cyan
+    if (rarity >= 10000000000000) return 'rarity-celestial-shine';      // Light Yellow
+    
+    // Ultra-Legendary Tiers (100B - 1T)
+    if (rarity >= 1000000000000) return 'rarity-transcendent';          // Hot Pink
+    if (rarity >= 500000000000) return 'rarity-absolute';               // Light Blue
+    if (rarity >= 200000000000) return 'rarity-eternal';                // Lime Green
+    if (rarity >= 100000000000) return 'rarity-infinite';               // Peach
+    
+    // Legendary+ Tiers (10B - 100B)
+    if (rarity >= 50000000000) return 'rarity-ultra';                   // Bright Orange
+    if (rarity >= 20000000000) return 'rarity-mythic-plus';             // Purple-Pink
+    if (rarity >= 10000000000) return 'rarity-divine-plus';             // Mint Green
+    
+    // Epic+ Tiers (1B - 10B)
+    if (rarity >= 5000000000) return 'rarity-epic-plus';                // Salmon
+    if (rarity >= 2000000000) return 'rarity-cosmic-base';              // Sky Blue
+    if (rarity >= 1000000000) return 'rarity-universal';                // Light Green
+    
+    // Rare+ Tiers (100M - 1B)
+    if (rarity >= 500000000) return 'rarity-ancient';                   // Gold
+    if (rarity >= 200000000) return 'rarity-primordial';                // Violet
+    if (rarity >= 100000000) return 'rarity-legendary-plus';            // Teal
+    
+    // Standard High Tiers (10M - 100M)
+    if (rarity >= 50000000) return 'rarity-mythic';
+    if (rarity >= 20000000) return 'rarity-divine';
+    if (rarity >= 10000000) return 'rarity-transcendent-base';
+    
+    // Original Tiers
+    if (rarity >= 1000000) return 'rarity-cosmic';
+    if (rarity >= 100000) return 'rarity-legendary';
+    if (rarity >= 10000) return 'rarity-epic';
+    if (rarity >= 1000) return 'rarity-rare';
+    if (rarity >= 100) return 'rarity-uncommon';
+    return 'rarity-common';
 }
 
 function getRarityName(rarity) {
-    if (rarity < 10) return 'Common';
-    if (rarity < 100) return 'Uncommon';
-    if (rarity < 1000) return 'Rare';
-    if (rarity < 10000) return 'Epic';
-    if (rarity < 100000) return 'Legendary';
-    if (rarity < 1000000) return 'Mythic';
-    if (rarity < 10000000) return 'Divine';
-    if (rarity < 100000000) return 'Transcendent';
-    if (rarity < 1000000000) return 'Cosmic';
-    return 'Ultimate';
+    // Ultra-Extreme Tiers
+    if (rarity >= 1000000000000000000) return 'Pure Energy';
+    if (rarity >= 100000000000000000) return 'Infinite Light';
+    if (rarity >= 10000000000000000) return 'Radiant Sun';
+    
+    // Hyper-Legendary Tiers
+    if (rarity >= 1000000000000000) return 'Cosmic Aura';
+    if (rarity >= 100000000000000) return 'Astral Glow';
+    if (rarity >= 10000000000000) return 'Celestial Shine';
+    
+    // Ultra-Legendary Tiers
+    if (rarity >= 1000000000000) return 'Transcendent';
+    if (rarity >= 500000000000) return 'Absolute';
+    if (rarity >= 200000000000) return 'Eternal';
+    if (rarity >= 100000000000) return 'Infinite';
+    
+    // Legendary+ Tiers
+    if (rarity >= 50000000000) return 'Ultra';
+    if (rarity >= 20000000000) return 'Mythic+';
+    if (rarity >= 10000000000) return 'Divine+';
+    
+    // Epic+ Tiers
+    if (rarity >= 5000000000) return 'Epic+';
+    if (rarity >= 2000000000) return 'Cosmic';
+    if (rarity >= 1000000000) return 'Universal';
+    
+    // Rare+ Tiers
+    if (rarity >= 500000000) return 'Ancient';
+    if (rarity >= 200000000) return 'Primordial';
+    if (rarity >= 100000000) return 'Legendary+';
+    
+    // High Tiers
+    if (rarity >= 50000000) return 'Mythic';
+    if (rarity >= 20000000) return 'Divine';
+    if (rarity >= 10000000) return 'Transcendent';
+    
+    // Standard Tiers
+    if (rarity >= 1000000) return 'Cosmic';
+    if (rarity >= 100000) return 'Legendary';
+    if (rarity >= 10000) return 'Epic';
+    if (rarity >= 1000) return 'Rare';
+    if (rarity >= 100) return 'Uncommon';
+    return 'Common';
 }
 
 function formatRarity(rarity) {

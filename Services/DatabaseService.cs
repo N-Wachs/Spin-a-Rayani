@@ -26,7 +26,7 @@ namespace SpinARayan.Services
         private const string ENCRYPTION_KEY = "SpinARayanSecretKey2025";
 
         // Current game version for savefile tracking
-        private const string GAME_VERSION = "3.0.0";
+        private const string GAME_VERSION = "3.0.2";
 
         public DatabaseService(string username)
         {
@@ -322,6 +322,7 @@ namespace SpinARayan.Services
 
         /// <summary>
         /// Save player stats to Savefiles table. Updates last_played and admin_used automatically.
+        /// SIMPLE UPLOAD: No conflict resolution, just uploads current state to DB.
         /// </summary>
         public async Task<bool> SavePlayerDataAsync(PlayerStats stats)
         {
@@ -364,6 +365,10 @@ namespace SpinARayan.Services
                 return false;
             }
         }
+
+        // REMOVED: MergeStatsFromDb()
+        // Old conflict resolution system - no longer used
+        // Now using simple "Load once, upload only" approach
 
         /// <summary>
         /// Load or create savefile for user. Returns PlayerStats or null if failed.
@@ -457,8 +462,12 @@ namespace SpinARayan.Services
 
                 var saveData = savefiles[0];
 
-                // Track if admin was used in this save
-                _adminUsedThisSession = saveData.admin_used;
+                // Track if admin was used in this save (never downgrade from true to false)
+                if (saveData.admin_used && !_adminUsedThisSession)
+                {
+                    _adminUsedThisSession = true;
+                    Console.WriteLine($"[DatabaseService] Admin flag loaded from savefile (was already used)");
+                }
 
                 var stats = ConvertDbFormatToStats(saveData);
 
@@ -624,12 +633,21 @@ namespace SpinARayan.Services
 
         /// <summary>
         /// Create new savefile for current user (public method)
+        /// MAX 10 SAVEFILES PER USER
         /// </summary>
         public async Task<string?> CreateNewSavefileAsync()
         {
             if (string.IsNullOrEmpty(_currentUserId))
             {
                 Console.WriteLine($"[DatabaseService] No user ID set");
+                return null;
+            }
+
+            // Check savefile limit
+            var existingSavefiles = await GetUserSavefilesAsync(_currentUserId);
+            if (existingSavefiles.Count >= 10)
+            {
+                Console.WriteLine($"[DatabaseService] Cannot create savefile: Limit of 10 savefiles reached!");
                 return null;
             }
 

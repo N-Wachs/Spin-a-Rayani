@@ -2,6 +2,8 @@ using System;
 using System.Drawing;
 using System.Windows.Forms;
 using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
 using SpinARayan.Config;
 using SpinARayan.Services;
 
@@ -13,6 +15,8 @@ namespace SpinARayan.Forms.Dialogs
         public bool CreateNewSavefile { get; private set; }
 
         private readonly List<SavefileInfo> _savefiles;
+        private readonly DatabaseService? _databaseService; // For deleting savefiles
+        
         private readonly Color DarkBackground = ModernTheme.BackgroundElevated;
         private readonly Color DarkPanel = ModernTheme.BackgroundPanel;
         private readonly Color BrightGreen = ModernTheme.Success;
@@ -23,9 +27,17 @@ namespace SpinARayan.Forms.Dialogs
         private Panel panelSavefiles;
         private Button btnNewSavefile;
         private Label lblTitle;
+        private Label lblSavefileCount;
 
-        public SavefileSelectionForm(List<SavefileInfo> savefiles)
+        // Old constructor for backwards compatibility
+        public SavefileSelectionForm(List<SavefileInfo> savefiles) : this(null, savefiles)
         {
+        }
+
+        // New constructor with DatabaseService (for deleting savefiles)
+        public SavefileSelectionForm(DatabaseService? databaseService, List<SavefileInfo> savefiles)
+        {
+            _databaseService = databaseService;
             _savefiles = savefiles;
             InitializeComponent();
             ApplyDarkMode();
@@ -35,7 +47,7 @@ namespace SpinARayan.Forms.Dialogs
         private void InitializeComponent()
         {
             this.Text = "Savefile auswaehlen";
-            this.ClientSize = new Size(600, 500);
+            this.ClientSize = new Size(600, 540);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
@@ -51,11 +63,22 @@ namespace SpinARayan.Forms.Dialogs
             };
             this.Controls.Add(lblTitle);
 
+            // Savefile Count Label
+            lblSavefileCount = new Label
+            {
+                Text = $"{_savefiles.Count} / 10 Savefiles",
+                Location = new Point(20, 65),
+                Size = new Size(560, 20),
+                Font = new Font("Segoe UI", 10F),
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+            this.Controls.Add(lblSavefileCount);
+
             // Savefiles Panel
             panelSavefiles = new Panel
             {
-                Location = new Point(20, 70),
-                Size = new Size(560, 370),
+                Location = new Point(20, 90),
+                Size = new Size(560, 390),
                 AutoScroll = true,
                 BorderStyle = BorderStyle.FixedSingle
             };
@@ -65,13 +88,20 @@ namespace SpinARayan.Forms.Dialogs
             btnNewSavefile = new Button
             {
                 Text = "\U00002795 Neuer Savefile",
-                Location = new Point(20, 450),
+                Location = new Point(20, 490),
                 Size = new Size(560, 40),
                 Font = new Font("Segoe UI Emoji", 12F, FontStyle.Bold),
-                FlatStyle = FlatStyle.Flat
+                FlatStyle = FlatStyle.Flat,
+                Enabled = _savefiles.Count < 10 // Disable if at limit
             };
             btnNewSavefile.FlatAppearance.BorderSize = 0;
             btnNewSavefile.Click += BtnNewSavefile_Click;
+            
+            if (_savefiles.Count >= 10)
+            {
+                btnNewSavefile.Text = "\U000026D4 Limit erreicht (10/10)";
+            }
+            
             this.Controls.Add(btnNewSavefile);
         }
 
@@ -79,6 +109,7 @@ namespace SpinARayan.Forms.Dialogs
         {
             this.BackColor = DarkBackground;
             lblTitle.ForeColor = BrightGold;
+            lblSavefileCount.ForeColor = TextColor;
             panelSavefiles.BackColor = DarkBackground;
             btnNewSavefile.BackColor = BrightGreen;
             btnNewSavefile.ForeColor = Color.White;
@@ -165,8 +196,8 @@ namespace SpinARayan.Forms.Dialogs
             // Select Button (weiter unten wegen mehr Panel-Höhe)
             var btnSelect = new Button
             {
-                Location = new Point(420, 60), // von 50 auf 60
-                Size = new Size(90, 40), // von 35 auf 40 (größerer Button)
+                Location = new Point(320, 80), // Verschoben nach links
+                Size = new Size(90, 30),
                 Text = "Auswaehlen",
                 Font = new Font("Segoe UI", 9F, FontStyle.Bold),
                 BackColor = BrightGreen,
@@ -184,14 +215,128 @@ namespace SpinARayan.Forms.Dialogs
             };
             panel.Controls.Add(btnSelect);
 
+            // Delete Button (only if DatabaseService is available)
+            if (_databaseService != null)
+            {
+                var btnDelete = new Button
+                {
+                    Location = new Point(420, 80),
+                    Size = new Size(90, 30),
+                    Text = "\U0001F5D1 Loeschen",
+                    Font = new Font("Segoe UI Emoji", 8F, FontStyle.Bold),
+                    BackColor = BrightRed,
+                    ForeColor = Color.White,
+                    FlatStyle = FlatStyle.Flat,
+                    Tag = savefile.Id
+                };
+                btnDelete.FlatAppearance.BorderSize = 0;
+                btnDelete.Click += async (s, e) => await BtnDelete_ClickAsync(savefile.Id, panel);
+                panel.Controls.Add(btnDelete);
+            }
+
             return panel;
+        }
+
+        private async Task BtnDelete_ClickAsync(string savefileId, Panel panel)
+        {
+            var result = MessageBox.Show(
+                $"Möchtest du Savefile #{savefileId} wirklich löschen?\n\n" +
+                "Diese Aktion kann nicht rückgängig gemacht werden!",
+                "Savefile löschen",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning,
+                MessageBoxDefaultButton.Button2
+            );
+
+            if (result == DialogResult.Yes)
+            {
+                // Delete from database
+                if (_databaseService != null)
+                {
+                    var success = await _databaseService.DeleteSavefileAsync(savefileId);
+
+                    if (success)
+                    {
+                        // Remove from local list
+                        _savefiles.RemoveAll(s => s.Id == savefileId);
+                        
+                        // Remove panel from UI
+                        panelSavefiles.Controls.Remove(panel);
+                        panel.Dispose();
+
+                        // Update savefile count label
+                        lblSavefileCount.Text = $"{_savefiles.Count} / 10 Savefiles";
+                        
+                        // Enable/disable "New Savefile" button
+                        btnNewSavefile.Enabled = _savefiles.Count < 10;
+                        btnNewSavefile.Text = _savefiles.Count >= 10 
+                            ? "\U000026D4 Limit erreicht (10/10)"
+                            : "\U00002795 Neuer Savefile";
+
+                        // Reorganize remaining panels
+                        int yPos = 10;
+                        foreach (Control control in panelSavefiles.Controls)
+                        {
+                            if (control is Panel savefilePanel)
+                            {
+                                savefilePanel.Location = new Point(10, yPos);
+                                yPos += savefilePanel.Height + 10;
+                            }
+                        }
+
+                        MessageBox.Show(
+                            $"Savefile #{savefileId} wurde erfolgreich gelöscht!",
+                            "Erfolg",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information
+                        );
+                        
+                        // If no savefiles left, show empty message
+                        if (_savefiles.Count == 0)
+                        {
+                            var lblEmpty = new Label
+                            {
+                                Text = "Keine Savefiles vorhanden.\nErstelle einen neuen Savefile!",
+                                Location = new Point(20, 150),
+                                Size = new Size(520, 60),
+                                Font = new Font("Segoe UI", 12F),
+                                TextAlign = ContentAlignment.MiddleCenter,
+                                ForeColor = TextColor
+                            };
+                            panelSavefiles.Controls.Add(lblEmpty);
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show(
+                            "Fehler beim Löschen des Savefiles!",
+                            "Fehler",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Error
+                        );
+                    }
+                }
+            }
         }
 
         private void BtnNewSavefile_Click(object? sender, EventArgs e)
         {
+            // Check limit
+            if (_savefiles.Count >= 10)
+            {
+                MessageBox.Show(
+                    "Du hast bereits 10 Savefiles!\n\n" +
+                    "Bitte lösche einen alten Savefile, bevor du einen neuen erstellst.",
+                    "Limit erreicht",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
+                return;
+            }
+            
             CreateNewSavefile = true;
             SelectedSavefileId = null;
-            this.DialogResult = DialogResult.OK;
+            this.DialogResult = DialogResult.Retry; // Changed from OK to Retry
             this.Close();
         }
 

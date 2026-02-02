@@ -73,18 +73,8 @@ class UIManager {
         document.getElementById('inventorySearch').addEventListener('input', () => this.renderFullInventory());
         document.getElementById('inventorySort').addEventListener('change', () => this.renderFullInventory());
         
-        // Admin mode cheat code (comma, minus, period)
-        let cheatBuffer = [];
+        // Admin mode: Force event with 'E' key
         document.addEventListener('keydown', (e) => {
-            cheatBuffer.push(e.key);
-            if (cheatBuffer.length > 3) cheatBuffer.shift();
-            
-            if (cheatBuffer.join('') === ',-.') {
-                this.game.toggleAdminMode();
-                this.updateAll();
-                this.showToast(this.game.adminMode ? 'Admin Mode aktiviert!' : 'Admin Mode deaktiviert!', 'info');
-            }
-            
             // Force event with 'E' key in admin mode
             if (e.key === 'e' && this.game.adminMode) {
                 this.game.forceEvent();
