@@ -164,12 +164,7 @@ namespace SpinARayan.Services
                 });
             }
 
-            // Local auto-save every 60 seconds
-            if ((int)(Stats.PlayTimeMinutes * 60) % 60 == 0 && (int)(Stats.PlayTimeMinutes * 60) > 0)
-            {
-                SaveLocal(); // Only save locally, cloud sync handled by AutoSaveTimer
-                Console.WriteLine($"[GameManager] Local auto-save at {DateTime.Now:HH:mm:ss}");
-            }
+            // NO LOCAL AUTO-SAVE - Database only via AutoSaveTimer (every 20s)
 
             // PERFORMANCE: Only trigger OnStatsChanged, don't force full UI update
             // The UI will decide what to update based on dirty flags

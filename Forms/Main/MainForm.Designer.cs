@@ -14,6 +14,7 @@
         private Button btnQuests;
         private Button btnShop;
         private Button btnOptions;
+        private Button btnLeaderboard;
         private Label lblMoney;
         private Label lblGems;
         private Label lblRebirths;
@@ -44,6 +45,7 @@
             this.btnQuests = new Button();
             this.btnShop = new Button();
             this.btnOptions = new Button();
+            this.btnLeaderboard = new Button();
             this.lblMoney = new Label();
             this.lblGems = new Label();
             this.lblRebirths = new Label();
@@ -272,6 +274,21 @@
             this.btnOptions.FlatAppearance.BorderColor = Color.FromArgb(92, 107, 192); // PrimaryLight
             this.btnOptions.Click += new EventHandler(this.btnOptions_Click);
             this.panelRight.Controls.Add(this.btnOptions);
+            
+            // 
+            // btnLeaderboard
+            // 
+            this.btnLeaderboard.Location = new Point(20, 370);
+            this.btnLeaderboard.Size = new Size(260, 60);
+            this.btnLeaderboard.BackColor = Color.FromArgb(255, 193, 7); // Warning/Gold
+            this.btnLeaderboard.ForeColor = Color.White;
+            this.btnLeaderboard.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
+            this.btnLeaderboard.Text = "🏆 LEADERBOARD";
+            this.btnLeaderboard.FlatStyle = FlatStyle.Flat;
+            this.btnLeaderboard.FlatAppearance.BorderSize = 1;
+            this.btnLeaderboard.FlatAppearance.BorderColor = Color.FromArgb(255, 213, 79);
+            this.btnLeaderboard.Click += new EventHandler(this.btnLeaderboard_Click);
+            this.panelRight.Controls.Add(this.btnLeaderboard);
             
             // 
             // MainForm

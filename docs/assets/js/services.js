@@ -179,11 +179,17 @@ class QuestService {
 }
 
 // ========================================
-// Game Manager
+// Game Manager (Database-Only Mode)
 // ========================================
 class GameManager {
-    constructor() {
-        this.stats = SaveService.load();
+    constructor(stats = null, databaseService = null) {
+        // Database-only mode - stats must be provided
+        if (!stats || !databaseService) {
+            throw new Error('GameManager requires stats and databaseService!');
+        }
+        
+        this.stats = stats;
+        this.databaseService = databaseService;
         this.rollService = new RollService();
         this.questService = new QuestService();
         
@@ -208,6 +214,8 @@ class GameManager {
 
         // Start game timer
         this.startGameTimer();
+        
+        console.log('[GameManager] Initialized with database service');
     }
 
     startGameTimer() {
@@ -664,22 +672,34 @@ class GameManager {
         return baseCooldown;
     }
 
-    save() {
+    async save() {
         this.questService.saveQuestsToStats(this.stats);
-        SaveService.save(this.stats);
+        if (this.databaseService) {
+            try {
+                await this.databaseService.saveSavefile(this.stats);
+                console.log('[GameManager] Saved to database');
+            } catch (error) {
+                console.error('[GameManager] Save failed:', error);
+            }
+        }
     }
-
-    resetGame() {
-        SaveService.reset();
-        this.stats = SaveService.load();
-        this.questService.initializeQuests();
-        if (this.onStatsChanged) {
-            this.onStatsChanged();
+    
+    saveSync() {
+        // Synchronous save for page unload
+        this.questService.saveQuestsToStats(this.stats);
+        if (this.databaseService) {
+            // Fire and forget (best effort on unload)
+            this.databaseService.saveSavefile(this.stats).catch(e => {
+                console.error('[GameManager] Sync save failed:', e);
+            });
         }
     }
 
     toggleAdminMode() {
         this.adminMode = !this.adminMode;
+        if (this.adminMode && this.databaseService) {
+            this.databaseService.markAdminUsed();
+        }
         if (this.onStatsChanged) {
             this.onStatsChanged();
         }

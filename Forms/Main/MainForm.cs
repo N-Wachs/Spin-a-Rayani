@@ -1657,6 +1657,23 @@ namespace SpinARayan
             }, _databaseService, _currentSavefileId);
             optionsForm.ShowDialog();
         }
+        
+        private void btnLeaderboard_Click(object sender, EventArgs e)
+        {
+            if (_databaseService == null)
+            {
+                MessageBox.Show(
+                    "Leaderboard ist nur im Online-Modus verfügbar!",
+                    "Offline-Modus",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+                return;
+            }
+            
+            var leaderboardForm = new Forms.Dialogs.LeaderboardForm(_databaseService);
+            leaderboardForm.ShowDialog();
+        }
 
         protected override void OnFormClosing(FormClosingEventArgs e)
         {

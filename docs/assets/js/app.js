@@ -1,19 +1,79 @@
 /**
  * Spin a Rayan - Web Version
- * Main Application Entry Point
+ * Main Application Entry Point with Database Auth
  */
 
-// Global game manager and UI manager
+// Global instances
 let gameManager;
 let uiManager;
+let databaseService;
+let authUI;
+let savefileUI;
+let leaderboardUI;
 
 // Initialize the application
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('🎲 Spin a Rayan - Web Version');
+document.addEventListener('DOMContentLoaded', async () => {
+    console.log('🎲 Spin a Rayan - Web Version (Database-Only Mode)');
     console.log('Initializing...');
     
-    // Create game manager
-    gameManager = new GameManager();
+    // Show loading screen
+    showLoadingScreen();
+    
+    // Step 1: Create auth UI
+    databaseService = new DatabaseService('temp');
+    authUI = new AuthUI(databaseService);
+    
+    // Step 2: Try auto-login
+    const autoLoginSuccess = await authUI.tryAutoLogin();
+    
+    if (autoLoginSuccess) {
+        // Auto-login successful, proceed to savefile selection
+        await initializeSavefileSelection();
+    } else {
+        // Show login modal
+        hideLoadingScreen();
+        authUI.show();
+    }
+    
+    // Set up auth success callback
+    authUI.onSuccess = async (userId, username) => {
+        authUI.hide();
+        showLoadingScreen();
+        await initializeSavefileSelection();
+    };
+    
+    console.log(`📦 ${PREFIXES.length} Rayans loaded`);
+    console.log(`🎲 ${DICE_TEMPLATES.length} Dice types available`);
+    console.log(`📋 ${QUEST_DEFINITIONS.length} Quests available`);
+});
+
+async function initializeSavefileSelection() {
+    // Create savefile UI
+    savefileUI = new SavefileUI(databaseService);
+    
+    // Load savefiles
+    await savefileUI.load();
+    
+    // Show savefile selection
+    hideLoadingScreen();
+    savefileUI.show();
+    
+    // Set up savefile selection callback
+    savefileUI.onSelect = (stats, savefileId) => {
+        savefileUI.hide();
+        showLoadingScreen();
+        initializeGame(stats, savefileId);
+    };
+}
+
+function initializeGame(stats, savefileId) {
+    console.log('✅ Starting game with savefile:', savefileId);
+    
+    // Create game manager (database-only mode)
+    gameManager = new GameManager(stats, databaseService);
+    
+    // Create leaderboard UI
+    leaderboardUI = new LeaderboardUI(databaseService);
     
     // Create UI manager
     uiManager = new UIManager(gameManager);
@@ -34,6 +94,11 @@ document.addEventListener('DOMContentLoaded', () => {
         uiManager.updateEvents();
     };
     
+    // Add leaderboard button handler
+    document.querySelector('[data-panel="leaderboard"]').addEventListener('click', () => {
+        leaderboardUI.show();
+    });
+    
     // Initial UI update
     uiManager.updateAll();
     
@@ -42,47 +107,81 @@ document.addEventListener('DOMContentLoaded', () => {
         uiManager.updateEvents();
     }, 1000);
     
-    console.log('✅ Game initialized!');
-    console.log(`📦 ${PREFIXES.length} Rayans loaded`);
-    console.log(`🎲 ${DICE_TEMPLATES.length} Dice types available`);
-    console.log(`📋 ${QUEST_DEFINITIONS.length} Quests available`);
+    // Hide loading screen
+    hideLoadingScreen();
     
     // Show welcome toast
-    uiManager.showToast('Willkommen bei Spin a Rayan! 🎲', 'info');
-});
+    uiManager.showToast('Willkommen zurück! 🎲', 'info');
+    
+    console.log('✅ Game initialized!');
+}
+
+function showLoadingScreen() {
+    let loading = document.getElementById('loadingScreen');
+    if (!loading) {
+        loading = document.createElement('div');
+        loading.id = 'loadingScreen';
+        loading.className = 'loading-screen';
+        loading.innerHTML = `
+            <div class="loading-content">
+                <div class="spinner"></div>
+                <h2>🎲 Spin a Rayan</h2>
+                <p>Lade...</p>
+            </div>
+        `;
+        document.body.appendChild(loading);
+    }
+    loading.style.display = 'flex';
+}
+
+function hideLoadingScreen() {
+    const loading = document.getElementById('loadingScreen');
+    if (loading) {
+        loading.style.display = 'none';
+    }
+}
 
 // Save before leaving
 window.addEventListener('beforeunload', () => {
-    if (gameManager) {
-        gameManager.save();
+    if (gameManager && databaseService) {
+        // Synchronous save (will wait up to timeout)
+        gameManager.saveSync();
     }
 });
 
 // Debug helpers (available in console)
 window.debug = {
     addMoney: (amount) => {
-        gameManager.stats.money += BigInt(amount);
-        uiManager.updateAll();
-    },
-    addGems: (amount) => {
-        gameManager.stats.gems += amount;
-        uiManager.updateAll();
-    },
-    toggleAdmin: () => {
-        gameManager.toggleAdminMode();
-        uiManager.updateAll();
-    },
-    forceEvent: (suffix) => {
-        gameManager.forceEvent(suffix);
-    },
-    resetGame: () => {
-        if (confirm('Wirklich alles zurücksetzen?')) {
-            gameManager.resetGame();
+        if (gameManager) {
+            gameManager.stats.money += BigInt(amount);
             uiManager.updateAll();
         }
     },
-    save: () => {
-        gameManager.save();
-        uiManager.showToast('Spiel gespeichert!', 'success');
+    addGems: (amount) => {
+        if (gameManager) {
+            gameManager.stats.gems += amount;
+            uiManager.updateAll();
+        }
+    },
+    toggleAdmin: () => {
+        if (gameManager) {
+            gameManager.toggleAdminMode();
+            uiManager.updateAll();
+        }
+    },
+    forceEvent: (suffix) => {
+        if (gameManager) {
+            gameManager.forceEvent(suffix);
+        }
+    },
+    save: async () => {
+        if (gameManager && databaseService) {
+            const success = await databaseService.saveSavefile(gameManager.stats);
+            uiManager.showToast(success ? 'Gespeichert!' : 'Fehler!', success ? 'success' : 'error');
+        }
+    },
+    logout: () => {
+        localStorage.removeItem('sar_remember');
+        location.reload();
     }
 };
