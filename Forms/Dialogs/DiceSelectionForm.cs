@@ -44,7 +44,7 @@ namespace SpinARayan
         private void InitializeComponents()
         {
             this.Text = "Select Dice";
-            this.Size = new Size(ScaleForDpi(880), ScaleForDpi(750)); // DPI-Aware: Skalierte Form-Größe
+            this.Size = new Size(880, 750); // DPI-Aware: Form-Größe wird automatisch durch AutoScaleMode skaliert
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;

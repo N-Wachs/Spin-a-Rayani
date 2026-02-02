@@ -298,7 +298,10 @@
             // 
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi; // DPI-Aware: Skalierung an DPI anpassen
             this.ClientSize = new Size(1200, 700);
-            this.Controls.Add(this.panelCenter); // Fill-Panel muss zuerst hinzugefügt werden
+            // DPI-Aware: Controls müssen in spezifischer Reihenfolge hinzugefügt werden:
+            // Fill-Panel muss zuerst hinzugefügt werden, dann Left/Right Panels
+            // Alternative: TableLayoutPanel für robusteres Layout (zukünftige Verbesserung)
+            this.Controls.Add(this.panelCenter); // Fill-Panel zuerst
             this.Controls.Add(this.panelLeft);
             this.Controls.Add(this.panelRight);
             this.Text = "Spin a Rayan - Modern Edition";
