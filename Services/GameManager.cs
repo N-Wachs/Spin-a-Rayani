@@ -284,8 +284,20 @@ namespace SpinARayan.Services
                 Stats.Money = 0;
                 Stats.Inventory.Clear();
                 Stats.EquippedRayanIndices.Clear();
-                Stats.Rebirths++;
-                Stats.TotalRebirthsAllTime++; // Track all-time
+                
+                // Check if "Skip Next Rebirth" upgrade was purchased
+                if (Stats.SkipNextRebirth)
+                {
+                    Stats.Rebirths += 2; // Grant +2 instead of +1
+                    Stats.TotalRebirthsAllTime += 2;
+                    Stats.SkipNextRebirth = false; // Reset flag after use
+                    Console.WriteLine("[GameManager] Skip Next Rebirth activated! +2 Rebirths granted.");
+                }
+                else
+                {
+                    Stats.Rebirths++; // Normal: +1
+                    Stats.TotalRebirthsAllTime++;
+                }
                 
                 // Plot Slots nur erhöhen wenn unter 10 (Maximum)
                 if (Stats.PlotSlots < 10)

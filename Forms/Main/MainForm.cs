@@ -1119,11 +1119,49 @@ namespace SpinARayan
 
         private Color GetRarityColor(double rarity)
         {
-            if (rarity >= 1000000) return Color.FromArgb(127, 107, 0); // Dark Gold (50% dunkler)
-            if (rarity >= 100000) return Color.FromArgb(100, 50, 127); // Dark Purple (50% dunkler)
-            if (rarity >= 10000) return Color.FromArgb(0, 87, 127); // Dark Blue (50% dunkler)
-            if (rarity >= 1000) return Color.FromArgb(0, 127, 63); // Dark Green (50% dunkler)
-            return DarkAccent;
+            // Ultra-Extreme Tiers (1 Quintillion+) - Gedämpfte spektakuläre Farben
+            if (rarity >= 1000000000000000000) return Color.FromArgb(180, 0, 180);    // Dark Magenta - Pure Energy
+            if (rarity >= 100000000000000000) return Color.FromArgb(0, 180, 180);     // Dark Cyan - Infinite Light
+            if (rarity >= 10000000000000000) return Color.FromArgb(180, 180, 0);      // Dark Yellow - Radiant Sun
+            
+            // Hyper-Legendary Tiers (1 Trillion - 1 Quadrillion) - Gedämpfte kosmische Farben
+            if (rarity >= 1000000000000000) return Color.FromArgb(200, 100, 200);     // Medium Magenta - Cosmic Aura
+            if (rarity >= 100000000000000) return Color.FromArgb(100, 200, 200);      // Medium Cyan - Astral Glow
+            if (rarity >= 10000000000000) return Color.FromArgb(200, 200, 100);       // Medium Yellow - Celestial Shine
+            
+            // Ultra-Legendary Tiers (100B - 1T) - Gedämpfte intensive Farben
+            if (rarity >= 1000000000000) return Color.FromArgb(200, 80, 150);         // Medium Pink - Transcendent
+            if (rarity >= 500000000000) return Color.FromArgb(80, 150, 200);          // Medium Blue - Absolute
+            if (rarity >= 200000000000) return Color.FromArgb(150, 200, 80);          // Medium Lime - Eternal
+            if (rarity >= 100000000000) return Color.FromArgb(200, 150, 80);          // Medium Peach - Infinite
+            
+            // Legendary+ Tiers (10B - 100B) - Gedämpfte helle Farben
+            if (rarity >= 50000000000) return Color.FromArgb(200, 120, 0);            // Medium Orange - Ultra
+            if (rarity >= 20000000000) return Color.FromArgb(160, 80, 200);           // Medium Purple-Pink - Mythic
+            if (rarity >= 10000000000) return Color.FromArgb(80, 200, 120);           // Medium Mint - Divine
+            
+            // Epic+ Tiers (1B - 10B) - Gedämpfte mittlere Farben
+            if (rarity >= 5000000000) return Color.FromArgb(200, 80, 80);             // Medium Salmon - Epic+
+            if (rarity >= 2000000000) return Color.FromArgb(80, 120, 200);            // Medium Sky Blue - Cosmic
+            if (rarity >= 1000000000) return Color.FromArgb(120, 200, 80);            // Medium Light Green - Universal
+            
+            // Rare+ Tiers (100M - 1B) - Kräftige gedämpfte Farben
+            if (rarity >= 500000000) return Color.FromArgb(160, 120, 0);              // Darker Gold - Ancient
+            if (rarity >= 200000000) return Color.FromArgb(120, 80, 160);             // Darker Violet - Primordial
+            if (rarity >= 100000000) return Color.FromArgb(0, 120, 160);              // Darker Teal - Legendary
+            
+            // Uncommon+ Tiers (10M - 100M) - Gedämpfte kräftige Farben
+            if (rarity >= 50000000) return Color.FromArgb(150, 100, 0);               // Dark Gold
+            if (rarity >= 20000000) return Color.FromArgb(100, 70, 140);              // Dark Violet
+            if (rarity >= 10000000) return Color.FromArgb(0, 100, 140);               // Dark Teal
+            
+            // Standard Tiers (1M - 10M) - Original Farben
+            if (rarity >= 5000000) return Color.FromArgb(127, 107, 0);                // Very Dark Gold
+            if (rarity >= 1000000) return Color.FromArgb(100, 50, 127);               // Dark Purple
+            if (rarity >= 100000) return Color.FromArgb(0, 87, 127);                  // Dark Blue
+            if (rarity >= 10000) return Color.FromArgb(0, 127, 63);                   // Dark Green
+            
+            return DarkAccent; // Common
         }
 
         private void OnRayanRolled_Handler(Rayan rayan)

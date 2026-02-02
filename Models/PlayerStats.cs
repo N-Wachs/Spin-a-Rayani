@@ -70,6 +70,9 @@ namespace SpinARayan.Models
         
         // Multiplayer System
         public string MultiplayerUsername { get; set; } = "";
+        
+        // Skip Next Rebirth - Upgrade that grants +2 Rebirths on next rebirth
+        public bool SkipNextRebirth { get; set; } = false;
 
 
         public double MoneyMultiplier => 1.0 + (Rebirths * 4.0);

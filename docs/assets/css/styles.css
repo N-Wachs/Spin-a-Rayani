@@ -1149,7 +1149,7 @@ body {
     color: var(--accent-light);
 }
 
-/* Rarity color classes - Expanded for ultra-rare tiers */
+/* Rarity color classes - Expanded with adjusted colors (v3.1.0 - less bright) */
 
 /* Original Tiers */
 .rarity-common { color: var(--rarity-common); }
@@ -1162,41 +1162,41 @@ body {
 .rarity-transcendent { color: var(--rarity-transcendent); }
 .rarity-cosmic { color: var(--rarity-cosmic); }
 
-/* Extended High Tiers (10M - 100M) */
-.rarity-transcendent-base { color: #0078A0; } /* Dark Teal */
-.rarity-divine { color: #7850A0; } /* Dark Violet */
-.rarity-mythic { color: #B47800; } /* Dark Gold */
+/* Extended High Tiers (10M - 100M) - Gedämpft */
+.rarity-transcendent-base { color: #00648C; } /* Darker Teal */
+.rarity-divine { color: #64468C; } /* Darker Violet */
+.rarity-mythic { color: #966400; } /* Darker Gold */
 
-/* Rare+ Tiers (100M - 1B) */
-.rarity-legendary-plus { color: #0096C8; } /* Teal */
-.rarity-primordial { color: #9664C8; } /* Violet */
-.rarity-ancient { color: #C89600; } /* Gold */
+/* Rare+ Tiers (100M - 1B) - Gedämpft */
+.rarity-legendary-plus { color: #0078A0; } /* Darker Teal */
+.rarity-primordial { color: #7850A0; } /* Darker Violet */
+.rarity-ancient { color: #A07800; } /* Darker Gold */
 
-/* Epic+ Tiers (1B - 10B) */
-.rarity-universal { color: #96FF64; } /* Light Green */
-.rarity-cosmic-base { color: #6496FF; } /* Sky Blue */
-.rarity-epic-plus { color: #FF6464; } /* Salmon */
+/* Epic+ Tiers (1B - 10B) - Gedämpft */
+.rarity-universal { color: #78C850; } /* Medium Light Green */
+.rarity-cosmic-base { color: #5078C8; } /* Medium Sky Blue */
+.rarity-epic-plus { color: #C85050; } /* Medium Salmon */
 
-/* Legendary+ Tiers (10B - 100B) */
-.rarity-divine-plus { color: #64FF96; } /* Mint Green */
-.rarity-mythic-plus { color: #C864FF; } /* Purple-Pink */
-.rarity-ultra { color: #FF9600; } /* Bright Orange */
+/* Legendary+ Tiers (10B - 100B) - Gedämpft */
+.rarity-divine-plus { color: #50C878; } /* Medium Mint */
+.rarity-mythic-plus { color: #A050C8; } /* Medium Purple-Pink */
+.rarity-ultra { color: #C87800; } /* Medium Orange */
 
-/* Ultra-Legendary Tiers (100B - 1T) */
-.rarity-infinite { color: #FFC864; } /* Peach */
-.rarity-eternal { color: #C8FF64; } /* Lime Green */
-.rarity-absolute { color: #64C8FF; } /* Light Blue */
-.rarity-transcendent { color: #FF64C8; } /* Hot Pink */
+/* Ultra-Legendary Tiers (100B - 1T) - Gedämpft */
+.rarity-infinite { color: #C89650; } /* Medium Peach */
+.rarity-eternal { color: #96C850; } /* Medium Lime */
+.rarity-absolute { color: #5096C8; } /* Medium Blue */
+.rarity-transcendent { color: #C85096; } /* Medium Pink */
 
-/* Hyper-Legendary Tiers (1T - 1 Quadrillion) */
-.rarity-celestial-shine { color: #FFFF96; } /* Light Yellow */
-.rarity-astral-glow { color: #96FFFF; } /* Light Cyan */
-.rarity-cosmic-aura { color: #FF96FF; } /* Light Magenta */
+/* Hyper-Legendary Tiers (1T - 1 Quadrillion) - Gedämpft */
+.rarity-celestial-shine { color: #C8C864; } /* Medium Yellow */
+.rarity-astral-glow { color: #64C8C8; } /* Medium Cyan */
+.rarity-cosmic-aura { color: #C864C8; } /* Medium Magenta */
 
-/* Ultra-Extreme Tiers (1 Quadrillion+) */
-.rarity-radiant-sun { color: #FFFF00; } /* Pure Yellow */
-.rarity-infinite-light { color: #00FFFF; } /* Pure Cyan */
-.rarity-pure-energy { color: #FF00FF; } /* Pure Magenta */
+/* Ultra-Extreme Tiers (1 Quadrillion+) - Gedämpft */
+.rarity-radiant-sun { color: #B4B400; } /* Dark Yellow */
+.rarity-infinite-light { color: #00B4B4; } /* Dark Cyan */
+.rarity-pure-energy { color: #B400B4; } /* Dark Magenta */
 
 /* Fallback */
 .rarity-ultimate { color: var(--rarity-ultimate); }

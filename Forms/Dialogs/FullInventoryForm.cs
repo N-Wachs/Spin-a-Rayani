@@ -174,41 +174,41 @@ namespace SpinARayan
 
         private Color GetRarityColor(double rarity)
         {
-            // Ultra-Extreme Tiers (1 Quintillion+) - Spektakuläre Farben
-            if (rarity >= 1000000000000000000) return Color.FromArgb(255, 0, 255);    // Magenta - Pure Energy
-            if (rarity >= 100000000000000000) return Color.FromArgb(0, 255, 255);     // Cyan - Infinite Light
-            if (rarity >= 10000000000000000) return Color.FromArgb(255, 255, 0);      // Yellow - Radiant Sun
+            // Ultra-Extreme Tiers (1 Quintillion+) - Gedämpfte spektakuläre Farben
+            if (rarity >= 1000000000000000000) return Color.FromArgb(180, 0, 180);    // Dark Magenta - Pure Energy
+            if (rarity >= 100000000000000000) return Color.FromArgb(0, 180, 180);     // Dark Cyan - Infinite Light
+            if (rarity >= 10000000000000000) return Color.FromArgb(180, 180, 0);      // Dark Yellow - Radiant Sun
             
-            // Hyper-Legendary Tiers (1 Trillion - 1 Quadrillion) - Kosmische Farben
-            if (rarity >= 1000000000000000) return Color.FromArgb(255, 150, 255);     // Light Magenta - Cosmic Aura
-            if (rarity >= 100000000000000) return Color.FromArgb(150, 255, 255);      // Light Cyan - Astral Glow
-            if (rarity >= 10000000000000) return Color.FromArgb(255, 255, 150);       // Light Yellow - Celestial Shine
+            // Hyper-Legendary Tiers (1 Trillion - 1 Quadrillion) - Gedämpfte kosmische Farben
+            if (rarity >= 1000000000000000) return Color.FromArgb(200, 100, 200);     // Medium Magenta - Cosmic Aura
+            if (rarity >= 100000000000000) return Color.FromArgb(100, 200, 200);      // Medium Cyan - Astral Glow
+            if (rarity >= 10000000000000) return Color.FromArgb(200, 200, 100);       // Medium Yellow - Celestial Shine
             
-            // Ultra-Legendary Tiers (100B - 1T) - Intensive leuchtende Farben
-            if (rarity >= 1000000000000) return Color.FromArgb(255, 100, 200);        // Hot Pink - Transcendent
-            if (rarity >= 500000000000) return Color.FromArgb(100, 200, 255);         // Light Blue - Absolute
-            if (rarity >= 200000000000) return Color.FromArgb(200, 255, 100);         // Lime Green - Eternal
-            if (rarity >= 100000000000) return Color.FromArgb(255, 200, 100);         // Peach - Infinite
+            // Ultra-Legendary Tiers (100B - 1T) - Gedämpfte intensive Farben
+            if (rarity >= 1000000000000) return Color.FromArgb(200, 80, 150);         // Medium Pink - Transcendent
+            if (rarity >= 500000000000) return Color.FromArgb(80, 150, 200);          // Medium Blue - Absolute
+            if (rarity >= 200000000000) return Color.FromArgb(150, 200, 80);          // Medium Lime - Eternal
+            if (rarity >= 100000000000) return Color.FromArgb(200, 150, 80);          // Medium Peach - Infinite
             
-            // Legendary+ Tiers (10B - 100B) - Helle intensive Farben
-            if (rarity >= 50000000000) return Color.FromArgb(255, 150, 0);            // Bright Orange - Ultra
-            if (rarity >= 20000000000) return Color.FromArgb(200, 100, 255);          // Purple-Pink - Mythic
-            if (rarity >= 10000000000) return Color.FromArgb(100, 255, 150);          // Mint Green - Divine
+            // Legendary+ Tiers (10B - 100B) - Gedämpfte helle Farben
+            if (rarity >= 50000000000) return Color.FromArgb(200, 120, 0);            // Medium Orange - Ultra
+            if (rarity >= 20000000000) return Color.FromArgb(160, 80, 200);           // Medium Purple-Pink - Mythic
+            if (rarity >= 10000000000) return Color.FromArgb(80, 200, 120);           // Medium Mint - Divine
             
-            // Epic+ Tiers (1B - 10B) - Mittlere leuchtende Farben
-            if (rarity >= 5000000000) return Color.FromArgb(255, 100, 100);           // Salmon - Epic+
-            if (rarity >= 2000000000) return Color.FromArgb(100, 150, 255);           // Sky Blue - Cosmic
-            if (rarity >= 1000000000) return Color.FromArgb(150, 255, 100);           // Light Green - Universal
+            // Epic+ Tiers (1B - 10B) - Gedämpfte mittlere Farben
+            if (rarity >= 5000000000) return Color.FromArgb(200, 80, 80);             // Medium Salmon - Epic+
+            if (rarity >= 2000000000) return Color.FromArgb(80, 120, 200);            // Medium Sky Blue - Cosmic
+            if (rarity >= 1000000000) return Color.FromArgb(120, 200, 80);            // Medium Light Green - Universal
             
-            // Rare+ Tiers (100M - 1B) - Kräftige Farben
-            if (rarity >= 500000000) return Color.FromArgb(200, 150, 0);              // Gold - Ancient
-            if (rarity >= 200000000) return Color.FromArgb(150, 100, 200);            // Violet - Primordial
-            if (rarity >= 100000000) return Color.FromArgb(0, 150, 200);              // Teal - Legendary
+            // Rare+ Tiers (100M - 1B) - Kräftige gedämpfte Farben
+            if (rarity >= 500000000) return Color.FromArgb(160, 120, 0);              // Darker Gold - Ancient
+            if (rarity >= 200000000) return Color.FromArgb(120, 80, 160);             // Darker Violet - Primordial
+            if (rarity >= 100000000) return Color.FromArgb(0, 120, 160);              // Darker Teal - Legendary
             
             // Uncommon+ Tiers (10M - 100M) - Gedämpfte kräftige Farben
-            if (rarity >= 50000000) return Color.FromArgb(180, 120, 0);               // Dark Gold
-            if (rarity >= 20000000) return Color.FromArgb(120, 80, 160);              // Dark Violet
-            if (rarity >= 10000000) return Color.FromArgb(0, 120, 160);               // Dark Teal
+            if (rarity >= 50000000) return Color.FromArgb(150, 100, 0);               // Dark Gold
+            if (rarity >= 20000000) return Color.FromArgb(100, 70, 140);              // Dark Violet
+            if (rarity >= 10000000) return Color.FromArgb(0, 100, 140);               // Dark Teal
             
             // Standard Tiers (1M - 10M) - Original Farben
             if (rarity >= 5000000) return Color.FromArgb(127, 107, 0);                // Very Dark Gold

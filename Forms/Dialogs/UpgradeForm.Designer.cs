@@ -14,17 +14,17 @@ namespace SpinARayan
         private TabPage tabMoneyUpgrades;
         private Panel panelAutoRoll;
         private Panel panelRollCooldown;
-        private Panel panelPlotSlots;
         private Panel panelLuckBooster;
         private Label lblAutoRollTitle;
         private Button btnAutoRollUnlock;
         private Button btnAutoRollToggle;
-        private Label lblPlotSlots;
-        private Label lblPlotSlotsTitle;
-        private Button btnBuyPlotSlot;
         private Label lblLuckBooster;
         private Label lblLuckBoosterTitle;
         private Button btnBuyLuckBooster;
+        private Panel panelSkipNextRebirth;
+        private Label lblSkipNextRebirthTitle;
+        private Label lblSkipNextRebirth;
+        private Button btnBuySkipNextRebirth;
         private Label lblRollCooldown;
         private Label lblRollCooldownTitle;
         private Button btnReduceCooldown;
@@ -55,22 +55,22 @@ namespace SpinARayan
             this.lblRollCooldownTitle = new Label();
             this.lblRollCooldown = new Label();
             this.btnReduceCooldown = new Button();
-            this.panelPlotSlots = new Panel();
-            this.lblPlotSlotsTitle = new Label();
-            this.lblPlotSlots = new Label();
-            this.btnBuyPlotSlot = new Button();
             this.panelLuckBooster = new Panel();
             this.lblLuckBoosterTitle = new Label();
             this.lblLuckBooster = new Label();
             this.btnBuyLuckBooster = new Button();
+            this.panelSkipNextRebirth = new Panel();
+            this.lblSkipNextRebirthTitle = new Label();
+            this.lblSkipNextRebirth = new Label();
+            this.btnBuySkipNextRebirth = new Button();
             this.btnRefresh = new Button();
             this.tabControl.SuspendLayout();
             this.tabGemsUpgrades.SuspendLayout();
             this.tabMoneyUpgrades.SuspendLayout();
             this.panelAutoRoll.SuspendLayout();
             this.panelRollCooldown.SuspendLayout();
-            this.panelPlotSlots.SuspendLayout();
             this.panelLuckBooster.SuspendLayout();
+            this.panelSkipNextRebirth.SuspendLayout();
             this.SuspendLayout();
             
             // 
@@ -121,8 +121,8 @@ namespace SpinARayan
             // 
             // tabMoneyUpgrades
             // 
-            this.tabMoneyUpgrades.Controls.Add(this.panelPlotSlots);
             this.tabMoneyUpgrades.Controls.Add(this.panelLuckBooster);
+            this.tabMoneyUpgrades.Controls.Add(this.panelSkipNextRebirth);
             this.tabMoneyUpgrades.Text = "💰 Geld Upgrades";
             this.tabMoneyUpgrades.BackColor = Color.FromArgb(230, 255, 230);
             this.tabMoneyUpgrades.Font = new Font("Segoe UI Emoji", 10F, FontStyle.Regular);
@@ -201,49 +201,13 @@ namespace SpinARayan
             this.btnReduceCooldown.Click += new System.EventHandler(this.btnReduceCooldown_Click);
             
             // 
-            // panelPlotSlots
-            // 
-            this.panelPlotSlots.BorderStyle = BorderStyle.FixedSingle;
-            this.panelPlotSlots.Controls.Add(this.lblPlotSlotsTitle);
-            this.panelPlotSlots.Controls.Add(this.lblPlotSlots);
-            this.panelPlotSlots.Controls.Add(this.btnBuyPlotSlot);
-            this.panelPlotSlots.Location = new Point(10, 10);
-            this.panelPlotSlots.Size = new Size(630, 120);
-            this.panelPlotSlots.BackColor = Color.White;
-            
-            // 
-            // lblPlotSlotsTitle
-            // 
-            this.lblPlotSlotsTitle.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
-            this.lblPlotSlotsTitle.Location = new Point(10, 10);
-            this.lblPlotSlotsTitle.Size = new Size(610, 30);
-            this.lblPlotSlotsTitle.Text = "Plot Slots";
-            
-            // 
-            // lblPlotSlots
-            // 
-            this.lblPlotSlots.Font = new Font("Segoe UI", 10F);
-            this.lblPlotSlots.Location = new Point(10, 50);
-            this.lblPlotSlots.Size = new Size(610, 25);
-            this.lblPlotSlots.Text = "Aktuelle Plot Slots: 3";
-            
-            // 
-            // btnBuyPlotSlot
-            // 
-            this.btnBuyPlotSlot.Font = new Font("Segoe UI", 10F);
-            this.btnBuyPlotSlot.Location = new Point(10, 80);
-            this.btnBuyPlotSlot.Size = new Size(610, 25);
-            this.btnBuyPlotSlot.Text = "Plot Slot kaufen";
-            this.btnBuyPlotSlot.Click += new System.EventHandler(this.btnBuyPlotSlot_Click);
-            
-            // 
             // panelLuckBooster
             // 
             this.panelLuckBooster.BorderStyle = BorderStyle.FixedSingle;
             this.panelLuckBooster.Controls.Add(this.lblLuckBoosterTitle);
             this.panelLuckBooster.Controls.Add(this.lblLuckBooster);
             this.panelLuckBooster.Controls.Add(this.btnBuyLuckBooster);
-            this.panelLuckBooster.Location = new Point(10, 140);
+            this.panelLuckBooster.Location = new Point(10, 10);
             this.panelLuckBooster.Size = new Size(630, 120);
             this.panelLuckBooster.BackColor = Color.White;
             
@@ -293,12 +257,15 @@ namespace SpinARayan
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
+            
+            // Initialize Skip Next Rebirth panel
+            InitializeSkipNextRebirthPanel();
+            
             this.tabControl.ResumeLayout(false);
             this.tabGemsUpgrades.ResumeLayout(false);
             this.tabMoneyUpgrades.ResumeLayout(false);
             this.panelAutoRoll.ResumeLayout(false);
             this.panelRollCooldown.ResumeLayout(false);
-            this.panelPlotSlots.ResumeLayout(false);
             this.panelLuckBooster.ResumeLayout(false);
             this.ResumeLayout(false);
         }

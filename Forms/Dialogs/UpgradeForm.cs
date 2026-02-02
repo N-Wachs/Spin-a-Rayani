@@ -114,8 +114,8 @@ namespace SpinARayan
 
         private void LoadMoneyUpgrades()
         {
-            UpdatePlotSlotInfo();
             UpdateLuckBoosterInfo();
+            UpdateSkipNextRebirthInfo();
         }
 
         private void UpdateLuckBoosterInfo()
@@ -129,17 +129,6 @@ namespace SpinARayan
             btnBuyLuckBooster.Enabled = _gameManager.AdminMode || _gameManager.Stats.Money >= nextLevelCost;
             btnBuyLuckBooster.BackColor = btnBuyLuckBooster.Enabled ? BrightGreen : DarkAccent;
             lblLuckBooster.Text = $"Luck Multiplier: {currentLuck:F2}x (Level {currentLevel})";
-        }
-
-        private void UpdatePlotSlotInfo()
-        {
-            int currentSlots = _gameManager.Stats.PlotSlots;
-            const int maxSlots = 10;
-            
-            lblPlotSlots.Text = $"Plot Slots: {currentSlots} / {maxSlots} (Maximum)";
-            btnBuyPlotSlot.Text = "Nur durch Rebirth erhöhbar!";
-            btnBuyPlotSlot.Enabled = false;
-            btnBuyPlotSlot.BackColor = DarkAccent;
         }
 
         private void UpdateRollCooldownInfo()
@@ -211,12 +200,6 @@ namespace SpinARayan
             }
         }
 
-        private void btnBuyPlotSlot_Click(object sender, EventArgs e)
-        {
-            // Plot Slots can only be increased through Rebirths
-            // This button is disabled
-        }
-
         private void btnBuyLuckBooster_Click(object sender, EventArgs e)
         {
             BigInteger cost = CalculateLuckBoosterCost(_gameManager.Stats.LuckBoosterLevel);
@@ -253,9 +236,102 @@ namespace SpinARayan
             }
         }
 
+        private void btnBuySkipNextRebirth_Click(object sender, EventArgs e)
+        {
+            BigInteger cost = CalculateSkipNextRebirthCost();
+            
+            // Confirmation dialog
+            var result = MessageBox.Show(
+                $"⚡ Skip Next Rebirth kaufen?\n\n" +
+                $"Kosten: {FormatBigInt(cost)} Money\n\n" +
+                $"Effekte:\n" +
+                $"✅ Beim nächsten Rebirth: +2 Rebirths statt +1\n" +
+                $"❌ SOFORT: Verliert alle Dices (außer Basic)\n" +
+                $"❌ SOFORT: Verliert alle Rayans\n" +
+                $"💰 Zieht nur {FormatBigInt(cost)} ab, nicht den Rebirth-Preis\n\n" +
+                $"Möchtest du fortfahren?",
+                "Skip Next Rebirth",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning
+            );
+            
+            if (result == DialogResult.Yes)
+            {
+                if (_gameManager.AdminMode || _gameManager.Stats.Money >= cost)
+                {
+                    // Deduct money
+                    if (!_gameManager.AdminMode)
+                    {
+                        _gameManager.Stats.Money -= cost;
+                    }
+                    
+                    // Clear inventory and dices immediately
+                    _gameManager.Stats.Inventory.Clear();
+                    _gameManager.Stats.EquippedRayanIndices.Clear();
+                    
+                    var basicDice = _gameManager.Stats.OwnedDices.FirstOrDefault(d => d.IsInfinite);
+                    _gameManager.Stats.OwnedDices.Clear();
+                    if (basicDice != null)
+                    {
+                        _gameManager.Stats.OwnedDices.Add(basicDice);
+                    }
+                    _gameManager.Stats.SelectedDiceIndex = 0;
+                    
+                    // Set flag for next rebirth
+                    _gameManager.Stats.SkipNextRebirth = true;
+                    
+                    _gameManager.Save();
+                    LoadUpgrades();
+                    _onUpgradeChanged?.Invoke();
+                    
+                    MessageBox.Show(
+                        "✅ Skip Next Rebirth aktiviert!\n\n" +
+                        "Beim nächsten Rebirth erhältst du +2 Rebirths!",
+                        "Erfolg",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information
+                    );
+                }
+            }
+        }
+
         private void btnRefresh_Click(object sender, EventArgs e)
         {
             LoadUpgrades();
+        }
+
+        private void UpdateSkipNextRebirthInfo()
+        {
+            BigInteger cost = CalculateSkipNextRebirthCost();
+            
+            if (_gameManager.Stats.SkipNextRebirth)
+            {
+                // Already purchased, show active state
+                btnBuySkipNextRebirth.Text = "✅ AKTIV - Nächster Rebirth: +2";
+                btnBuySkipNextRebirth.Enabled = false;
+                btnBuySkipNextRebirth.BackColor = BrightGreen;
+                lblSkipNextRebirth.Text = "✅ Upgrade aktiv! Beim nächsten Rebirth erhältst du +2 Rebirths.\n" +
+                                          "Das Upgrade wurde bereits bezahlt.\n" +
+                                          "Nach dem Rebirth wird dieser Effekt zurückgesetzt.";
+            }
+            else
+            {
+                btnBuySkipNextRebirth.Text = _gameManager.AdminMode ?
+                    $"Upgrade kaufen (GRATIS)" :
+                    $"Upgrade kaufen ({FormatBigInt(cost)} Money)";
+                btnBuySkipNextRebirth.Enabled = _gameManager.AdminMode || _gameManager.Stats.Money >= cost;
+                btnBuySkipNextRebirth.BackColor = btnBuySkipNextRebirth.Enabled ? BrightGold : DarkAccent;
+                lblSkipNextRebirth.Text = $"Kosten: 60% Aufpreis vom aktuellen Rebirth-Preis.\n" +
+                                          $"Beim nächsten Rebirth erhältst du +2 Rebirths statt +1.\n" +
+                                          $"⚠️ Verliert alle Dices (außer Basic) und Rayans SOFORT!\n" +
+                                          $"💰 Zieht nur {FormatBigInt(cost)} ab, nicht den Rebirth-Preis.";
+            }
+        }
+
+        private BigInteger CalculateSkipNextRebirthCost()
+        {
+            // 60% Aufpreis vom aktuellen Rebirth-Preis
+            return _gameManager.Stats.NextRebirthCost * 16 / 10; // 1.6x = 160%
         }
     }
 }

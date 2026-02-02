@@ -26,7 +26,7 @@ namespace SpinARayan.Services
         private const string ENCRYPTION_KEY = "SpinARayanSecretKey2025";
 
         // Current game version for savefile tracking
-        private const string GAME_VERSION = "3.0.2";
+        private const string GAME_VERSION = "3.1.0";
 
         public DatabaseService(string username)
         {
@@ -771,7 +771,8 @@ namespace SpinARayan.Services
                 ["equipped_rayan_indices"] = equippedIndicesJson,
                 ["owned_dice"] = ownedDiceJson,
                 ["selected_dice_index"] = stats.SelectedDiceIndex,
-                ["saved_quests"] = savedQuestsJson
+                ["saved_quests"] = savedQuestsJson,
+                ["skip_next_rebirth"] = stats.SkipNextRebirth
             };
         }
 
@@ -796,7 +797,8 @@ namespace SpinARayan.Services
                 BestRayanEverName = saveData.best_rayan_ever_name,
                 BestRayanEverRarity = double.Parse(saveData.best_rayan_rarity ?? "0"),
                 BestRayanEverValue = BigInteger.Parse(saveData.best_rayan_value ?? "0"),
-                SelectedDiceIndex = saveData.selected_dice_index
+                SelectedDiceIndex = saveData.selected_dice_index,
+                SkipNextRebirth = saveData.skip_next_rebirth
             };
 
             // Deserialize JSONB arrays
@@ -1095,6 +1097,7 @@ namespace SpinARayan.Services
             public int user_id { get; set; } // ? INTEGER (wie in DB)
             public string? last_played { get; set; }
             public bool admin_used { get; set; }
+            public bool skip_next_rebirth { get; set; } // NEW: Skip Next Rebirth upgrade
         }
     }
     
