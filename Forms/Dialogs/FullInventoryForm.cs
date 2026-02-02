@@ -174,11 +174,49 @@ namespace SpinARayan
 
         private Color GetRarityColor(double rarity)
         {
-            if (rarity >= 1000000) return Color.FromArgb(127, 107, 0); // Dark Gold (50% dunkler)
-            if (rarity >= 100000) return Color.FromArgb(100, 50, 127); // Dark Purple (50% dunkler)
-            if (rarity >= 10000) return Color.FromArgb(0, 87, 127); // Dark Blue (50% dunkler)
-            if (rarity >= 1000) return Color.FromArgb(0, 127, 63); // Dark Green (50% dunkler)
-            return DarkAccent;
+            // Ultra-Extreme Tiers (1 Quintillion+) - Spektakuläre Farben
+            if (rarity >= 1000000000000000000) return Color.FromArgb(255, 0, 255);    // Magenta - Pure Energy
+            if (rarity >= 100000000000000000) return Color.FromArgb(0, 255, 255);     // Cyan - Infinite Light
+            if (rarity >= 10000000000000000) return Color.FromArgb(255, 255, 0);      // Yellow - Radiant Sun
+            
+            // Hyper-Legendary Tiers (1 Trillion - 1 Quadrillion) - Kosmische Farben
+            if (rarity >= 1000000000000000) return Color.FromArgb(255, 150, 255);     // Light Magenta - Cosmic Aura
+            if (rarity >= 100000000000000) return Color.FromArgb(150, 255, 255);      // Light Cyan - Astral Glow
+            if (rarity >= 10000000000000) return Color.FromArgb(255, 255, 150);       // Light Yellow - Celestial Shine
+            
+            // Ultra-Legendary Tiers (100B - 1T) - Intensive leuchtende Farben
+            if (rarity >= 1000000000000) return Color.FromArgb(255, 100, 200);        // Hot Pink - Transcendent
+            if (rarity >= 500000000000) return Color.FromArgb(100, 200, 255);         // Light Blue - Absolute
+            if (rarity >= 200000000000) return Color.FromArgb(200, 255, 100);         // Lime Green - Eternal
+            if (rarity >= 100000000000) return Color.FromArgb(255, 200, 100);         // Peach - Infinite
+            
+            // Legendary+ Tiers (10B - 100B) - Helle intensive Farben
+            if (rarity >= 50000000000) return Color.FromArgb(255, 150, 0);            // Bright Orange - Ultra
+            if (rarity >= 20000000000) return Color.FromArgb(200, 100, 255);          // Purple-Pink - Mythic
+            if (rarity >= 10000000000) return Color.FromArgb(100, 255, 150);          // Mint Green - Divine
+            
+            // Epic+ Tiers (1B - 10B) - Mittlere leuchtende Farben
+            if (rarity >= 5000000000) return Color.FromArgb(255, 100, 100);           // Salmon - Epic+
+            if (rarity >= 2000000000) return Color.FromArgb(100, 150, 255);           // Sky Blue - Cosmic
+            if (rarity >= 1000000000) return Color.FromArgb(150, 255, 100);           // Light Green - Universal
+            
+            // Rare+ Tiers (100M - 1B) - Kräftige Farben
+            if (rarity >= 500000000) return Color.FromArgb(200, 150, 0);              // Gold - Ancient
+            if (rarity >= 200000000) return Color.FromArgb(150, 100, 200);            // Violet - Primordial
+            if (rarity >= 100000000) return Color.FromArgb(0, 150, 200);              // Teal - Legendary
+            
+            // Uncommon+ Tiers (10M - 100M) - Gedämpfte kräftige Farben
+            if (rarity >= 50000000) return Color.FromArgb(180, 120, 0);               // Dark Gold
+            if (rarity >= 20000000) return Color.FromArgb(120, 80, 160);              // Dark Violet
+            if (rarity >= 10000000) return Color.FromArgb(0, 120, 160);               // Dark Teal
+            
+            // Standard Tiers (1M - 10M) - Original Farben
+            if (rarity >= 5000000) return Color.FromArgb(127, 107, 0);                // Very Dark Gold
+            if (rarity >= 1000000) return Color.FromArgb(100, 50, 127);               // Dark Purple
+            if (rarity >= 100000) return Color.FromArgb(0, 87, 127);                  // Dark Blue
+            if (rarity >= 10000) return Color.FromArgb(0, 127, 63);                   // Dark Green
+            
+            return DarkAccent; // Common
         }
 
         private string FormatBigInt(BigInteger value)

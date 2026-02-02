@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Linq;
@@ -33,7 +33,7 @@ namespace SpinARayan.Forms.Dialogs
         
         private void InitializeComponent()
         {
-            this.Text = "?? Leaderboard";
+            this.Text = "🏆 Leaderboard";
             this.ClientSize = new Size(800, 700);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -43,7 +43,7 @@ namespace SpinARayan.Forms.Dialogs
             // Title
             var lblTitle = new Label
             {
-                Text = "?? LEADERBOARD",
+                Text = "🏆 LEADERBOARD",
                 Location = new Point(20, 20),
                 Size = new Size(760, 40),
                 Font = new Font("Segoe UI Emoji", 18F, FontStyle.Bold),
@@ -76,12 +76,12 @@ namespace SpinARayan.Forms.Dialogs
             };
             _comboCategory.Items.AddRange(new object[]
             {
-                "?? Meistes Geld",
-                "? Seltenster Rayan",
-                "?? Meiste Rolls",
-                "?? Meiste Gems",
-                "?? Meiste Spielzeit",
-                "?? Meiste Rayans"
+                "💰 Meistes Geld",
+                "⭐ Seltenster Rayan",
+                "🎲 Meiste Rolls",
+                "💎 Meiste Gems",
+                "⏱️ Meiste Spielzeit",
+                "📦 Meiste Rayans"
             });
             _comboCategory.SelectedIndex = 0;
             _comboCategory.SelectedIndexChanged += ComboCategory_SelectedIndexChanged;
@@ -113,7 +113,7 @@ namespace SpinARayan.Forms.Dialogs
             // Close button
             var btnClose = new Button
             {
-                Text = "Schlie�en",
+                Text = "Schließen",
                 Location = new Point(650, 650),
                 Size = new Size(130, 40),
                 Font = new Font("Segoe UI", 11F, FontStyle.Bold),
@@ -128,7 +128,7 @@ namespace SpinARayan.Forms.Dialogs
             // Info label
             var lblInfo = new Label
             {
-                Text = "?? Nur legitime Spieler (ohne Admin-Modus) werden angezeigt",
+                Text = "🛡️ Nur legitime Spieler (ohne Admin-Modus) werden angezeigt",
                 Location = new Point(20, 655),
                 Size = new Size(600, 20),
                 Font = new Font("Segoe UI", 8F, FontStyle.Italic),
@@ -182,7 +182,7 @@ namespace SpinARayan.Forms.Dialogs
             {
                 var lblEmpty = new Label
                 {
-                    Text = "Keine Eintr�ge gefunden",
+                    Text = "Keine Einträge gefunden",
                     Location = new Point(280, 250),
                     Size = new Size(200, 30),
                     Font = new Font("Segoe UI", 12F),
@@ -209,45 +209,47 @@ namespace SpinARayan.Forms.Dialogs
         
         private Panel CreateLeaderboardEntry(LeaderboardEntry entry, int rank)
         {
+            bool isTopThree = rank <= 3;
+            
             var panel = new Panel
             {
                 Size = new Size(720, 60),
-                BackColor = rank <= 3 ? GetRankColor(rank) : Color.FromArgb(48, 48, 48),
+                BackColor = isTopThree ? GetRankColor(rank) : Color.FromArgb(48, 48, 48),
                 BorderStyle = BorderStyle.None
             };
             
-            // Rank
+            // Rank - Schwarz für Top 3, weiß für alle anderen
             var lblRank = new Label
             {
                 Text = GetRankEmoji(rank) + rank.ToString(),
                 Location = new Point(10, 15),
                 Size = new Size(60, 30),
                 Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold),
-                ForeColor = Color.White,
+                ForeColor = isTopThree ? Color.Black : Color.White,
                 TextAlign = ContentAlignment.MiddleCenter
             };
             panel.Controls.Add(lblRank);
             
-            // Username
+            // Username - Schwarz für Top 3, weiß für alle anderen
             var lblUsername = new Label
             {
                 Text = entry.Username,
                 Location = new Point(80, 10),
                 Size = new Size(250, 25),
                 Font = new Font("Segoe UI", 12F, FontStyle.Bold),
-                ForeColor = Color.White,
+                ForeColor = isTopThree ? Color.Black : Color.White,
                 TextAlign = ContentAlignment.MiddleLeft
             };
             panel.Controls.Add(lblUsername);
             
-            // Value
+            // Value - Dunkelgrau für Top 3, hellgrau für alle anderen
             var lblValue = new Label
             {
                 Text = entry.ValueFormatted,
                 Location = new Point(80, 32),
                 Size = new Size(600, 20),
                 Font = new Font("Segoe UI", 10F),
-                ForeColor = Color.FromArgb(189, 189, 189),
+                ForeColor = isTopThree ? Color.FromArgb(64, 64, 64) : Color.FromArgb(189, 189, 189),
                 TextAlign = ContentAlignment.MiddleLeft
             };
             panel.Controls.Add(lblValue);
@@ -270,9 +272,9 @@ namespace SpinARayan.Forms.Dialogs
         {
             return rank switch
             {
-                1 => "?? ",
-                2 => "?? ",
-                3 => "?? ",
+                1 => "🥇 ",
+                2 => "🥈 ",
+                3 => "🥉 ",
                 _ => ""
             };
         }

@@ -1149,7 +1149,9 @@ body {
     color: var(--accent-light);
 }
 
-/* Rarity color classes */
+/* Rarity color classes - Expanded for ultra-rare tiers */
+
+/* Original Tiers */
 .rarity-common { color: var(--rarity-common); }
 .rarity-uncommon { color: var(--rarity-uncommon); }
 .rarity-rare { color: var(--rarity-rare); }
@@ -1159,6 +1161,44 @@ body {
 .rarity-divine { color: var(--rarity-divine); }
 .rarity-transcendent { color: var(--rarity-transcendent); }
 .rarity-cosmic { color: var(--rarity-cosmic); }
+
+/* Extended High Tiers (10M - 100M) */
+.rarity-transcendent-base { color: #0078A0; } /* Dark Teal */
+.rarity-divine { color: #7850A0; } /* Dark Violet */
+.rarity-mythic { color: #B47800; } /* Dark Gold */
+
+/* Rare+ Tiers (100M - 1B) */
+.rarity-legendary-plus { color: #0096C8; } /* Teal */
+.rarity-primordial { color: #9664C8; } /* Violet */
+.rarity-ancient { color: #C89600; } /* Gold */
+
+/* Epic+ Tiers (1B - 10B) */
+.rarity-universal { color: #96FF64; } /* Light Green */
+.rarity-cosmic-base { color: #6496FF; } /* Sky Blue */
+.rarity-epic-plus { color: #FF6464; } /* Salmon */
+
+/* Legendary+ Tiers (10B - 100B) */
+.rarity-divine-plus { color: #64FF96; } /* Mint Green */
+.rarity-mythic-plus { color: #C864FF; } /* Purple-Pink */
+.rarity-ultra { color: #FF9600; } /* Bright Orange */
+
+/* Ultra-Legendary Tiers (100B - 1T) */
+.rarity-infinite { color: #FFC864; } /* Peach */
+.rarity-eternal { color: #C8FF64; } /* Lime Green */
+.rarity-absolute { color: #64C8FF; } /* Light Blue */
+.rarity-transcendent { color: #FF64C8; } /* Hot Pink */
+
+/* Hyper-Legendary Tiers (1T - 1 Quadrillion) */
+.rarity-celestial-shine { color: #FFFF96; } /* Light Yellow */
+.rarity-astral-glow { color: #96FFFF; } /* Light Cyan */
+.rarity-cosmic-aura { color: #FF96FF; } /* Light Magenta */
+
+/* Ultra-Extreme Tiers (1 Quadrillion+) */
+.rarity-radiant-sun { color: #FFFF00; } /* Pure Yellow */
+.rarity-infinite-light { color: #00FFFF; } /* Pure Cyan */
+.rarity-pure-energy { color: #FF00FF; } /* Pure Magenta */
+
+/* Fallback */
 .rarity-ultimate { color: var(--rarity-ultimate); }
 
 /* Scrollbar styling */

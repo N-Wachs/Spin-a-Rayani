@@ -232,10 +232,12 @@ class GameManager {
         this.updateEvents();
 
         // Remove expired events
+        const hadEvents = this.currentEvents.length > 0;
         this.currentEvents = this.currentEvents.filter(evt => evt.isActive);
+        const hasEvents = this.currentEvents.length > 0;
 
-        // Update event display
-        if (this.currentEvents.length > 0 && this.onEventsChanged) {
+        // Update event display (always call when events change, including when last event expires)
+        if ((hadEvents || hasEvents) && this.onEventsChanged) {
             this.onEventsChanged(this.currentEvents.filter(e => e.isActive));
         }
 

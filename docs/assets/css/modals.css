@@ -257,14 +257,32 @@
     border: 2px solid gold;
 }
 
+.leaderboard-entry.rank-1 .entry-rank,
+.leaderboard-entry.rank-1 .entry-username,
+.leaderboard-entry.rank-1 .entry-value {
+    color: black !important;
+}
+
 .leaderboard-entry.rank-2 {
     background: linear-gradient(135deg, rgba(192, 192, 192, 0.2), #2d3748);
     border: 2px solid silver;
 }
 
+.leaderboard-entry.rank-2 .entry-rank,
+.leaderboard-entry.rank-2 .entry-username,
+.leaderboard-entry.rank-2 .entry-value {
+    color: black !important;
+}
+
 .leaderboard-entry.rank-3 {
     background: linear-gradient(135deg, rgba(205, 127, 50, 0.2), #2d3748);
     border: 2px solid #cd7f32;
+}
+
+.leaderboard-entry.rank-3 .entry-rank,
+.leaderboard-entry.rank-3 .entry-username,
+.leaderboard-entry.rank-3 .entry-value {
+    color: black !important;
 }
 
 .entry-rank {

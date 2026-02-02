@@ -322,6 +322,7 @@ namespace SpinARayan.Services
 
         /// <summary>
         /// Save player stats to Savefiles table. Updates last_played and admin_used automatically.
+        /// CONFLICT RESOLUTION: Checks if DB has larger values and merges them before saving.
         /// </summary>
         public async Task<bool> SavePlayerDataAsync(PlayerStats stats)
         {
@@ -333,6 +334,15 @@ namespace SpinARayan.Services
 
             try
             {
+                // STEP 1: Load current DB state for conflict resolution
+                var dbStats = await LoadSavefileAsync(_currentSavefileId);
+                if (dbStats != null)
+                {
+                    // Merge: Take larger values from DB
+                    MergeStatsFromDb(stats, dbStats);
+                }
+
+                // STEP 2: Save merged stats
                 var saveData = ConvertStatsToDbFormat(stats);
                 var json = JsonSerializer.Serialize(saveData);
 
@@ -362,6 +372,97 @@ namespace SpinARayan.Services
             {
                 Console.WriteLine($"[DatabaseService] Error saving data: {ex.Message}");
                 return false;
+            }
+        }
+
+        /// <summary>
+        /// Merge stats: Take larger values from DB to avoid overwriting progress
+        /// </summary>
+        private void MergeStatsFromDb(PlayerStats local, PlayerStats db)
+        {
+            // Take larger numeric values
+            if (db.Money > local.Money)
+            {
+                Console.WriteLine($"[DatabaseService] Merging: DB has more money ({db.Money} > {local.Money})");
+                local.Money = db.Money;
+            }
+
+            if (db.TotalMoneyEarned > local.TotalMoneyEarned)
+            {
+                Console.WriteLine($"[DatabaseService] Merging: DB has more total money earned");
+                local.TotalMoneyEarned = db.TotalMoneyEarned;
+            }
+
+            if (db.Gems > local.Gems)
+            {
+                Console.WriteLine($"[DatabaseService] Merging: DB has more gems ({db.Gems} > {local.Gems})");
+                local.Gems = db.Gems;
+            }
+
+            if (db.Rebirths > local.Rebirths)
+            {
+                Console.WriteLine($"[DatabaseService] Merging: DB has more rebirths");
+                local.Rebirths = db.Rebirths;
+            }
+
+            if (db.TotalRebirthsAllTime > local.TotalRebirthsAllTime)
+            {
+                local.TotalRebirthsAllTime = db.TotalRebirthsAllTime;
+            }
+
+            if (db.PlotSlots > local.PlotSlots)
+            {
+                Console.WriteLine($"[DatabaseService] Merging: DB has more plot slots");
+                local.PlotSlots = db.PlotSlots;
+            }
+
+            if (db.TotalRollsAllTime > local.TotalRollsAllTime)
+            {
+                local.TotalRollsAllTime = db.TotalRollsAllTime;
+            }
+
+            if (db.LuckBoosterLevel > local.LuckBoosterLevel)
+            {
+                Console.WriteLine($"[DatabaseService] Merging: DB has higher luck booster level");
+                local.LuckBoosterLevel = db.LuckBoosterLevel;
+            }
+
+            if (db.TotalPlayTimeMinutes > local.TotalPlayTimeMinutes)
+            {
+                local.TotalPlayTimeMinutes = db.TotalPlayTimeMinutes;
+            }
+
+            // Take best rayan if rarer
+            if (db.BestRayanEverRarity > local.BestRayanEverRarity)
+            {
+                Console.WriteLine($"[DatabaseService] Merging: DB has rarer best rayan");
+                local.BestRayanEverName = db.BestRayanEverName;
+                local.BestRayanEverRarity = db.BestRayanEverRarity;
+                local.BestRayanEverValue = db.BestRayanEverValue;
+            }
+
+            // Merge inventories: Take DB inventory if larger
+            if (db.Inventory.Count > local.Inventory.Count)
+            {
+                Console.WriteLine($"[DatabaseService] Merging: DB has larger inventory ({db.Inventory.Count} > {local.Inventory.Count})");
+                local.Inventory = db.Inventory;
+                local.EquippedRayanIndices = db.EquippedRayanIndices;
+            }
+
+            // Merge dices: Add any dices from DB that local doesn't have
+            foreach (var dbDice in db.OwnedDices)
+            {
+                var localDice = local.OwnedDices.FirstOrDefault(d => d.Name == dbDice.Name);
+                if (localDice == null && !dbDice.IsInfinite)
+                {
+                    Console.WriteLine($"[DatabaseService] Merging: Adding dice from DB: {dbDice.Name}");
+                    local.OwnedDices.Add(dbDice);
+                }
+                else if (localDice != null && !dbDice.IsInfinite && dbDice.Quantity > localDice.Quantity)
+                {
+                    Console.WriteLine($"[DatabaseService] Merging: DB has more of {dbDice.Name}");
+                    localDice.Quantity = dbDice.Quantity;
+                }
             }
         }
 
@@ -457,8 +558,12 @@ namespace SpinARayan.Services
 
                 var saveData = savefiles[0];
 
-                // Track if admin was used in this save
-                _adminUsedThisSession = saveData.admin_used;
+                // Track if admin was used in this save (never downgrade from true to false)
+                if (saveData.admin_used && !_adminUsedThisSession)
+                {
+                    _adminUsedThisSession = true;
+                    Console.WriteLine($"[DatabaseService] Admin flag loaded from savefile (was already used)");
+                }
 
                 var stats = ConvertDbFormatToStats(saveData);
 
@@ -624,12 +729,21 @@ namespace SpinARayan.Services
 
         /// <summary>
         /// Create new savefile for current user (public method)
+        /// MAX 10 SAVEFILES PER USER
         /// </summary>
         public async Task<string?> CreateNewSavefileAsync()
         {
             if (string.IsNullOrEmpty(_currentUserId))
             {
                 Console.WriteLine($"[DatabaseService] No user ID set");
+                return null;
+            }
+
+            // Check savefile limit
+            var existingSavefiles = await GetUserSavefilesAsync(_currentUserId);
+            if (existingSavefiles.Count >= 10)
+            {
+                Console.WriteLine($"[DatabaseService] Cannot create savefile: Limit of 10 savefiles reached!");
                 return null;
             }
 

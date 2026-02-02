@@ -150,11 +150,16 @@ namespace SpinARayan.Services
             // Check for event updates
             UpdateEvents();
             
+            // Track if we had events before and after filtering
+            bool hadEvents = _currentEvents.Count > 0;
+            
             // Remove expired events and update display
             _currentEvents.RemoveAll(evt => !evt.IsActive);
             
-            // Update event display every second if we have active events
-            if (_currentEvents.Any(e => e.IsActive))
+            bool hasEvents = _currentEvents.Count > 0;
+            
+            // Update event display every second if events changed (including when last event expires)
+            if (hadEvents || hasEvents)
             {
                 // THREAD-SAFE: Always invoke on UI thread
                 var activeEventsList = _currentEvents.Where(e => e.IsActive).ToList();
