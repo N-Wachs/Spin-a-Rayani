@@ -71,8 +71,22 @@ namespace SpinARayan.Models
         // Multiplayer System
         public string MultiplayerUsername { get; set; } = "";
         
-        // Skip Next Rebirth - Upgrade that grants +2 Rebirths on next rebirth
-        public bool SkipNextRebirth { get; set; } = false;
+        // Skip Next Rebirth - Target rebirth count (stored in DB as string)
+        // If NextRebirthTarget > Rebirths + 1, the Skip Next Rebirth upgrade is active
+        public int NextRebirthTarget { get; set; } = 0;
+        
+        // Legacy flag (kept for backwards compatibility, not saved to DB)
+        public bool SkipNextRebirth 
+        { 
+            get => NextRebirthTarget > Rebirths + 1;
+            set 
+            {
+                if (value)
+                    NextRebirthTarget = Rebirths + 2;
+                else
+                    NextRebirthTarget = Rebirths + 1;
+            }
+        }
 
 
         public double MoneyMultiplier => 1.0 + (Rebirths * 4.0);

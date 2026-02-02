@@ -772,7 +772,7 @@ namespace SpinARayan.Services
                 ["owned_dice"] = ownedDiceJson,
                 ["selected_dice_index"] = stats.SelectedDiceIndex,
                 ["saved_quests"] = savedQuestsJson,
-                ["skip_next_rebirth"] = stats.SkipNextRebirth
+                ["next_rebirth"] = stats.NextRebirthTarget.ToString()
             };
         }
 
@@ -798,7 +798,7 @@ namespace SpinARayan.Services
                 BestRayanEverRarity = double.Parse(saveData.best_rayan_rarity ?? "0"),
                 BestRayanEverValue = BigInteger.Parse(saveData.best_rayan_value ?? "0"),
                 SelectedDiceIndex = saveData.selected_dice_index,
-                SkipNextRebirth = saveData.skip_next_rebirth
+                NextRebirthTarget = int.TryParse(saveData.next_rebirth, out int target) ? target : saveData.rebirths + 1
             };
 
             // Deserialize JSONB arrays
@@ -1097,7 +1097,7 @@ namespace SpinARayan.Services
             public int user_id { get; set; } // ? INTEGER (wie in DB)
             public string? last_played { get; set; }
             public bool admin_used { get; set; }
-            public bool skip_next_rebirth { get; set; } // NEW: Skip Next Rebirth upgrade
+            public string? next_rebirth { get; set; } // NEW: Next rebirth target (string number)
         }
     }
     

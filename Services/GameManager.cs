@@ -286,18 +286,20 @@ namespace SpinARayan.Services
                 Stats.EquippedRayanIndices.Clear();
                 
                 // Check if "Skip Next Rebirth" upgrade was purchased
-                if (Stats.SkipNextRebirth)
+                // NextRebirthTarget > Rebirths + 1 means the upgrade is active
+                int rebirthsToGrant = 1;
+                
+                if (Stats.NextRebirthTarget > Stats.Rebirths + 1)
                 {
-                    Stats.Rebirths += 2; // Grant +2 instead of +1
-                    Stats.TotalRebirthsAllTime += 2;
-                    Stats.SkipNextRebirth = false; // Reset flag after use
-                    Console.WriteLine("[GameManager] Skip Next Rebirth activated! +2 Rebirths granted.");
+                    rebirthsToGrant = Stats.NextRebirthTarget - Stats.Rebirths;
+                    Console.WriteLine($"[GameManager] Skip Next Rebirth activated! Granting +{rebirthsToGrant} Rebirths.");
                 }
-                else
-                {
-                    Stats.Rebirths++; // Normal: +1
-                    Stats.TotalRebirthsAllTime++;
-                }
+                
+                Stats.Rebirths += rebirthsToGrant;
+                Stats.TotalRebirthsAllTime += rebirthsToGrant;
+                
+                // Update NextRebirthTarget to the new expected value
+                Stats.NextRebirthTarget = Stats.Rebirths + 1;
                 
                 // Plot Slots nur erhöhen wenn unter 10 (Maximum)
                 if (Stats.PlotSlots < 10)

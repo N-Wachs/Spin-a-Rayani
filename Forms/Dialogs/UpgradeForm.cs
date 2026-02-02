@@ -277,8 +277,8 @@ namespace SpinARayan
                     }
                     _gameManager.Stats.SelectedDiceIndex = 0;
                     
-                    // Set flag for next rebirth
-                    _gameManager.Stats.SkipNextRebirth = true;
+                    // Set next rebirth target to grant +2 on next rebirth
+                    _gameManager.Stats.NextRebirthTarget = _gameManager.Stats.Rebirths + 2;
                     
                     _gameManager.Save();
                     LoadUpgrades();
@@ -304,13 +304,17 @@ namespace SpinARayan
         {
             BigInteger cost = CalculateSkipNextRebirthCost();
             
-            if (_gameManager.Stats.SkipNextRebirth)
+            // Check if upgrade is active: NextRebirthTarget > Rebirths + 1
+            bool isActive = _gameManager.Stats.NextRebirthTarget > _gameManager.Stats.Rebirths + 1;
+            
+            if (isActive)
             {
                 // Already purchased, show active state
-                btnBuySkipNextRebirth.Text = "✅ AKTIV - Nächster Rebirth: +2";
+                int rebirthsToGrant = _gameManager.Stats.NextRebirthTarget - _gameManager.Stats.Rebirths;
+                btnBuySkipNextRebirth.Text = $"✅ AKTIV - Nächster Rebirth: +{rebirthsToGrant}";
                 btnBuySkipNextRebirth.Enabled = false;
                 btnBuySkipNextRebirth.BackColor = BrightGreen;
-                lblSkipNextRebirth.Text = "✅ Upgrade aktiv! Beim nächsten Rebirth erhältst du +2 Rebirths.\n" +
+                lblSkipNextRebirth.Text = $"✅ Upgrade aktiv! Beim nächsten Rebirth erhältst du +{rebirthsToGrant} Rebirths.\n" +
                                           "Das Upgrade wurde bereits bezahlt.\n" +
                                           "Nach dem Rebirth wird dieser Effekt zurückgesetzt.";
             }
