@@ -34,19 +34,21 @@ namespace SpinARayan.Forms.Dialogs
 
         private void InitializeComponent()
         {
+            this.AutoScaleMode = AutoScaleMode.Dpi; // DPI-Aware: Skalierung an DPI anpassen
             this.Text = "Savefile auswaehlen";
             this.ClientSize = new Size(600, 500);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
+            this.MinimumSize = new Size(450, 400); // DPI-Aware: Minimale GrÃ¶ÃŸe
 
             // Title
             lblTitle = new Label
             {
-                Text = "\U0001F4BE Savefile auswaehlen",
+                Text = "ðŸ’¾ Savefile auswaehlen",
                 Location = new Point(20, 20),
                 Size = new Size(560, 40),
-                Font = new Font("Segoe UI Emoji", 16F, FontStyle.Bold),
+                Font = new Font("Segoe UI Emoji", 16F, FontStyle.Bold, GraphicsUnit.Point),
                 TextAlign = ContentAlignment.MiddleCenter
             };
             this.Controls.Add(lblTitle);
@@ -116,7 +118,7 @@ namespace SpinARayan.Forms.Dialogs
         {
             var panel = new Panel
             {
-                Size = new Size(520, 120), // Erhöht von 100 auf 120 für mehr Platz
+                Size = new Size(520, 120), // Erhï¿½ht von 100 auf 120 fï¿½r mehr Platz
                 BorderStyle = BorderStyle.FixedSingle,
                 BackColor = DarkPanel
             };
@@ -132,11 +134,11 @@ namespace SpinARayan.Forms.Dialogs
             };
             panel.Controls.Add(lblInfo);
 
-            // Stats (mehr Platz für Zeilenumbrüche)
+            // Stats (mehr Platz fï¿½r Zeilenumbrï¿½che)
             var lblStats = new Label
             {
                 Location = new Point(10, 40),
-                Size = new Size(400, 70), // Erhöht von 50 auf 70
+                Size = new Size(400, 70), // Erhï¿½ht von 50 auf 70
                 Font = new Font("Segoe UI", 10F),
                 Text = $"Money: {FormatMoney(savefile.Money)}\n" +
                        $"Gems: {savefile.Gems}  |  Rebirths: {savefile.Rebirths}\n" +
@@ -162,11 +164,11 @@ namespace SpinARayan.Forms.Dialogs
                 panel.Controls.Add(lblAdmin);
             }
 
-            // Select Button (weiter unten wegen mehr Panel-Höhe)
+            // Select Button (weiter unten wegen mehr Panel-Hï¿½he)
             var btnSelect = new Button
             {
                 Location = new Point(420, 60), // von 50 auf 60
-                Size = new Size(90, 40), // von 35 auf 40 (größerer Button)
+                Size = new Size(90, 40), // von 35 auf 40 (grï¿½ï¿½erer Button)
                 Text = "Auswaehlen",
                 Font = new Font("Segoe UI", 9F, FontStyle.Bold),
                 BackColor = BrightGreen,

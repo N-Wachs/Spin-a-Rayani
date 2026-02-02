@@ -67,6 +67,7 @@
             // 
             // FullInventoryForm
             // 
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi; // DPI-Aware: Skalierung an DPI anpassen
             this.ClientSize = new System.Drawing.Size(824, 750);
             this.Controls.Add(this.lblTitle);
             this.Controls.Add(this.lblTotalRayans);
@@ -74,6 +75,7 @@
             this.Controls.Add(this.panelInventory);
             this.Text = "Vollstaendiges Inventar";
             this.StartPosition = FormStartPosition.CenterParent;
+            this.MinimumSize = new System.Drawing.Size(600, 500); // DPI-Aware: Minimale Größe
             this.BackColor = System.Drawing.Color.FromArgb(18, 18, 18);
             this.ResumeLayout(false);
         }

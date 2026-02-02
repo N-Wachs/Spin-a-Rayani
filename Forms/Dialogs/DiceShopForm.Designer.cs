@@ -51,6 +51,7 @@
             // 
             // DiceShopForm
             // 
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi; // DPI-Aware: Skalierung an DPI anpassen
             this.ClientSize = new System.Drawing.Size(844, 800);
             this.Controls.Add(this.lblTitle);
             this.Controls.Add(this.lblMoney);
@@ -59,6 +60,7 @@
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(600, 400); // DPI-Aware: Minimale Größe
             this.BackColor = System.Drawing.Color.FromArgb(18, 18, 18);
             this.ResumeLayout(false);
         }

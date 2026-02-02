@@ -35,12 +35,14 @@ namespace SpinARayan
 
         private void InitializeComponent()
         {
+            this.AutoScaleMode = AutoScaleMode.Dpi; // DPI-Aware: Skalierung an DPI anpassen
             this.Text = "Multiplayer Setup - Spin a Rayan";
             this.Size = new Size(600, 450);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
+            this.MinimumSize = new Size(450, 350); // DPI-Aware: Minimale Größe
 
             // Title
             var lblTitle = new Label
@@ -48,7 +50,7 @@ namespace SpinARayan
                 Text = "🌐 Multiplayer Konfiguration",
                 Location = new Point(20, 20),
                 Size = new Size(550, 40),
-                Font = new Font("Segoe UI", 16F, FontStyle.Bold),
+                Font = new Font("Segoe UI", 16F, FontStyle.Bold, GraphicsUnit.Point),
                 ForeColor = BrightGold
             };
             this.Controls.Add(lblTitle);
@@ -56,8 +58,8 @@ namespace SpinARayan
             // Description
             var lblDesc = new Label
             {
-                Text = "M�chtest du Multiplayer aktivieren?\n" +
-                       "Admin kann Events f�r alle Spieler starten, Clients empfangen Events.",
+                Text = "Möchtest du Multiplayer aktivieren?\n" +
+                       "Admin kann Events für alle Spieler starten, Clients empfangen Events.",
                 Location = new Point(20, 70),
                 Size = new Size(550, 50),
                 Font = new Font("Segoe UI", 10F),

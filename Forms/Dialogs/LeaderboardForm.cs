@@ -33,20 +33,22 @@ namespace SpinARayan.Forms.Dialogs
         
         private void InitializeComponent()
         {
-            this.Text = "?? Leaderboard";
+            this.AutoScaleMode = AutoScaleMode.Dpi; // DPI-Aware: Skalierung an DPI anpassen
+            this.Text = "🏆 Leaderboard";
             this.ClientSize = new Size(800, 700);
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
+            this.MinimumSize = new Size(600, 500); // DPI-Aware: Minimale Größe
             this.BackColor = DarkBackground;
             
             // Title
             var lblTitle = new Label
             {
-                Text = "?? LEADERBOARD",
+                Text = "🏆 LEADERBOARD",
                 Location = new Point(20, 20),
                 Size = new Size(760, 40),
-                Font = new Font("Segoe UI Emoji", 18F, FontStyle.Bold),
+                Font = new Font("Segoe UI Emoji", 18F, FontStyle.Bold, GraphicsUnit.Point),
                 ForeColor = BrightGold,
                 TextAlign = ContentAlignment.MiddleCenter
             };
@@ -58,7 +60,7 @@ namespace SpinARayan.Forms.Dialogs
                 Text = "Kategorie:",
                 Location = new Point(20, 75),
                 Size = new Size(100, 30),
-                Font = new Font("Segoe UI", 11F),
+                Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point),
                 ForeColor = TextColor,
                 TextAlign = ContentAlignment.MiddleLeft
             };
@@ -68,7 +70,7 @@ namespace SpinARayan.Forms.Dialogs
             {
                 Location = new Point(130, 75),
                 Size = new Size(640, 30),
-                Font = new Font("Segoe UI", 11F),
+                Font = new Font("Segoe UI", 11F, FontStyle.Regular, GraphicsUnit.Point),
                 DropDownStyle = ComboBoxStyle.DropDownList,
                 BackColor = DarkPanel,
                 ForeColor = TextColor,
@@ -76,8 +78,8 @@ namespace SpinARayan.Forms.Dialogs
             };
             _comboCategory.Items.AddRange(new object[]
             {
-                "?? Meistes Geld",
-                "? Seltenster Rayan",
+                "💰 Meistes Geld",
+                "🎲 Seltenster Rayan",
                 "?? Meiste Rolls",
                 "?? Meiste Gems",
                 "?? Meiste Spielzeit",
@@ -113,7 +115,7 @@ namespace SpinARayan.Forms.Dialogs
             // Close button
             var btnClose = new Button
             {
-                Text = "Schlie�en",
+                Text = "Schlie�en",
                 Location = new Point(650, 650),
                 Size = new Size(130, 40),
                 Font = new Font("Segoe UI", 11F, FontStyle.Bold),
@@ -182,7 +184,7 @@ namespace SpinARayan.Forms.Dialogs
             {
                 var lblEmpty = new Label
                 {
-                    Text = "Keine Eintr�ge gefunden",
+                    Text = "Keine Eintr�ge gefunden",
                     Location = new Point(280, 250),
                     Size = new Size(200, 30),
                     Font = new Font("Segoe UI", 12F),

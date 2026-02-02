@@ -35,28 +35,35 @@ namespace SpinARayan
             LoadDices();
         }
 
+        // DPI-Aware: Hilfsmethode zum Skalieren von Werten basierend auf aktueller DPI
+        private int ScaleForDpi(int baseValue)
+        {
+            return (int)(baseValue * this.DeviceDpi / 96.0f);
+        }
+
         private void InitializeComponents()
         {
             this.Text = "Select Dice";
-            this.Size = new Size(880, 750);
+            this.Size = new Size(ScaleForDpi(880), ScaleForDpi(750)); // DPI-Aware: Skalierte Form-Größe
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
             this.StartPosition = FormStartPosition.CenterParent;
+            this.AutoScaleMode = AutoScaleMode.Dpi; // DPI-Aware: AutoScaleMode setzen
 
             lblTitle = new Label
             {
-                Location = new Point(20, 20),
-                Size = new Size(400, 40),
-                Font = new Font("Segoe UI Emoji", 18F, FontStyle.Bold),
+                Location = new Point(ScaleForDpi(20), ScaleForDpi(20)),
+                Size = new Size(ScaleForDpi(400), ScaleForDpi(40)),
+                Font = new Font("Segoe UI Emoji", 18F, FontStyle.Bold, GraphicsUnit.Point),
                 Text = "\U0001F3B2 SELECT DICE"
             };
             this.Controls.Add(lblTitle);
 
             panelDices = new Panel
             {
-                Location = new Point(20, 70),
-                Size = new Size(820, 650),
+                Location = new Point(ScaleForDpi(20), ScaleForDpi(70)),
+                Size = new Size(ScaleForDpi(820), ScaleForDpi(650)),
                 AutoScroll = true,
                 BorderStyle = BorderStyle.FixedSingle
             };
@@ -82,13 +89,13 @@ namespace SpinARayan
                 .ThenByDescending(x => x.Dice.LuckMultiplier) // Then by luck
                 .ToList();
 
-            int yPosition = 10;
+            int yPosition = ScaleForDpi(10); // DPI-Aware: Skalierte Y-Position
             foreach (var item in sortedDices)
             {
                 var dicePanel = CreateDicePanel(item.Dice, item.OriginalIndex);
-                dicePanel.Location = new Point(10, yPosition);
+                dicePanel.Location = new Point(ScaleForDpi(10), yPosition);
                 panelDices.Controls.Add(dicePanel);
-                yPosition += dicePanel.Height + 10;
+                yPosition += dicePanel.Height + ScaleForDpi(10); // DPI-Aware: Skalierter Abstand
             }
         }
 
@@ -96,18 +103,20 @@ namespace SpinARayan
         {
             bool isSelected = _gameManager.Stats.SelectedDiceIndex == index;
             
+            // DPI-Aware: Skalierte Panel-Größe
             var panel = new Panel
             {
-                Size = new Size(750, 80),
+                Size = new Size(ScaleForDpi(750), ScaleForDpi(80)),
                 BorderStyle = BorderStyle.FixedSingle,
                 BackColor = isSelected ? Color.FromArgb(0, 80, 120) : DarkPanel
             };
 
             // Try to load dice image from embedded resources
+            // DPI-Aware: Skalierte Positionen und Größen
             var picBox = new PictureBox
             {
-                Location = new Point(10, 5),
-                Size = new Size(70, 70), // Square image, almost full height
+                Location = new Point(ScaleForDpi(10), ScaleForDpi(5)),
+                Size = new Size(ScaleForDpi(70), ScaleForDpi(70)),
                 SizeMode = PictureBoxSizeMode.StretchImage,
                 BackColor = Color.Transparent
             };
@@ -134,11 +143,12 @@ namespace SpinARayan
             
             panel.Controls.Add(picBox);
 
+            // DPI-Aware: Skalierte Label-Positionen und -Größen
             var lblName = new Label
             {
-                Location = new Point(90, 10), // Moved right for image
-                Size = new Size(250, 25),
-                Font = new Font("Segoe UI", 14F, FontStyle.Bold),
+                Location = new Point(ScaleForDpi(90), ScaleForDpi(10)),
+                Size = new Size(ScaleForDpi(250), ScaleForDpi(25)),
+                Font = new Font("Segoe UI", 14F, FontStyle.Bold, GraphicsUnit.Point),
                 Text = dice.DisplayName,
                 ForeColor = dice.IsInfinite ? BrightGreen : BrightGold
             };
@@ -146,9 +156,9 @@ namespace SpinARayan
 
             var lblDescription = new Label
             {
-                Location = new Point(90, 40), // Moved right for image
-                Size = new Size(250, 20),
-                Font = new Font("Segoe UI", 10F),
+                Location = new Point(ScaleForDpi(90), ScaleForDpi(40)),
+                Size = new Size(ScaleForDpi(250), ScaleForDpi(20)),
+                Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point),
                 Text = dice.Description,
                 ForeColor = BrightBlue
             };
@@ -156,9 +166,9 @@ namespace SpinARayan
 
             var lblQuantity = new Label
             {
-                Location = new Point(350, 10),
-                Size = new Size(200, 25),
-                Font = new Font("Segoe UI", 14F, FontStyle.Bold),
+                Location = new Point(ScaleForDpi(350), ScaleForDpi(10)),
+                Size = new Size(ScaleForDpi(200), ScaleForDpi(25)),
+                Font = new Font("Segoe UI", 14F, FontStyle.Bold, GraphicsUnit.Point),
                 Text = $"Quantity: {dice.QuantityDisplay}",
                 ForeColor = dice.IsInfinite ? BrightGreen : dice.Quantity > 0 ? TextColor : Color.Red
             };
@@ -166,19 +176,20 @@ namespace SpinARayan
 
             var lblLuck = new Label
             {
-                Location = new Point(350, 40),
-                Size = new Size(200, 20),
-                Font = new Font("Segoe UI", 10F),
+                Location = new Point(ScaleForDpi(350), ScaleForDpi(40)),
+                Size = new Size(ScaleForDpi(200), ScaleForDpi(20)),
+                Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point),
                 Text = $"Luck: {dice.LuckMultiplier:F1}x",
                 ForeColor = BrightGold
             };
             panel.Controls.Add(lblLuck);
 
+            // DPI-Aware: Skalierte Button-Position und -Größe
             var btnSelect = new Button
             {
-                Location = new Point(600, 20),
-                Size = new Size(130, 40),
-                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                Location = new Point(ScaleForDpi(600), ScaleForDpi(20)),
+                Size = new Size(ScaleForDpi(130), ScaleForDpi(40)),
+                Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point),
                 Text = isSelected ? "SELECTED" : "SELECT",
                 Enabled = !isSelected && (dice.IsInfinite || dice.Quantity > 0),
                 BackColor = isSelected ? DarkAccent : BrightBlue,

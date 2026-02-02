@@ -35,20 +35,22 @@ namespace SpinARayan.Forms.Dialogs
 
         private void InitializeComponent()
         {
+            this.AutoScaleMode = AutoScaleMode.Dpi; // DPI-Aware: Skalierung an DPI anpassen
             this.Text = "Login - Spin a Rayan";
             this.ClientSize = new Size(400, 340);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
             this.MinimizeBox = false;
+            this.MinimumSize = new Size(350, 300); // DPI-Aware: Minimale Größe
 
             // Title
             lblTitle = new Label
             {
-                Text = "\U0001F3B2 Spin a Rayan - Login",
+                Text = "🎲 Spin a Rayan - Login",
                 Location = new Point(20, 20),
                 Size = new Size(360, 40),
-                Font = new Font("Segoe UI Emoji", 16F, FontStyle.Bold),
+                Font = new Font("Segoe UI Emoji", 16F, FontStyle.Bold, GraphicsUnit.Point),
                 TextAlign = ContentAlignment.MiddleCenter
             };
             this.Controls.Add(lblTitle);
@@ -59,7 +61,7 @@ namespace SpinARayan.Forms.Dialogs
                 Text = "Username:",
                 Location = new Point(20, 80),
                 Size = new Size(360, 20),
-                Font = new Font("Segoe UI", 10F)
+                Font = new Font("Segoe UI", 10F, FontStyle.Regular, GraphicsUnit.Point)
             };
             this.Controls.Add(lblUsername);
 
@@ -68,7 +70,7 @@ namespace SpinARayan.Forms.Dialogs
             {
                 Location = new Point(20, 105),
                 Size = new Size(360, 30),
-                Font = new Font("Segoe UI", 12F)
+                Font = new Font("Segoe UI", 12F, FontStyle.Regular, GraphicsUnit.Point)
             };
             this.Controls.Add(txtUsername);
 

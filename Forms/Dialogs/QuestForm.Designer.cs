@@ -66,6 +66,7 @@
             // 
             // QuestForm
             // 
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi; // DPI-Aware: Skalierung an DPI anpassen
             this.ClientSize = new System.Drawing.Size(594, 680);
             this.Controls.Add(this.lblTitle);
             this.Controls.Add(this.lblTotalGems);
@@ -75,6 +76,7 @@
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
+            this.MinimumSize = new System.Drawing.Size(400, 500); // DPI-Aware: Minimale Größe
             this.BackColor = System.Drawing.Color.FromArgb(18, 18, 18);
             this.ResumeLayout(false);
         }

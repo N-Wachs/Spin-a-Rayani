@@ -214,6 +214,7 @@ namespace SpinARayan
             this.panelActions.Controls.Add(this.btnClose);
             
             // OptionsForm
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi; // DPI-Aware: Skalierung an DPI anpassen
             this.ClientSize = new Size(744, 900); // Increased to 900 for account management buttons
             this.Controls.Add(this.lblTitle);
             this.Controls.Add(this.panelStats);
@@ -222,6 +223,7 @@ namespace SpinARayan
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
+            this.MinimumSize = new Size(500, 600); // DPI-Aware: Minimale Größe
             this.BackColor = Color.FromArgb(18, 18, 18);
             
             this.panelStats.ResumeLayout(false);

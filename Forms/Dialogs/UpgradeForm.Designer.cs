@@ -283,6 +283,7 @@ namespace SpinARayan
             // 
             // UpgradeForm
             // 
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi; // DPI-Aware: Skalierung an DPI anpassen
             this.ClientSize = new Size(684, 561);
             this.Controls.Add(this.lblTitle);
             this.Controls.Add(this.lblGems);
@@ -293,6 +294,7 @@ namespace SpinARayan
             this.StartPosition = FormStartPosition.CenterParent;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
+            this.MinimumSize = new Size(500, 400); // DPI-Aware: Minimale Größe
             this.tabControl.ResumeLayout(false);
             this.tabGemsUpgrades.ResumeLayout(false);
             this.tabMoneyUpgrades.ResumeLayout(false);
