@@ -20,6 +20,7 @@ namespace SpinARayan
 #if DEBUG
             AllocConsole();
             Console.WriteLine("[Program] Debug mode - Console enabled");
+            Console.WriteLine("[Program] Type 'ad' and press Enter to toggle Admin Mode");
 #endif
             
             ApplicationConfiguration.Initialize();
@@ -338,9 +339,65 @@ namespace SpinARayan
             // Step 4: Set the selected savefile in database service
             dbService.SetCurrentSavefile(selectedSavefileId, userId);
             
+            
             // Step 5: Start game with selected savefile
             Console.WriteLine($"[Program] Starting game with savefile: {selectedSavefileId}");
-            Application.Run(new MainForm(username, dbService, selectedSavefileId));
+            
+            var mainForm = new MainForm(username, dbService, selectedSavefileId);
+            
+#if DEBUG
+            // Start console input listener for admin mode (DEBUG only)
+            StartConsoleListener(mainForm);
+#endif
+            
+            Application.Run(mainForm);
         }
+        
+#if DEBUG
+        /// <summary>
+        /// Background thread that listens for console input (DEBUG only)
+        /// Typing "ad" and pressing Enter toggles Admin Mode
+        /// </summary>
+        private static void StartConsoleListener(MainForm mainForm)
+        {
+            var consoleThread = new System.Threading.Thread(() =>
+            {
+                try
+                {
+                    while (true)
+                    {
+                        var input = Console.ReadLine();
+                        
+                        if (input?.Trim().ToLower() == "ad")
+                        {
+                            // Invoke on UI thread to safely toggle admin mode
+                            try
+                            {
+                                mainForm.Invoke(() =>
+                                {
+                                    mainForm.ToggleAdminModeFromConsole();
+                                });
+                            }
+                            catch (Exception ex)
+                            {
+                                Console.WriteLine($"[Console] Failed to toggle admin mode: {ex.Message}");
+                            }
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[Console] Listener error: {ex.Message}");
+                }
+            })
+            {
+                IsBackground = true // Background thread dies when app closes
+            };
+            
+            consoleThread.Start();
+            Console.WriteLine("[Console] Admin command listener started (type 'ad' + Enter)");
+        }
+#endif
+        
     }
 }

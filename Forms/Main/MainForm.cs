@@ -38,6 +38,7 @@ namespace SpinARayan
         private int _lastRebirths = 0;
         private int _lastLuckBoosterLevel = 0;
         
+        
         // PERFORMANCE: Image cache for dice images (keep in RAM)
         private Dictionary<string, Image> _diceImageCache = new Dictionary<string, Image>();
 
@@ -51,11 +52,6 @@ namespace SpinARayan
         private readonly Color BrightRed = ModernTheme.Error;
         private readonly Color TextColor = ModernTheme.TextPrimary;
         private readonly Color RebirthColor = ModernTheme.Rebirth;
-
-        // Cheat Code Detection
-        private List<Keys> _cheatSequence = new List<Keys>();
-        private DateTime _lastCheatKeyPress = DateTime.MinValue;
-        private readonly TimeSpan _cheatKeyTimeout = TimeSpan.FromSeconds(2);
         
         // Database and Savefile tracking
         private DatabaseService? _databaseService;
@@ -315,31 +311,6 @@ namespace SpinARayan
 
         private void MainForm_KeyDown(object? sender, KeyEventArgs e)
         {
-            // Check if too much time has passed since last key press
-            if ((DateTime.Now - _lastCheatKeyPress) > _cheatKeyTimeout)
-            {
-                _cheatSequence.Clear();
-            }
-
-            _lastCheatKeyPress = DateTime.Now;
-            _cheatSequence.Add(e.KeyCode);
-
-            // Keep only last 3 keys
-            if (_cheatSequence.Count > 3)
-            {
-                _cheatSequence.RemoveAt(0);
-            }
-
-            // Check for cheat code: , - .
-            if (_cheatSequence.Count == 3 &&
-                _cheatSequence[0] == Keys.Oemcomma &&  // ,
-                _cheatSequence[1] == Keys.OemMinus &&  // -
-                _cheatSequence[2] == Keys.OemPeriod)   // .
-            {
-                ActivateAdminMode();
-                _cheatSequence.Clear();
-            }
-            
             // Admin: Press 'E' to force an event
             if (_gameManager.AdminMode && e.KeyCode == Keys.E)
             {
@@ -373,6 +344,17 @@ namespace SpinARayan
             
             UpdateUI();
         }
+
+#if DEBUG
+        /// <summary>
+        /// Public method for console to toggle admin mode (DEBUG only)
+        /// </summary>
+        public void ToggleAdminModeFromConsole()
+        {
+            ActivateAdminMode();
+            Console.WriteLine($"[Console] Admin mode toggled via console command: {(_gameManager.AdminMode ? "ENABLED" : "DISABLED")}");
+        }
+#endif
 
         private void ApplyDarkMode()
         {
