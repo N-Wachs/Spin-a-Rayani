@@ -413,20 +413,26 @@ namespace SpinARayan
             }
         }
 
+        // DPI-Aware: Hilfsmethode zum Skalieren von Werten basierend auf aktueller DPI
+        private int ScaleForDpi(int baseValue)
+        {
+            return (int)(baseValue * this.DeviceDpi / 96.0f);
+        }
+
         private void CreateDiceInfoLabel()
         {
-            // Position centered above roll button with more spacing
-            int width = 180;
+            // DPI-Aware: Relative Positionierung zur Panel-Breite
+            int width = ScaleForDpi(180);
             int centerX = panelCenter.Width / 2;
             
             // DICE IMAGE - clickable, leads to inventory (larger size for better visibility)
             // Add as background element - will be behind other controls
-            // Moved down to avoid overlap with lblLastRoll
+            // DPI-Aware: Skalierte Größen und Positionen
             _picDiceSelector = new PictureBox
             {
-                Location = new Point(centerX - 75, 150), // Moved down from 100 to 150 for more spacing
-                Size = new Size(150, 150), // Increased from 100x100 to 150x150
-                SizeMode = PictureBoxSizeMode.Zoom, // Changed from StretchImage to Zoom for better quality
+                Location = new Point(centerX - ScaleForDpi(75), ScaleForDpi(150)),
+                Size = new Size(ScaleForDpi(150), ScaleForDpi(150)),
+                SizeMode = PictureBoxSizeMode.Zoom,
                 BackColor = Color.Transparent,
                 Cursor = Cursors.Hand
             };
@@ -435,12 +441,12 @@ namespace SpinARayan
             _picDiceSelector.SendToBack(); // Send to background so other controls are visible on top
             
             // QUANTITY LABEL - below image, should be visible on top
-            // Moved down to avoid overlap with roll button
+            // DPI-Aware: Skalierte Position
             _lblDiceInfo = new Label
             {
-                Location = new Point(centerX - 90, 310), // Moved down from 255 to 310 for more spacing
-                Size = new Size(width, 30),
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                Location = new Point(centerX - ScaleForDpi(90), ScaleForDpi(310)),
+                Size = new Size(width, ScaleForDpi(30)),
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold, GraphicsUnit.Point), // DPI-Aware: Font in Punkten
                 ForeColor = BrightBlue,
                 BackColor = Color.Transparent,
                 TextAlign = ContentAlignment.TopCenter,
@@ -1026,24 +1032,25 @@ namespace SpinARayan
             panelLeft.Controls.Clear();
             _plotPanels.Clear();
 
+            // DPI-Aware: Skalierte Größen und Positionen
             var titleLabel = new Label
             {
-                Location = new Point(10, 10),
-                Size = new Size(280, 25),
-                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                Location = new Point(ScaleForDpi(10), ScaleForDpi(10)),
+                Size = new Size(ScaleForDpi(280), ScaleForDpi(25)),
+                Font = new Font("Segoe UI", 11F, FontStyle.Bold, GraphicsUnit.Point),
                 Text = "📊 PLOTS",
                 TextAlign = ContentAlignment.MiddleLeft,
                 ForeColor = BrightGold
             };
             panelLeft.Controls.Add(titleLabel);
 
-            int yPosition = 45;
+            int yPosition = ScaleForDpi(45);
             for (int i = 0; i < 10; i++)
             {
                 var plotPanel = CreateCompactPlotPanel(i, yPosition);
                 _plotPanels.Add(plotPanel);
                 panelLeft.Controls.Add(plotPanel);
-                yPosition += 50;
+                yPosition += ScaleForDpi(50); // DPI-Aware: Skalierter Abstand
             }
 
             _totalIncomePanel = new Panel
@@ -1091,10 +1098,11 @@ namespace SpinARayan
 
         private Panel CreateCompactPlotPanel(int index, int yPosition)
         {
+            // DPI-Aware: Skalierte Größen
             Panel plotPanel = new Panel
             {
-                Location = new Point(10, yPosition),
-                Size = new Size(280, 45),
+                Location = new Point(ScaleForDpi(10), yPosition),
+                Size = new Size(ScaleForDpi(280), ScaleForDpi(45)),
                 BorderStyle = BorderStyle.FixedSingle,
                 BackColor = DarkAccent,
                 Visible = false
@@ -1102,9 +1110,9 @@ namespace SpinARayan
 
             Label lblPlotNumber = new Label
             {
-                Location = new Point(5, 3),
-                Size = new Size(50, 15),
-                Font = new Font("Segoe UI", 8F, FontStyle.Bold),
+                Location = new Point(ScaleForDpi(5), ScaleForDpi(3)),
+                Size = new Size(ScaleForDpi(50), ScaleForDpi(15)),
+                Font = new Font("Segoe UI", 8F, FontStyle.Bold, GraphicsUnit.Point), // DPI-Aware: Font in Punkten
                 Text = $"Plot {index + 1}",
                 ForeColor = Color.Gray
             };
@@ -1112,9 +1120,9 @@ namespace SpinARayan
 
             Label lblRayanName = new Label
             {
-                Location = new Point(5, 18),
-                Size = new Size(270, 16),
-                Font = new Font("Segoe UI", 8F),
+                Location = new Point(ScaleForDpi(5), ScaleForDpi(18)),
+                Size = new Size(ScaleForDpi(270), ScaleForDpi(16)),
+                Font = new Font("Segoe UI", 8F, FontStyle.Regular, GraphicsUnit.Point), // DPI-Aware: Font in Punkten
                 Text = "[Leer]",
                 ForeColor = Color.Gray
             };
@@ -1122,9 +1130,9 @@ namespace SpinARayan
 
             Label lblRayanValue = new Label
             {
-                Location = new Point(200, 3),
-                Size = new Size(75, 15),
-                Font = new Font("Segoe UI", 8F, FontStyle.Bold),
+                Location = new Point(ScaleForDpi(200), ScaleForDpi(3)),
+                Size = new Size(ScaleForDpi(75), ScaleForDpi(15)),
+                Font = new Font("Segoe UI", 8F, FontStyle.Bold, GraphicsUnit.Point), // DPI-Aware: Font in Punkten
                 Text = "0/s",
                 ForeColor = BrightGreen,
                 TextAlign = ContentAlignment.TopRight,

@@ -63,6 +63,7 @@
             this.panelLeft.Location = new Point(0, 0);
             this.panelLeft.Size = new Size(300, 700);
             this.panelLeft.BackColor = Color.FromArgb(38, 38, 38); // BackgroundPanel
+            this.panelLeft.Dock = DockStyle.Left; // DPI-Aware: Panel dockt links an
             
             // 
             // panelCenter
@@ -70,6 +71,7 @@
             this.panelCenter.Location = new Point(300, 0);
             this.panelCenter.Size = new Size(600, 700);
             this.panelCenter.BackColor = Color.FromArgb(30, 30, 30); // BackgroundElevated
+            this.panelCenter.Dock = DockStyle.Fill; // DPI-Aware: Panel füllt verbleibenden Raum
             
             // 
             // panelRight
@@ -77,6 +79,7 @@
             this.panelRight.Location = new Point(900, 0);
             this.panelRight.Size = new Size(300, 700);
             this.panelRight.BackColor = Color.FromArgb(38, 38, 38); // BackgroundPanel
+            this.panelRight.Dock = DockStyle.Right; // DPI-Aware: Panel dockt rechts an
             
             // 
             // btnRoll
@@ -293,15 +296,17 @@
             // 
             // MainForm
             // 
+            this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi; // DPI-Aware: Skalierung an DPI anpassen
             this.ClientSize = new Size(1200, 700);
+            this.Controls.Add(this.panelCenter); // Fill-Panel muss zuerst hinzugefügt werden
             this.Controls.Add(this.panelLeft);
-            this.Controls.Add(this.panelCenter);
             this.Controls.Add(this.panelRight);
             this.Text = "Spin a Rayan - Modern Edition";
             this.BackColor = Color.FromArgb(18, 18, 18); // BackgroundDark
             this.FormBorderStyle = FormBorderStyle.FixedSingle;
             this.MaximizeBox = false;
             this.StartPosition = FormStartPosition.CenterScreen;
+            this.MinimumSize = new Size(800, 600); // DPI-Aware: Minimale Größe für Layout-Stabilität
             this.panelCenter.ResumeLayout(false);
             this.panelRight.ResumeLayout(false);
             this.ResumeLayout(false);
