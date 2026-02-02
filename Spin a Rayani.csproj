@@ -1,8 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType Condition="'$(Configuration)' == 'Debug'">Exe</OutputType>
-    <OutputType Condition="'$(Configuration)' != 'Debug'">WinExe</OutputType>
+    <OutputType>WinExe</OutputType> <!-- Always WinExe - no console by default -->
     <TargetFramework>net8.0-windows</TargetFramework>
     <RootNamespace>Spin_a_Rayan</RootNamespace>
     <Nullable>enable</Nullable>

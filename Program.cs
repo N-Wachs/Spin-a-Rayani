@@ -1,15 +1,27 @@
 using SpinARayan.Forms.Dialogs;
 using SpinARayan.Services;
 using System;
+using System.Runtime.InteropServices;
 using System.Windows.Forms;
 
 namespace SpinARayan
 {
     internal static class Program
     {
+        // Import Windows API to allocate console
+        [DllImport("kernel32.dll", SetLastError = true)]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        static extern bool AllocConsole();
+
         [STAThread]
         static void Main()
         {
+            // Only show console in DEBUG mode
+#if DEBUG
+            AllocConsole();
+            Console.WriteLine("[Program] Debug mode - Console enabled");
+#endif
+            
             ApplicationConfiguration.Initialize();
             
             // Login loop - retry until successful or cancelled
