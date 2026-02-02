@@ -383,6 +383,7 @@ namespace SpinARayan.Services
             _questService.SaveQuestsToStats();
             
             bool databaseSaveSuccessful = false;
+            bool isOfflineMode = _databaseService == null;
             
             if (_databaseService != null)
             {
@@ -420,17 +421,23 @@ namespace SpinARayan.Services
             }
             else
             {
-                Console.WriteLine("[GameManager] No database service available");
+                Console.WriteLine("[GameManager] No database service available (offline mode)");
             }
             
-            // Only save to local file if database save failed OR no database service
-            // This ensures database is the primary storage, local is emergency fallback only
-            if (!databaseSaveSuccessful)
+            // Only save to local file in offline mode OR if database save failed
+            if (isOfflineMode || !databaseSaveSuccessful)
             {
                 try
                 {
                     _saveService.Save(Stats);
-                    Console.WriteLine("[GameManager] WARNING: Local emergency save created (database unavailable)");
+                    if (isOfflineMode)
+                    {
+                        Console.WriteLine("[GameManager] Local save created (offline mode)");
+                    }
+                    else
+                    {
+                        Console.WriteLine("[GameManager] WARNING: Local emergency save created (database save failed)");
+                    }
                 }
                 catch (Exception ex)
                 {
