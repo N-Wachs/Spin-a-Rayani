@@ -68,12 +68,16 @@ namespace SpinARayan.Models
         // Quest System - Save quest progress
         public List<Quest> SavedQuests { get; set; } = new List<Quest>();
         
+        
         // Multiplayer System
         public string MultiplayerUsername { get; set; } = "";
         
         // Skip Next Rebirth - Target rebirth count (stored in DB as string)
         // If NextRebirthTarget > Rebirths + 1, the Skip Next Rebirth upgrade is active
         public int NextRebirthTarget { get; set; } = 0;
+        
+        // Rarity Quest Level (stored in DB) - 0-based
+        public int RarityQuestLevel { get; set; } = 0;
         
         // Legacy flag (kept for backwards compatibility, not saved to DB)
         public bool SkipNextRebirth 
@@ -87,6 +91,8 @@ namespace SpinARayan.Models
                     NextRebirthTarget = Rebirths + 1;
             }
         }
+
+
 
 
         public double MoneyMultiplier => 1.0 + (Rebirths * 4.0);
@@ -115,7 +121,7 @@ namespace SpinARayan.Models
         }
 
         [XmlIgnore]
-        public BigInteger NextRebirthCost => BigInteger.Pow(8, Rebirths) * 100000;
+        public BigInteger NextRebirthCost => BigInteger.Pow(6, Rebirths) * 100000; // 6x teurer pro Rebirth (vorher 8x)
 
         [XmlElement("NextRebirthCost")]
         public string NextRebirthCostString => NextRebirthCost.ToString();

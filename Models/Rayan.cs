@@ -21,6 +21,11 @@ namespace SpinARayan.Models
         }
         
         public double Multiplier { get; set; } = 1.0;
+        
+        // Adjusted Rarity (Rarity / LuckMultiplier) - used for flash effects
+        // Not serialized, only used for UI effects
+        [XmlIgnore]
+        public double AdjustedRarity { get; set; } = 0;
 
         public string FullName => $"{(string.IsNullOrEmpty(Prefix) ? "" : Prefix + " ")}Rayan{(string.IsNullOrEmpty(Suffix) ? "" : " " + Suffix)}";
 

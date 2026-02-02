@@ -1,4 +1,4 @@
-using SpinARayan.Forms.Dialogs;
+ï»¿using SpinARayan.Forms.Dialogs;
 using SpinARayan.Services;
 using System;
 using System.Runtime.InteropServices;
@@ -20,7 +20,12 @@ namespace SpinARayan
 #if DEBUG
             AllocConsole();
             Console.WriteLine("[Program] Debug mode - Console enabled");
-            Console.WriteLine("[Program] Type 'ad' and press Enter to toggle Admin Mode");
+            Console.WriteLine("[Program] Commands:");
+            Console.WriteLine("[Program]   ad                - Toggle Admin Mode");
+            Console.WriteLine("[Program]   cash -add XXX     - Add money");
+            Console.WriteLine("[Program]   gems -add XXX     - Add gems");
+            Console.WriteLine("[Program]   roll XXX          - Roll X times");
+            Console.WriteLine("[Program]   roll -speed XXX   - Set roll cooldown");
 #endif
             
             ApplicationConfiguration.Initialize();
@@ -101,7 +106,7 @@ namespace SpinARayan
                         else
                         {
                             MessageBox.Show(
-                                "Login fehlgeschlagen!\n\nUngültiger Username oder Passwort.\nBitte versuche es erneut.",
+                                "Login fehlgeschlagen!\n\nUngÃ¼ltiger Username oder Passwort.\nBitte versuche es erneut.",
                                 "Login Fehler",
                                 MessageBoxButtons.OK,
                                 MessageBoxIcon.Error
@@ -195,8 +200,8 @@ namespace SpinARayan
                             "Details:\n" +
                             $"- User ID: {userId}\n" +
                             $"- Username: {username}\n\n" +
-                            "Bitte schau in die Console für mehr Informationen.\n" +
-                            "Häufige Ursachen:\n" +
+                            "Bitte schau in die Console fÃ¼r mehr Informationen.\n" +
+                            "HÃ¤ufige Ursachen:\n" +
                             "- DB-Tabelle 'Savefiles' fehlt eine Spalte\n" +
                             "- Netzwerk-Timeout\n" +
                             "- Falsche Datentypen\n\n" +
@@ -229,7 +234,7 @@ namespace SpinARayan
                         "Fehler beim Erstellen des Savefiles!\n\n" +
                         $"Exception: {ae.InnerExceptions[0].GetType().Name}\n" +
                         $"Message: {ae.InnerExceptions[0].Message}\n\n" +
-                        "Siehe Console für Details.",
+                        "Siehe Console fÃ¼r Details.",
                         "Fehler",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Error
@@ -249,7 +254,7 @@ namespace SpinARayan
                         "Fehler beim Erstellen des Savefiles!\n\n" +
                         $"Exception: {ex.GetType().Name}\n" +
                         $"Message: {ex.Message}\n\n" +
-                        "Siehe Console für Details.",
+                        "Siehe Console fÃ¼r Details.",
                         "Fehler",
                         MessageBoxButtons.OK,
                         MessageBoxIcon.Error
@@ -289,7 +294,7 @@ namespace SpinARayan
                                     MessageBox.Show(
                                         "Fehler beim Erstellen des Savefiles!\n\n" +
                                         $"User ID: {userId}\n" +
-                                        "Siehe Console für Details.",
+                                        "Siehe Console fÃ¼r Details.",
                                         "Fehler",
                                         MessageBoxButtons.OK,
                                         MessageBoxIcon.Error
@@ -343,20 +348,56 @@ namespace SpinARayan
             // Step 5: Start game with selected savefile
             Console.WriteLine($"[Program] Starting game with savefile: {selectedSavefileId}");
             
-            var mainForm = new MainForm(username, dbService, selectedSavefileId);
-            
+            try
+            {
+                var mainForm = new MainForm(username, dbService, selectedSavefileId);
+                
 #if DEBUG
-            // Start console input listener for admin mode (DEBUG only)
-            StartConsoleListener(mainForm);
+                // Start console input listener for admin mode (DEBUG only)
+                StartConsoleListener(mainForm);
 #endif
-            
-            Application.Run(mainForm);
+                
+                Application.Run(mainForm);
+            }
+            catch (Exception ex)
+            {
+                // Check for version incompatibility
+                if (ex.Message.StartsWith("INCOMPATIBLE_VERSION:"))
+                {
+                    string errorMessage = ex.Message.Substring(21); // Remove prefix
+                    MessageBox.Show(
+                        errorMessage,
+                        "Inkompatible Savefile-Version",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Warning
+                    );
+                    
+                    // Restart the application
+                    Console.WriteLine($"[Program] Restarting application after version incompatibility...");
+                    System.Diagnostics.Process.Start(Application.ExecutablePath);
+                    return;
+                }
+                else
+                {
+                    // Other errors
+                    MessageBox.Show(
+                        $"Fehler beim Starten des Spiels:\n\n{ex.Message}",
+                        "Fehler",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                    throw;
+                }
+            }
         }
         
 #if DEBUG
         /// <summary>
         /// Background thread that listens for console input (DEBUG only)
-        /// Typing "ad" and pressing Enter toggles Admin Mode
+        /// Commands:
+        /// - "ad" = Toggle Admin Mode
+        /// - "cash -add XXX" = Add money (triggers admin flag)
+        /// - "gems -add XXX" = Add gems (triggers admin flag)
         /// </summary>
         private static void StartConsoleListener(MainForm mainForm)
         {
@@ -368,9 +409,14 @@ namespace SpinARayan
                     {
                         var input = Console.ReadLine();
                         
-                        if (input?.Trim().ToLower() == "ad")
+                        if (string.IsNullOrWhiteSpace(input))
+                            continue;
+                        
+                        var trimmedInput = input.Trim().ToLower();
+                        
+                        // Command: "ad" - Toggle Admin Mode
+                        if (trimmedInput == "ad")
                         {
-                            // Invoke on UI thread to safely toggle admin mode
                             try
                             {
                                 mainForm.Invoke(() =>
@@ -382,6 +428,112 @@ namespace SpinARayan
                             {
                                 Console.WriteLine($"[Console] Failed to toggle admin mode: {ex.Message}");
                             }
+                        }
+                        // Command: "cash -add XXX" - Add money
+                        else if (trimmedInput.StartsWith("cash -add "))
+                        {
+                            var amountStr = trimmedInput.Replace("cash -add ", "").Trim();
+                            if (System.Numerics.BigInteger.TryParse(amountStr, out var amount))
+                            {
+                                try
+                                {
+                                    mainForm.Invoke(() =>
+                                    {
+                                        mainForm.AddMoneyFromConsole(amount);
+                                    });
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"[Console] Failed to add money: {ex.Message}");
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine($"[Console] Invalid amount: {amountStr}");
+                                Console.WriteLine($"[Console] Usage: cash -add <number>");
+                            }
+                        }
+                        // Command: "gems -add XXX" - Add gems
+                        else if (trimmedInput.StartsWith("gems -add "))
+                        {
+                            var amountStr = trimmedInput.Replace("gems -add ", "").Trim();
+                            if (int.TryParse(amountStr, out var amount))
+                            {
+                                try
+                                {
+                                    mainForm.Invoke(() =>
+                                    {
+                                        mainForm.AddGemsFromConsole(amount);
+                                    });
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"[Console] Failed to add gems: {ex.Message}");
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine($"[Console] Invalid amount: {amountStr}");
+                                Console.WriteLine($"[Console] Usage: gems -add <number>");
+                            }
+                        }
+                        // Command: "roll -speed XXX" - Set roll cooldown speed
+                        else if (trimmedInput.StartsWith("roll -speed "))
+                        {
+                            var speedStr = trimmedInput.Replace("roll -speed ", "").Trim();
+                            if (double.TryParse(speedStr, out var speed) && speed >= 0.1 && speed <= 60.0)
+                            {
+                                try
+                                {
+                                    mainForm.Invoke(() =>
+                                    {
+                                        mainForm.SetRollSpeedFromConsole(speed);
+                                    });
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"[Console] Failed to set roll speed: {ex.Message}");
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine($"[Console] Invalid speed: {speedStr}");
+                                Console.WriteLine($"[Console] Usage: roll -speed <seconds> (0.1-60.0)");
+                            }
+                        }
+                        // Command: "roll XXX" - Roll X times without timer (for testing)
+                        else if (trimmedInput.StartsWith("roll "))
+                        {
+                            var amountStr = trimmedInput.Replace("roll ", "").Trim();
+                            if (int.TryParse(amountStr, out var amount) && amount > 0 && amount <= 10000)
+                            {
+                                try
+                                {
+                                    mainForm.Invoke(() =>
+                                    {
+                                        mainForm.RollMultipleFromConsole(amount);
+                                    });
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine($"[Console] Failed to roll: {ex.Message}");
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine($"[Console] Invalid amount: {amountStr}");
+                                Console.WriteLine($"[Console] Usage: roll <number> (1-10000)");
+                            }
+                        }
+                        else if (!string.IsNullOrEmpty(trimmedInput))
+                        {
+                            Console.WriteLine($"[Console] Unknown command: {trimmedInput}");
+                            Console.WriteLine($"[Console] Available commands:");
+                            Console.WriteLine($"[Console]   ad              - Toggle Admin Mode");
+                            Console.WriteLine($"[Console]   cash -add XXX   - Add money (triggers admin flag)");
+                            Console.WriteLine($"[Console]   gems -add XXX   - Add gems (triggers admin flag)");
+                            Console.WriteLine($"[Console]   roll XXX        - Roll X times without timer (triggers admin flag)");
+                            Console.WriteLine($"[Console]   roll -speed XXX - Set roll cooldown to X.X seconds (triggers admin flag)");
                         }
                     }
                 }
@@ -395,7 +547,13 @@ namespace SpinARayan
             };
             
             consoleThread.Start();
-            Console.WriteLine("[Console] Admin command listener started (type 'ad' + Enter)");
+            Console.WriteLine("[Console] Admin command listener started");
+            Console.WriteLine("[Console] Available commands:");
+            Console.WriteLine("[Console]   ad                - Toggle Admin Mode");
+            Console.WriteLine("[Console]   cash -add XXX     - Add money (triggers admin flag)");
+            Console.WriteLine("[Console]   gems -add XXX     - Add gems (triggers admin flag)");
+            Console.WriteLine("[Console]   roll XXX          - Roll X times without timer (triggers admin flag)");
+            Console.WriteLine("[Console]   roll -speed XXX   - Set roll cooldown to X.X seconds (triggers admin flag)");
         }
 #endif
         

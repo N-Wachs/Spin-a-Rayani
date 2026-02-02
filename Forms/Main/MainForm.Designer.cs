@@ -15,6 +15,7 @@
         private Button btnShop;
         private Button btnOptions;
         private Button btnLeaderboard;
+        private Button btnFeedback;
         private Label lblMoney;
         private Label lblGems;
         private Label lblRebirths;
@@ -46,6 +47,7 @@
             this.btnShop = new Button();
             this.btnOptions = new Button();
             this.btnLeaderboard = new Button();
+            this.btnFeedback = new Button();
             this.lblMoney = new Label();
             this.lblGems = new Label();
             this.lblRebirths = new Label();
@@ -61,28 +63,28 @@
             // panelLeft
             // 
             this.panelLeft.Location = new Point(0, 0);
-            this.panelLeft.Size = new Size(300, 700);
+            this.panelLeft.Size = new Size(350, 850);
             this.panelLeft.BackColor = Color.FromArgb(38, 38, 38); // BackgroundPanel
             
             // 
             // panelCenter
             // 
-            this.panelCenter.Location = new Point(300, 0);
-            this.panelCenter.Size = new Size(600, 700);
+            this.panelCenter.Location = new Point(350, 0);
+            this.panelCenter.Size = new Size(700, 850);
             this.panelCenter.BackColor = Color.FromArgb(30, 30, 30); // BackgroundElevated
             
             // 
             // panelRight
             // 
-            this.panelRight.Location = new Point(900, 0);
-            this.panelRight.Size = new Size(300, 700);
+            this.panelRight.Location = new Point(1050, 0);
+            this.panelRight.Size = new Size(350, 850);
             this.panelRight.BackColor = Color.FromArgb(38, 38, 38); // BackgroundPanel
             
             // 
             // btnRoll
             // 
-            this.btnRoll.Location = new Point(150, 380); // Moved down from 270 to 380 for spacing
-            this.btnRoll.Size = new Size(300, 120);
+            this.btnRoll.Location = new Point(200, 600); // Centered: 700/2 - 300/2 = 200
+            this.btnRoll.Size = new Size(300, 100);
             this.btnRoll.BackColor = Color.FromArgb(33, 150, 243); // AccentBlue
             this.btnRoll.ForeColor = Color.White;
             this.btnRoll.Font = new Font("Segoe UI Emoji", 24F, FontStyle.Bold);
@@ -128,9 +130,9 @@
             // 
             // lblMoney
             // 
-            this.lblMoney.Location = new Point(20, 620);
-            this.lblMoney.Size = new Size(260, 30);
-            this.lblMoney.Font = new Font("Segoe UI Emoji", 16F, FontStyle.Bold);
+            this.lblMoney.Location = new Point(20, 720);
+            this.lblMoney.Size = new Size(320, 35);
+            this.lblMoney.Font = new Font("Segoe UI Emoji", 18F, FontStyle.Bold);
             this.lblMoney.ForeColor = Color.FromArgb(76, 175, 80); // Success Green
             this.lblMoney.Text = "💰 0";
             this.panelCenter.Controls.Add(this.lblMoney);
@@ -138,9 +140,9 @@
             // 
             // lblGems
             // 
-            this.lblGems.Location = new Point(20, 655);
-            this.lblGems.Size = new Size(260, 30);
-            this.lblGems.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
+            this.lblGems.Location = new Point(20, 760);
+            this.lblGems.Size = new Size(320, 35);
+            this.lblGems.Font = new Font("Segoe UI Emoji", 16F, FontStyle.Bold);
             this.lblGems.ForeColor = Color.FromArgb(33, 150, 243); // AccentBlue
             this.lblGems.Text = "💎 0";
             this.panelCenter.Controls.Add(this.lblGems);
@@ -148,9 +150,9 @@
             // 
             // lblLuck
             // 
-            this.lblLuck.Location = new Point(320, 620);
-            this.lblLuck.Size = new Size(260, 30);
-            this.lblLuck.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
+            this.lblLuck.Location = new Point(360, 720);
+            this.lblLuck.Size = new Size(320, 35);
+            this.lblLuck.Font = new Font("Segoe UI Emoji", 16F, FontStyle.Bold);
             this.lblLuck.ForeColor = Color.FromArgb(255, 193, 7); // Warning Amber
             this.lblLuck.Text = "🍀 Luck: +0%";
             this.lblLuck.TextAlign = ContentAlignment.MiddleRight;
@@ -159,9 +161,9 @@
             // 
             // lblRebirthBonus
             // 
-            this.lblRebirthBonus.Location = new Point(320, 655);
-            this.lblRebirthBonus.Size = new Size(260, 30);
-            this.lblRebirthBonus.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
+            this.lblRebirthBonus.Location = new Point(360, 760);
+            this.lblRebirthBonus.Size = new Size(320, 35);
+            this.lblRebirthBonus.Font = new Font("Segoe UI Emoji", 16F, FontStyle.Bold);
             this.lblRebirthBonus.ForeColor = Color.FromArgb(156, 39, 176); // Rebirth Purple
             this.lblRebirthBonus.Text = "🔄 Rebirth: +0%";
             this.lblRebirthBonus.TextAlign = ContentAlignment.MiddleRight;
@@ -170,7 +172,7 @@
             // 
             // lblLastRoll
             // 
-            this.lblLastRoll.Location = new Point(50, 50);
+            this.lblLastRoll.Location = new Point(100, 30);
             this.lblLastRoll.Size = new Size(500, 80);
             this.lblLastRoll.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
             this.lblLastRoll.ForeColor = Color.FromArgb(255, 193, 7); // Warning Amber
@@ -181,20 +183,20 @@
             // 
             // lblAutoRollStatus
             // 
-            this.lblAutoRollStatus.Location = new Point(350, 655);
-            this.lblAutoRollStatus.Size = new Size(200, 30);
-            this.lblAutoRollStatus.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            this.lblAutoRollStatus.Location = new Point(20, 800);
+            this.lblAutoRollStatus.Size = new Size(320, 30);
+            this.lblAutoRollStatus.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             this.lblAutoRollStatus.ForeColor = Color.FromArgb(76, 175, 80); // Success Green
-            this.lblAutoRollStatus.TextAlign = ContentAlignment.MiddleRight;
+            this.lblAutoRollStatus.TextAlign = ContentAlignment.MiddleLeft;
             this.lblAutoRollStatus.Text = "";
             this.panelCenter.Controls.Add(this.lblAutoRollStatus);
             
             // 
             // lblRebirths
             // 
-            this.lblRebirths.Location = new Point(10, 670);
-            this.lblRebirths.Size = new Size(280, 25);
-            this.lblRebirths.Font = new Font("Segoe UI", 10F, FontStyle.Bold);
+            this.lblRebirths.Location = new Point(360, 800);
+            this.lblRebirths.Size = new Size(320, 30);
+            this.lblRebirths.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
             this.lblRebirths.ForeColor = Color.FromArgb(230, 230, 230);
             this.lblRebirths.Text = "Rebirths: 0";
             this.lblRebirths.TextAlign = ContentAlignment.TopCenter;
@@ -204,7 +206,7 @@
             // btnInventory
             // 
             this.btnInventory.Location = new Point(20, 20);
-            this.btnInventory.Size = new Size(260, 60);
+            this.btnInventory.Size = new Size(310, 60);
             this.btnInventory.BackColor = Color.FromArgb(48, 63, 159); // PrimaryMedium
             this.btnInventory.ForeColor = Color.White;
             this.btnInventory.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
@@ -219,7 +221,7 @@
             // btnShop
             // 
             this.btnShop.Location = new Point(20, 90);
-            this.btnShop.Size = new Size(260, 60);
+            this.btnShop.Size = new Size(310, 60);
             this.btnShop.BackColor = Color.FromArgb(48, 63, 159); // PrimaryMedium
             this.btnShop.ForeColor = Color.White;
             this.btnShop.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
@@ -234,7 +236,7 @@
             // btnUpgrades
             // 
             this.btnUpgrades.Location = new Point(20, 160);
-            this.btnUpgrades.Size = new Size(260, 60);
+            this.btnUpgrades.Size = new Size(310, 60);
             this.btnUpgrades.BackColor = Color.FromArgb(48, 63, 159); // PrimaryMedium
             this.btnUpgrades.ForeColor = Color.White;
             this.btnUpgrades.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
@@ -249,7 +251,7 @@
             // btnQuests
             // 
             this.btnQuests.Location = new Point(20, 230);
-            this.btnQuests.Size = new Size(260, 60);
+            this.btnQuests.Size = new Size(310, 60);
             this.btnQuests.BackColor = Color.FromArgb(48, 63, 159); // PrimaryMedium
             this.btnQuests.ForeColor = Color.White;
             this.btnQuests.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
@@ -264,7 +266,7 @@
             // btnOptions
             // 
             this.btnOptions.Location = new Point(20, 300);
-            this.btnOptions.Size = new Size(260, 60);
+            this.btnOptions.Size = new Size(310, 60);
             this.btnOptions.BackColor = Color.FromArgb(48, 63, 159); // PrimaryMedium
             this.btnOptions.ForeColor = Color.White;
             this.btnOptions.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
@@ -279,7 +281,7 @@
             // btnLeaderboard
             // 
             this.btnLeaderboard.Location = new Point(20, 370);
-            this.btnLeaderboard.Size = new Size(260, 60);
+            this.btnLeaderboard.Size = new Size(310, 60);
             this.btnLeaderboard.BackColor = Color.FromArgb(255, 193, 7); // Warning/Gold
             this.btnLeaderboard.ForeColor = Color.White;
             this.btnLeaderboard.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
@@ -291,9 +293,25 @@
             this.panelRight.Controls.Add(this.btnLeaderboard);
             
             // 
+            // btnFeedback
+            // 
+            this.btnFeedback.Location = new Point(20, 440);
+            this.btnFeedback.Size = new Size(310, 60);
+            this.btnFeedback.BackColor = Color.FromArgb(156, 39, 176); // Purple
+            this.btnFeedback.ForeColor = Color.White;
+            this.btnFeedback.Font = new Font("Segoe UI Emoji", 14F, FontStyle.Bold);
+            this.btnFeedback.Text = "💬 FEEDBACK";
+            this.btnFeedback.FlatStyle = FlatStyle.Flat;
+            this.btnFeedback.FlatAppearance.BorderSize = 2;
+            this.btnFeedback.FlatAppearance.BorderColor = Color.FromArgb(186, 104, 200);
+            this.btnFeedback.Cursor = Cursors.Hand;
+            this.btnFeedback.Click += new EventHandler(this.btnFeedback_Click);
+            this.panelRight.Controls.Add(this.btnFeedback);
+            
+            // 
             // MainForm
             // 
-            this.ClientSize = new Size(1200, 700);
+            this.ClientSize = new Size(1400, 850);
             this.Controls.Add(this.panelLeft);
             this.Controls.Add(this.panelCenter);
             this.Controls.Add(this.panelRight);

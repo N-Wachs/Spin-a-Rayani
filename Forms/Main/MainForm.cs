@@ -263,14 +263,30 @@ namespace SpinARayan
             CreateDiceInfoLabel();
             CreateEventDisplay();
             
+            
+            
+            
             // Move Rebirth button to right panel (bottom)
             panelCenter.Controls.Remove(btnRebirth);
-            btnRebirth.Location = new Point(20, 580);
-            btnRebirth.Size = new Size(260, 80);
-            btnRebirth.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
+            btnRebirth.Location = new Point(20, 720);
+            btnRebirth.Size = new Size(310, 90);
+            btnRebirth.Font = new Font("Segoe UI", 16F, FontStyle.Bold);
             btnRebirth.Text = $"Rebirth\n{FormatBigInt(_gameManager.Stats.NextRebirthCost)}";
             btnRebirth.Enabled = _gameManager.AdminMode || _gameManager.Stats.Money >= _gameManager.Stats.NextRebirthCost;
             panelRight.Controls.Add(btnRebirth);
+            
+            // Add Rebirth counter label below the button
+            var lblRebirthCounter = new Label
+            {
+                Location = new Point(20, 815),
+                Size = new Size(310, 25),
+                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                Text = $"Rebirth #{_gameManager.Stats.Rebirths}",
+                ForeColor = RebirthColor,
+                TextAlign = ContentAlignment.TopCenter,
+                Name = "lblRebirthCounter"
+            };
+            panelRight.Controls.Add(lblRebirthCounter);
             
             // Add debug button for manual polling (Admin/Multiplayer only)
             CreateDebugPollButton();
@@ -354,6 +370,109 @@ namespace SpinARayan
             ActivateAdminMode();
             Console.WriteLine($"[Console] Admin mode toggled via console command: {(_gameManager.AdminMode ? "ENABLED" : "DISABLED")}");
         }
+        
+        /// <summary>
+        /// Add money from console command (DEBUG only, triggers admin flag)
+        /// </summary>
+        public void AddMoneyFromConsole(BigInteger amount)
+        {
+            _gameManager.Stats.Money += amount;
+            _gameManager.MarkAdminUsed();
+            Console.WriteLine($"[Console] Added {amount} money. New total: {_gameManager.Stats.Money}");
+            Console.WriteLine($"[Console] Admin flag set!");
+            UpdateUI();
+        }
+        
+        /// <summary>
+        /// Add gems from console command (DEBUG only, triggers admin flag)
+        /// </summary>
+        public void AddGemsFromConsole(int amount)
+        {
+            _gameManager.Stats.Gems += amount;
+            _gameManager.MarkAdminUsed();
+            Console.WriteLine($"[Console] Added {amount} gems. New total: {_gameManager.Stats.Gems}");
+            Console.WriteLine($"[Console] Admin flag set!");
+            UpdateUI();
+        }
+        
+        /// <summary>
+        /// Set roll cooldown speed from console command (DEBUG only, triggers admin flag)
+        /// </summary>
+        public void SetRollSpeedFromConsole(double seconds)
+        {
+            _gameManager.Stats.RollCooldown = seconds;
+            _gameManager.MarkAdminUsed();
+            Console.WriteLine($"[Console] Roll cooldown set to {seconds:F1} seconds");
+            Console.WriteLine($"[Console] Admin flag set!");
+            
+            // If roll is currently on cooldown, update it
+            if (_rollCooldownRemaining > seconds)
+            {
+                _rollCooldownRemaining = seconds;
+            }
+            
+            UpdateUI();
+        }
+        
+        /// <summary>
+        /// Roll multiple times from console command (DEBUG only, triggers admin flag)
+        /// For testing probabilities without timer
+        /// </summary>
+        public void RollMultipleFromConsole(int count)
+        {
+            Console.WriteLine($"[Console] Starting {count} rolls for testing...");
+            _gameManager.MarkAdminUsed();
+            
+            var rarityStats = new Dictionary<string, int>();
+            var suffixStats = new Dictionary<string, int>();
+            int totalRolls = 0;
+            
+            var startTime = DateTime.Now;
+            
+            for (int i = 0; i < count; i++)
+            {
+                _gameManager.Roll();
+                totalRolls++;
+                
+                // Get last rolled rayan
+                var lastRayan = _gameManager.Stats.Inventory.LastOrDefault();
+                if (lastRayan != null)
+                {
+                    // Track prefix stats
+                    if (!rarityStats.ContainsKey(lastRayan.Prefix))
+                        rarityStats[lastRayan.Prefix] = 0;
+                    rarityStats[lastRayan.Prefix]++;
+                    
+                    // Track suffix stats
+                    string suffixKey = string.IsNullOrEmpty(lastRayan.Suffix) ? "(No Suffix)" : lastRayan.Suffix;
+                    if (!suffixStats.ContainsKey(suffixKey))
+                        suffixStats[suffixKey] = 0;
+                    suffixStats[suffixKey]++;
+                }
+            }
+            
+            var endTime = DateTime.Now;
+            var duration = (endTime - startTime).TotalSeconds;
+            
+            Console.WriteLine($"[Console] Completed {totalRolls} rolls in {duration:F2} seconds");
+            Console.WriteLine($"[Console] Admin flag set!");
+            Console.WriteLine($"");
+            Console.WriteLine($"[Console] === PREFIX STATISTICS ===");
+            foreach (var kvp in rarityStats.OrderByDescending(x => x.Value))
+            {
+                double percentage = (kvp.Value / (double)totalRolls) * 100.0;
+                Console.WriteLine($"[Console]   {kvp.Key,-20}: {kvp.Value,6} ({percentage,6:F2}%)");
+            }
+            Console.WriteLine($"");
+            Console.WriteLine($"[Console] === SUFFIX STATISTICS ===");
+            foreach (var kvp in suffixStats.OrderByDescending(x => x.Value))
+            {
+                double percentage = (kvp.Value / (double)totalRolls) * 100.0;
+                Console.WriteLine($"[Console]   {kvp.Key,-20}: {kvp.Value,6} ({percentage,6:F2}%)");
+            }
+            
+            UpdateUI();
+        }
 #endif
 
         private void ApplyDarkMode()
@@ -398,31 +517,29 @@ namespace SpinARayan
         private void CreateDiceInfoLabel()
         {
             // Position centered above roll button with more spacing
-            int width = 180;
+            int width = 200;
             int centerX = panelCenter.Width / 2;
             
             // DICE IMAGE - clickable, leads to inventory (larger size for better visibility)
-            // Add as background element - will be behind other controls
-            // Moved down to avoid overlap with lblLastRoll
+            // Centered DIRECTLY above roll button
             _picDiceSelector = new PictureBox
             {
-                Location = new Point(centerX - 75, 150), // Moved down from 100 to 150 for more spacing
-                Size = new Size(150, 150), // Increased from 100x100 to 150x150
-                SizeMode = PictureBoxSizeMode.Zoom, // Changed from StretchImage to Zoom for better quality
+                Location = new Point(centerX - 100, 350), // Centered: 700/2 - 200/2 = 250
+                Size = new Size(200, 200), // Large visible image
+                SizeMode = PictureBoxSizeMode.Zoom,
                 BackColor = Color.Transparent,
                 Cursor = Cursors.Hand
             };
             _picDiceSelector.Click += (s, e) => OpenDiceSelection();
             panelCenter.Controls.Add(_picDiceSelector);
-            _picDiceSelector.SendToBack(); // Send to background so other controls are visible on top
+            _picDiceSelector.BringToFront(); // Keep in front
             
-            // QUANTITY LABEL - below image, should be visible on top
-            // Moved down to avoid overlap with roll button
+            // QUANTITY LABEL - below image, centered
             _lblDiceInfo = new Label
             {
-                Location = new Point(centerX - 90, 310), // Moved down from 255 to 310 for more spacing
-                Size = new Size(width, 30),
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                Location = new Point(centerX - 100, 560), // Below image
+                Size = new Size(200, 30),
+                Font = new Font("Segoe UI", 12F, FontStyle.Bold),
                 ForeColor = BrightBlue,
                 BackColor = Color.Transparent,
                 TextAlign = ContentAlignment.TopCenter,
@@ -437,8 +554,8 @@ namespace SpinARayan
             var btnDebugPoll = new Button
             {
                 Text = "🔍 Debug: Poll Events",
-                Location = new Point(20, 520),
-                Size = new Size(260, 50),
+                Location = new Point(20, 640),
+                Size = new Size(310, 60),
                 Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 BackColor = Color.FromArgb(100, 50, 150),
                 ForeColor = Color.White,
@@ -876,6 +993,13 @@ namespace SpinARayan
                     btnRebirth.Text = $"Rebirth\n{FormatBigInt(_gameManager.Stats.NextRebirthCost)}";
                     btnRebirth.Enabled = _gameManager.AdminMode || _gameManager.Stats.Money >= _gameManager.Stats.NextRebirthCost;
                     
+                    // Update rebirth counter label below button
+                    var lblRebirthCounter = panelRight.Controls.Find("lblRebirthCounter", false).FirstOrDefault() as Label;
+                    if (lblRebirthCounter != null)
+                    {
+                        lblRebirthCounter.Text = $"Rebirth #{_gameManager.Stats.Rebirths}";
+                    }
+                    
                     _lastRebirths = _gameManager.Stats.Rebirths;
                     _plotsDirty = true; // Rebirths change plot slots
                 }
@@ -1011,15 +1135,15 @@ namespace SpinARayan
             var titleLabel = new Label
             {
                 Location = new Point(10, 10),
-                Size = new Size(280, 25),
-                Font = new Font("Segoe UI", 11F, FontStyle.Bold),
+                Size = new Size(330, 30),
+                Font = new Font("Segoe UI", 12F, FontStyle.Bold),
                 Text = "📊 PLOTS",
                 TextAlign = ContentAlignment.MiddleLeft,
                 ForeColor = BrightGold
             };
             panelLeft.Controls.Add(titleLabel);
 
-            int yPosition = 45;
+            int yPosition = 50;
             for (int i = 0; i < 10; i++)
             {
                 var plotPanel = CreateCompactPlotPanel(i, yPosition);
@@ -1031,7 +1155,7 @@ namespace SpinARayan
             _totalIncomePanel = new Panel
             {
                 Location = new Point(10, yPosition),
-                Size = new Size(280, 45),
+                Size = new Size(330, 55),
                 BorderStyle = BorderStyle.FixedSingle,
                 BackColor = Color.FromArgb(0, 80, 0)
             };
@@ -1039,8 +1163,8 @@ namespace SpinARayan
             Label lblTotal = new Label
             {
                 Location = new Point(5, 5),
-                Size = new Size(270, 18),
-                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
+                Size = new Size(320, 22),
+                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
                 Text = "💰 Total Income:",
                 ForeColor = BrightGreen
             };
@@ -1048,9 +1172,9 @@ namespace SpinARayan
 
             Label lblTotalValue = new Label
             {
-                Location = new Point(5, 23),
-                Size = new Size(270, 18),
-                Font = new Font("Segoe UI", 10F, FontStyle.Bold),
+                Location = new Point(5, 28),
+                Size = new Size(320, 22),
+                Font = new Font("Segoe UI", 12F, FontStyle.Bold),
                 Text = "0/s",
                 ForeColor = BrightGreen
             };
@@ -1059,12 +1183,12 @@ namespace SpinARayan
             panelLeft.Controls.Add(_totalIncomePanel);
             
             // Move AutoEquip button below Total Income Panel
-            yPosition += 55; // Total Income height + gap
+            yPosition += 65; // Total Income height + gap
             panelLeft.Controls.Remove(btnAutoEquip);
             panelCenter.Controls.Remove(btnAutoEquip);
             btnAutoEquip.Location = new Point(10, yPosition);
-            btnAutoEquip.Size = new Size(280, 50);
-            btnAutoEquip.Font = new Font("Segoe UI", 12F, FontStyle.Bold);
+            btnAutoEquip.Size = new Size(330, 60);
+            btnAutoEquip.Font = new Font("Segoe UI", 14F, FontStyle.Bold);
             btnAutoEquip.Text = "⬆️ AUTO EQUIP";
             panelLeft.Controls.Add(btnAutoEquip);
             
@@ -1076,7 +1200,7 @@ namespace SpinARayan
             Panel plotPanel = new Panel
             {
                 Location = new Point(10, yPosition),
-                Size = new Size(280, 45),
+                Size = new Size(330, 50),
                 BorderStyle = BorderStyle.FixedSingle,
                 BackColor = DarkAccent,
                 Visible = false
@@ -1085,8 +1209,8 @@ namespace SpinARayan
             Label lblPlotNumber = new Label
             {
                 Location = new Point(5, 3),
-                Size = new Size(50, 15),
-                Font = new Font("Segoe UI", 8F, FontStyle.Bold),
+                Size = new Size(60, 18),
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
                 Text = $"Plot {index + 1}",
                 ForeColor = Color.Gray
             };
@@ -1094,9 +1218,9 @@ namespace SpinARayan
 
             Label lblRayanName = new Label
             {
-                Location = new Point(5, 18),
-                Size = new Size(270, 16),
-                Font = new Font("Segoe UI", 8F),
+                Location = new Point(5, 22),
+                Size = new Size(320, 20),
+                Font = new Font("Segoe UI", 9F),
                 Text = "[Leer]",
                 ForeColor = Color.Gray
             };
@@ -1104,9 +1228,9 @@ namespace SpinARayan
 
             Label lblRayanValue = new Label
             {
-                Location = new Point(200, 3),
-                Size = new Size(75, 15),
-                Font = new Font("Segoe UI", 8F, FontStyle.Bold),
+                Location = new Point(240, 3),
+                Size = new Size(85, 18),
+                Font = new Font("Segoe UI", 9F, FontStyle.Bold),
                 Text = "0/s",
                 ForeColor = BrightGreen,
                 TextAlign = ContentAlignment.TopRight,
@@ -1170,10 +1294,90 @@ namespace SpinARayan
             _plotsDirty = true;
             ShowNewRayan(rayan);
         }
+        
+        private int CalculateFlashCount(double adjustedRarity)
+        {
+            // Flash thresholds based on adjusted rarity (rarity / luck)
+            // NEW SYSTEM: Real probability of 1 in 125 (0.8%) = 3 flashes
+            // adjustedRarity represents the "felt" rarity after luck is applied
+            
+            if (adjustedRarity >= 1000000000000000) return 15; // Ultra-Legendary
+            if (adjustedRarity >= 100000000000000) return 14;
+            if (adjustedRarity >= 10000000000000) return 13;
+            if (adjustedRarity >= 1000000000000) return 12;
+            if (adjustedRarity >= 100000000000) return 11;
+            if (adjustedRarity >= 10000000000) return 10;
+            if (adjustedRarity >= 1000000000) return 9;
+            if (adjustedRarity >= 100000000) return 8;
+            if (adjustedRarity >= 10000000) return 7;
+            if (adjustedRarity >= 1000000) return 6;
+            if (adjustedRarity >= 100000) return 5;
+            if (adjustedRarity >= 10000) return 4;
+            if (adjustedRarity >= 125) return 3; // ← NEW: 1 in 125 = 3 flashes (0.8%)
+            if (adjustedRarity >= 50) return 2;  // 1 in 50 = 2 flashes (2%)
+            if (adjustedRarity >= 25) return 1;  // 1 in 25 = 1 flash (4%)
+            
+            return 0; // No flash for common items (> 4% chance)
+        }
+        
+        private async void TriggerFlashEffect(Color flashColor, int flashCount)
+        {
+            Console.WriteLine($"[Flash] Starting flash effect: {flashCount} flashes");
+            
+            // Store original color
+            Color originalColor = this.BackColor;
+            
+            // Flash effect with 100ms duration as requested
+            for (int i = 0; i < flashCount; i++)
+            {
+                Console.WriteLine($"[Flash] Flash #{i + 1}");
+                
+                // Flash to rarity color
+                this.BackColor = flashColor;
+                await Task.Delay(100); // Hold for 100ms (as requested)
+                
+                // Back to original
+                this.BackColor = originalColor;
+                await Task.Delay(100); // Wait 100ms before next flash
+            }
+            
+            Console.WriteLine($"[Flash] Flash effect completed");
+        }
 
         private void ShowNewRayan(Rayan rayan)
         {
+            // Get tier color (Bronze, Silver, Gold) based on adjusted rarity
+            Color tierColor = GetTierColor(rayan.AdjustedRarity);
+            
             lblLastRoll.Text = $"🎲 {rayan.FullName}\n1 in {rayan.Rarity:N0}";
+            lblLastRoll.ForeColor = tierColor;
+        }
+        
+        /// <summary>
+        /// Get tier color based on adjusted rarity (Bronze/Silver/Gold system)
+        /// </summary>
+        private Color GetTierColor(double adjustedRarity)
+        {
+            // GOLD Tier (Top 0.8% - 1 in 125 or rarer)
+            if (adjustedRarity >= 125)
+            {
+                return Color.FromArgb(255, 215, 0); // Gold
+            }
+            
+            // SILVER Tier (Top 2-4% - 1 in 25 to 1 in 125)
+            if (adjustedRarity >= 25)
+            {
+                return Color.FromArgb(192, 192, 192); // Silver
+            }
+            
+            // BRONZE Tier (Top 4-10% - 1 in 10 to 1 in 25)
+            if (adjustedRarity >= 10)
+            {
+                return Color.FromArgb(205, 127, 50); // Bronze
+            }
+            
+            // WHITE (Common - more than 10% chance)
+            return Color.White;
         }
         
         private void ShowEventSelectionDialog()
@@ -1693,6 +1897,23 @@ namespace SpinARayan
             
             var leaderboardForm = new Forms.Dialogs.LeaderboardForm(_databaseService);
             leaderboardForm.ShowDialog();
+        }
+        
+        private void btnFeedback_Click(object sender, EventArgs e)
+        {
+            if (_databaseService == null)
+            {
+                MessageBox.Show(
+                    "Feedback ist nur im Online-Modus verfügbar!",
+                    "Offline-Modus",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+                return;
+            }
+            
+            var feedbackForm = new Forms.Dialogs.FeedbackForm(_databaseService, _gameManager.Stats.MultiplayerUsername);
+            feedbackForm.ShowDialog();
         }
 
         protected override void OnFormClosing(FormClosingEventArgs e)

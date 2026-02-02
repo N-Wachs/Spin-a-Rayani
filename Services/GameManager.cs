@@ -301,10 +301,16 @@ namespace SpinARayan.Services
                 // Update NextRebirthTarget to the new expected value
                 Stats.NextRebirthTarget = Stats.Rebirths + 1;
                 
-                // Plot Slots nur erhöhen wenn unter 10 (Maximum)
+                // Plot Slots erhöhen basierend auf Anzahl der gewährten Rebirths (Maximum: 10)
                 if (Stats.PlotSlots < 10)
                 {
-                    Stats.PlotSlots++;
+                    int plotSlotsToAdd = Math.Min(rebirthsToGrant, 10 - Stats.PlotSlots);
+                    Stats.PlotSlots += plotSlotsToAdd;
+                    
+                    if (rebirthsToGrant > 1)
+                    {
+                        Console.WriteLine($"[GameManager] Added {plotSlotsToAdd} Plot Slot(s) (for {rebirthsToGrant} Rebirths). Total: {Stats.PlotSlots}/10");
+                    }
                 }
                 
                 // Keep only Basic Dice and reset quantities

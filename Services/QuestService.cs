@@ -78,6 +78,20 @@ namespace SpinARayan.Services
                 IsRepeatable = true
             });
             
+            // Rarity Quest (EINE Quest, die mit Level hochsteigt)
+            // Level wird in PlayerStats.RarityQuestLevel gespeichert
+            // Dynamisch: Rarity = 1000 * (1000^level), Gems = 50 * 4^level
+            Quests.Add(new Quest
+            {
+                Id = "rarity_milestone",
+                Description = "Sammle einen Rayan mit Rarity 1.000+", // Wird dynamisch angepasst
+                Goal = 1,
+                InitialGoal = 1,
+                GoalIncrement = 0,
+                RewardGems = 50, // Wird dynamisch angepasst
+                IsRepeatable = true
+            });
+            
             // Time-based Quests (NICHT wiederholbar)
             Quests.Add(new Quest
             {
@@ -132,11 +146,38 @@ namespace SpinARayan.Services
                 int actualProgress = 0;
 
                 if (quest.Id == "roll_100" || quest.Id == "roll_1000" || quest.Id == "roll_10000")
+                {
                     actualProgress = stats.TotalRolls;
+                }
                 else if (quest.Id == "play_30min" || quest.Id == "play_120min")
+                {
                     actualProgress = (int)stats.PlayTimeMinutes;
+                }
                 else if (quest.Id == "rebirth_5" || quest.Id == "rebirth_25")
+                {
                     actualProgress = stats.Rebirths;
+                }
+                else if (quest.Id == "rarity_milestone")
+                {
+                    // Dynamische Rarity Quest - basiert auf RarityQuestLevel
+                    int level = stats.RarityQuestLevel;
+                    
+                    // Calculate required rarity: 1000 * (1000^level)
+                    double requiredRarity = 1000.0 * Math.Pow(1000.0, level);
+                    
+                    // Calculate gems reward: 50 * (4^level)
+                    int gemsReward = (int)(50 * Math.Pow(4, level));
+                    
+                    // Update quest dynamically
+                    quest.RewardGems = gemsReward;
+                    quest.Description = $"Sammle einen Rayan mit Rarity {requiredRarity:N0}+ (Level {level + 1})";
+                    
+                    // Check if player has met the requirement
+                    if (stats.BestRayanEverRarity >= requiredRarity)
+                    {
+                        actualProgress = 1; // Quest completed!
+                    }
+                }
 
                 // Berechne den Fortschritt relativ zum BaseProgress
                 quest.CurrentProgress = actualProgress - quest.BaseProgress;
@@ -154,6 +195,14 @@ namespace SpinARayan.Services
             {
                 stats.Gems += quest.RewardGems;
                 quest.IsClaimed = true;
+
+                // Spezial-Behandlung für Rarity Milestone Quest
+                if (quest.Id == "rarity_milestone")
+                {
+                    // Erhöhe das Quest-Level in den Stats
+                    stats.RarityQuestLevel++;
+                    Console.WriteLine($"[QuestService] Rarity Quest Level increased to {stats.RarityQuestLevel}");
+                }
 
                 // Wenn die Quest wiederholbar ist, setze sie zurück
                 if (quest.IsRepeatable)

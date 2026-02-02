@@ -27,23 +27,31 @@ namespace SpinARayan.Services
             // Roll for Suffix (NOT affected by luck, only by events)
             var suffixData = SelectSuffix(activeEvents);
 
-            return new Rayan
+            // Calculate adjusted rarity (what the rarity "feels like" with current luck)
+            double adjustedRarity = prefixData.Rarity / luckMultiplier;
+
+            var rayan = new Rayan
             {
                 Prefix = prefixData.Prefix,
                 Rarity = prefixData.Rarity,
                 BaseValue = prefixData.BaseValue,
                 Suffix = suffixData?.Suffix ?? "",
-                Multiplier = suffixData?.Multiplier ?? 1.0
+                Multiplier = suffixData?.Multiplier ?? 1.0,
+                AdjustedRarity = adjustedRarity // Store for flash calculation
             };
+
+            return rayan;
         }
 
         private (string Prefix, double Rarity, System.Numerics.BigInteger BaseValue) SelectFromList(double luck)
         {
             // PERFORMANCE: Use cached sorted list
+            double basis = _random.NextDouble();
+
             foreach (var item in _sortedPrefixes)
             {
                 double chance = 1.0 / (item.Rarity / luck);
-                if (_random.NextDouble() < chance)
+                if (basis < chance)
                 {
                     return item;
                 }
@@ -57,6 +65,7 @@ namespace SpinARayan.Services
             // PERFORMANCE: Use cached sorted list
             foreach (var item in _sortedSuffixes)
             {
+                double basis = _random.NextDouble();
                 double baseChance = item.Chance;
                 
                 // Check if ANY active event boosts this suffix
@@ -71,7 +80,7 @@ namespace SpinARayan.Services
                 }
                 
                 double chance = 1.0 / baseChance;
-                if (_random.NextDouble() < chance)
+                if (basis < chance)
                 {
                     return item;
                 }

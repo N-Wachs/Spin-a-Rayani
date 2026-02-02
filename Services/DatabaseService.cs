@@ -26,7 +26,10 @@ namespace SpinARayan.Services
         private const string ENCRYPTION_KEY = "SpinARayanSecretKey2025";
 
         // Current game version for savefile tracking
-        private const string GAME_VERSION = "3.1.0";
+        private const string GAME_VERSION = "4.0.0";
+        
+        // Minimum required version for savefiles
+        private const string MIN_REQUIRED_VERSION = "4.0.0";
 
         public DatabaseService(string username)
         {
@@ -213,6 +216,13 @@ namespace SpinARayan.Services
 
             var user = users[0];
 
+            // Check banned_flag FIRST - permanent ban
+            if (user.banned_flag)
+            {
+                Console.WriteLine($"[DatabaseService] User {username} is BANNED!");
+                throw new Exception("BANNED:Fehler in der Save-Datei! Bitte kontaktiere den Support.");
+            }
+
             // Decrypt stored password and compare
             string storedPassword = DecryptPassword(user.password);
 
@@ -220,6 +230,38 @@ namespace SpinARayan.Services
             {
                 _currentUserId = user.id.ToString(); // Convert int to string
                 Console.WriteLine($"[DatabaseService] User {username} authenticated successfully");
+                
+                // Check and reset kick_flag if it's set
+                if (user.kick_flag)
+                {
+                    Console.WriteLine($"[DatabaseService] WARNING: Kick flag was set for user {username}! Resetting to false...");
+                    
+                    try
+                    {
+                        var resetData = new Dictionary<string, object>
+                        {
+                            ["kick_flag"] = false
+                        };
+                        
+                        var resetJson = JsonSerializer.Serialize(resetData);
+                        var resetContent = new StringContent(resetJson, Encoding.UTF8, "application/json");
+                        
+                        var resetResponse = await _httpClient.PatchAsync(
+                            $"{SUPABASE_URL}/User?id=eq.{user.id}",
+                            resetContent
+                        );
+                        
+                        if (resetResponse.IsSuccessStatusCode)
+                        {
+                            Console.WriteLine($"[DatabaseService] Kick flag reset successfully");
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[DatabaseService] Failed to reset kick flag: {ex.Message}");
+                    }
+                }
+                
                 return (true, user.id.ToString()); // Convert int to string
             }
             else
@@ -334,6 +376,37 @@ namespace SpinARayan.Services
 
             try
             {
+                // STEP 1: Check user flags before saving
+                var checkResponse = await _httpClient.GetAsync($"{SUPABASE_URL}/User?id=eq.{_currentUserId}&select=kick_flag,banned_flag");
+                
+                if (checkResponse.IsSuccessStatusCode)
+                {
+                    var checkJson = await checkResponse.Content.ReadAsStringAsync();
+                    var users = JsonSerializer.Deserialize<List<DbUserData>>(checkJson);
+                    
+                    if (users != null && users.Count > 0)
+                    {
+                        var user = users[0];
+                        
+                        // Check banned_flag - permanent ban
+                        if (user.banned_flag)
+                        {
+                            Console.WriteLine($"[DatabaseService] BANNED FLAG DETECTED! User is permanently banned. Closing application...");
+                            Environment.Exit(0);
+                            return false; // Never reached
+                        }
+                        
+                        // Check kick_flag - temporary kick
+                        if (user.kick_flag)
+                        {
+                            Console.WriteLine($"[DatabaseService] KICK FLAG DETECTED! Closing application...");
+                            Environment.Exit(0);
+                            return false; // Never reached
+                        }
+                    }
+                }
+                
+                // STEP 2: Continue with normal save
                 var saveData = ConvertStatsToDbFormat(stats);
                 var json = JsonSerializer.Serialize(saveData);
 
@@ -461,6 +534,22 @@ namespace SpinARayan.Services
                 }
 
                 var saveData = savefiles[0];
+                
+                // VERSION CHECK: Ensure savefile is 4.0.0 or higher
+                string saveVersion = saveData.created_in_version ?? "0.0.0";
+                if (!IsVersionCompatible(saveVersion, MIN_REQUIRED_VERSION))
+                {
+                    Console.WriteLine($"[DatabaseService] Savefile version {saveVersion} is too old! Minimum required: {MIN_REQUIRED_VERSION}");
+                    Console.WriteLine($"[DatabaseService] Deleting incompatible savefile {savefileId}...");
+                    
+                    // Delete the old savefile
+                    await DeleteSavefileAsync(savefileId);
+                    
+                    throw new Exception($"INCOMPATIBLE_VERSION:Dein Savefile wurde mit Version {saveVersion} erstellt.\n\n" +
+                                      $"Version {GAME_VERSION} verwendet ein neues Roll-System und ist nicht kompatibel mit alten Saves.\n\n" +
+                                      $"Dein alter Save wurde gelöscht.\n" +
+                                      $"Bitte starte das Spiel neu.");
+                }
 
                 // Track if admin was used in this save (never downgrade from true to false)
                 if (saveData.admin_used && !_adminUsedThisSession)
@@ -472,6 +561,7 @@ namespace SpinARayan.Services
                 var stats = ConvertDbFormatToStats(saveData);
 
                 Console.WriteLine($"[DatabaseService] Successfully loaded Savefile {savefileId}");
+                Console.WriteLine($"[DatabaseService]   Version: {saveVersion}");
                 Console.WriteLine($"[DatabaseService]   Last played: {saveData.last_played}");
                 Console.WriteLine($"[DatabaseService]   Admin used: {saveData.admin_used}");
 
@@ -480,7 +570,39 @@ namespace SpinARayan.Services
             catch (Exception ex)
             {
                 Console.WriteLine($"[DatabaseService] Error loading savefile: {ex.Message}");
+                
+                // Re-throw version incompatibility exceptions
+                if (ex.Message.StartsWith("INCOMPATIBLE_VERSION:"))
+                {
+                    throw;
+                }
+                
                 return null;
+            }
+        }
+        
+        /// <summary>
+        /// Check if a version is compatible (>= minimum required version)
+        /// </summary>
+        private bool IsVersionCompatible(string version, string minRequired)
+        {
+            try
+            {
+                var vParts = version.Split('.').Select(int.Parse).ToArray();
+                var minParts = minRequired.Split('.').Select(int.Parse).ToArray();
+                
+                // Compare major.minor.patch
+                for (int i = 0; i < Math.Min(3, Math.Min(vParts.Length, minParts.Length)); i++)
+                {
+                    if (vParts[i] > minParts[i]) return true;
+                    if (vParts[i] < minParts[i]) return false;
+                }
+                
+                return true; // Equal versions
+            }
+            catch
+            {
+                return false; // Invalid version format
             }
         }
 
@@ -500,24 +622,81 @@ namespace SpinARayan.Services
                 }
 
                 var jsonContent = await response.Content.ReadAsStringAsync();
-                var savefiles = JsonSerializer.Deserialize<List<DbSavefileData>>(jsonContent);
-
-                if (savefiles == null || savefiles.Count == 0)
+                
+                // Try to deserialize - if it fails, try to at least count the savefiles
+                try
                 {
+                    var savefiles = JsonSerializer.Deserialize<List<DbSavefileData>>(jsonContent);
+
+                    if (savefiles == null || savefiles.Count == 0)
+                    {
+                        return new List<SavefileInfo>();
+                    }
+
+                    Console.WriteLine($"[DatabaseService] Found {savefiles.Count} savefile(s) for user");
+
+                    return savefiles.Select(s => new SavefileInfo
+                    {
+                        Id = s.id.ToString(), // Convert int to string
+                        LastPlayed = s.last_played,
+                        Rebirths = s.rebirths,
+                        Money = s.money ?? "0",
+                        Gems = s.gems,
+                        AdminUsed = s.admin_used
+                    }).ToList();
+                }
+                catch (JsonException jsonEx)
+                {
+                    Console.WriteLine($"[DatabaseService] JSON Deserialization Error: {jsonEx.Message}");
+                    Console.WriteLine($"[DatabaseService] This usually means the data in the database is corrupted or in wrong format.");
+                    Console.WriteLine($"[DatabaseService] Attempting to parse basic info from raw JSON...");
+                    
+                    // Try to at least count how many savefiles exist using basic JSON parsing
+                    try
+                    {
+                        using var doc = JsonDocument.Parse(jsonContent);
+                        if (doc.RootElement.ValueKind == JsonValueKind.Array)
+                        {
+                            int count = doc.RootElement.GetArrayLength();
+                            Console.WriteLine($"[DatabaseService] Found {count} savefile(s) in database (but data is corrupted)");
+                            
+                            // Return basic info so the system knows savefiles exist
+                            var savefileInfos = new List<SavefileInfo>();
+                            for (int i = 0; i < count; i++)
+                            {
+                                var element = doc.RootElement[i];
+                                
+                                // Try to extract basic info
+                                var info = new SavefileInfo
+                                {
+                                    Id = element.TryGetProperty("id", out var idProp) ? idProp.GetInt32().ToString() : "unknown",
+                                    LastPlayed = element.TryGetProperty("last_played", out var lpProp) ? lpProp.GetString() : null,
+                                    Rebirths = element.TryGetProperty("rebirths", out var rebProp) ? rebProp.GetInt32() : 0,
+                                    Money = element.TryGetProperty("money", out var moneyProp) ? moneyProp.GetString() ?? "0" : "0",
+                                    Gems = element.TryGetProperty("gems", out var gemsProp) ? gemsProp.GetInt32() : 0,
+                                    AdminUsed = element.TryGetProperty("admin_used", out var adminProp) && adminProp.GetBoolean()
+                                };
+                                
+                                savefileInfos.Add(info);
+                            }
+                            
+                            if (savefileInfos.Count > 0)
+                            {
+                                Console.WriteLine($"[DatabaseService] WARNING: Savefiles exist but have data corruption!");
+                                Console.WriteLine($"[DatabaseService] You may need to delete corrupted savefiles manually from the database.");
+                                Console.WriteLine($"[DatabaseService] Problematic fields are likely: inventory, owned_dice, equipped_rayan_indices, saved_quests");
+                            }
+                            
+                            return savefileInfos;
+                        }
+                    }
+                    catch (Exception parseEx)
+                    {
+                        Console.WriteLine($"[DatabaseService] Failed to parse even basic JSON: {parseEx.Message}");
+                    }
+                    
                     return new List<SavefileInfo>();
                 }
-
-                Console.WriteLine($"[DatabaseService] Found {savefiles.Count} savefile(s) for user");
-
-                return savefiles.Select(s => new SavefileInfo
-                {
-                    Id = s.id.ToString(), // Convert int to string
-                    LastPlayed = s.last_played,
-                    Rebirths = s.rebirths,
-                    Money = s.money ?? "0",
-                    Gems = s.gems,
-                    AdminUsed = s.admin_used
-                }).ToList();
             }
             catch (Exception ex)
             {
@@ -772,7 +951,8 @@ namespace SpinARayan.Services
                 ["owned_dice"] = ownedDiceJson,
                 ["selected_dice_index"] = stats.SelectedDiceIndex,
                 ["saved_quests"] = savedQuestsJson,
-                ["next_rebirth"] = stats.NextRebirthTarget.ToString()
+                ["next_rebirth"] = stats.NextRebirthTarget.ToString(),
+                ["rarity_quest_level"] = stats.RarityQuestLevel
             };
         }
 
@@ -798,7 +978,8 @@ namespace SpinARayan.Services
                 BestRayanEverRarity = double.Parse(saveData.best_rayan_rarity ?? "0"),
                 BestRayanEverValue = BigInteger.Parse(saveData.best_rayan_value ?? "0"),
                 SelectedDiceIndex = saveData.selected_dice_index,
-                NextRebirthTarget = int.TryParse(saveData.next_rebirth, out int target) ? target : saveData.rebirths + 1
+                NextRebirthTarget = int.TryParse(saveData.next_rebirth, out int target) ? target : saveData.rebirths + 1,
+                RarityQuestLevel = saveData.rarity_quest_level
             };
 
             // Deserialize JSONB arrays
@@ -847,9 +1028,11 @@ namespace SpinARayan.Services
                     _ => "total_money_earned"
                 };
                 
-                // Fetch top 50 savefiles where admin_used = false
+                // Fetch top 50 savefiles where:
+                // - admin_used = false
+                // - created_in_version >= 4.0.0 (new roll system)
                 string url = $"{SUPABASE_URL}/Savefiles?" +
-                             $"select=id,user_id,{orderByField},best_rayan_ever_name,best_rayan_rarity,inventory" +
+                             $"select=id,user_id,{orderByField},best_rayan_ever_name,best_rayan_rarity,inventory,created_in_version" +
                              $"&admin_used=eq.false" +
                              $"&order={orderByField}.desc" +
                              $"&limit=50";
@@ -884,6 +1067,19 @@ namespace SpinARayan.Services
                 
                 foreach (var savefile in savefiles)
                 {
+                    // VERSION FILTER: Only include savefiles from version 4.0.0+
+                    string saveVersion = "0.0.0";
+                    if (savefile.TryGetProperty("created_in_version", out var versionProp))
+                    {
+                        saveVersion = versionProp.GetString() ?? "0.0.0";
+                    }
+                    
+                    if (!IsVersionCompatible(saveVersion, MIN_REQUIRED_VERSION))
+                    {
+                        Console.WriteLine($"[DatabaseService] Skipping savefile with old version: {saveVersion}");
+                        continue; // Skip old versions
+                    }
+                    
                     var userId = savefile.GetProperty("user_id").GetInt32().ToString();
                     if (string.IsNullOrEmpty(userId) || !usernames.ContainsKey(userId))
                         continue;
@@ -1056,6 +1252,87 @@ namespace SpinARayan.Services
             double days = hours / 24;
             return $"{days:F1} Tage";
         }
+        
+        /// <summary>
+        /// Save user feedback to User table (appends to feedback_send with "?\?" separator)
+        /// </summary>
+        public async Task<bool> SaveFeedbackAsync(string username, string feedback)
+        {
+            try
+            {
+                Console.WriteLine($"[DatabaseService] Saving feedback for user: {username}");
+                
+                // Get current feedback from user
+                var response = await _httpClient.GetAsync($"{SUPABASE_URL}/User?username=eq.{username}&select=feedback_send");
+                
+                if (!response.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"[DatabaseService] Failed to fetch user feedback");
+                    return false;
+                }
+                
+                var json = await response.Content.ReadAsStringAsync();
+                var users = JsonSerializer.Deserialize<List<JsonElement>>(json);
+                
+                if (users == null || users.Count == 0)
+                {
+                    Console.WriteLine($"[DatabaseService] User not found");
+                    return false;
+                }
+                
+                // Get existing feedback
+                string existingFeedback = "";
+                if (users[0].TryGetProperty("feedback_send", out var feedbackProp))
+                {
+                    existingFeedback = feedbackProp.GetString() ?? "";
+                }
+                
+                // Append new feedback with timestamp and separator
+                string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+                string newFeedbackEntry = $"[{timestamp}] {feedback}";
+                
+                string updatedFeedback;
+                if (string.IsNullOrEmpty(existingFeedback))
+                {
+                    updatedFeedback = newFeedbackEntry;
+                }
+                else
+                {
+                    updatedFeedback = existingFeedback + @"?\?" + newFeedbackEntry;
+                }
+                
+                // Update user feedback
+                var updateData = new Dictionary<string, object>
+                {
+                    ["feedback_send"] = updatedFeedback
+                };
+                
+                var updateJson = JsonSerializer.Serialize(updateData);
+                var content = new StringContent(updateJson, Encoding.UTF8, "application/json");
+                
+                var updateResponse = await _httpClient.PatchAsync(
+                    $"{SUPABASE_URL}/User?username=eq.{username}",
+                    content
+                );
+                
+                if (updateResponse.IsSuccessStatusCode)
+                {
+                    Console.WriteLine($"[DatabaseService] Feedback saved successfully");
+                    return true;
+                }
+                else
+                {
+                    var error = await updateResponse.Content.ReadAsStringAsync();
+                    Console.WriteLine($"[DatabaseService] Failed to save feedback: {error}");
+                    return false;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[DatabaseService] Error saving feedback: {ex.Message}");
+                return false;
+            }
+        }
 
         // Database models
         private class DbUserData
@@ -1065,6 +1342,8 @@ namespace SpinARayan.Services
             public string username { get; set; } = "";
             public string password { get; set; } = "";
             public string[]? savefile_ids { get; set; }
+            public bool kick_flag { get; set; } // NEW: Kick flag for admin moderation (reset on load)
+            public bool banned_flag { get; set; } // NEW: Permanent ban flag (never reset)
         }
 
         private class DbSavefileData
@@ -1098,6 +1377,7 @@ namespace SpinARayan.Services
             public string? last_played { get; set; }
             public bool admin_used { get; set; }
             public string? next_rebirth { get; set; } // NEW: Next rebirth target (string number)
+            public int rarity_quest_level { get; set; } // NEW: Current level of rarity quest (0-based)
         }
     }
     
