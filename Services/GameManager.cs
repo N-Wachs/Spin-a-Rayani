@@ -282,7 +282,7 @@ namespace SpinARayan.Services
                 Stats.Rebirths++;
                 Stats.TotalRebirthsAllTime++; // Track all-time
                 
-                // Plot Slots nur erhöhen wenn unter 10 (Maximum)
+                // Plot Slots nur erhÃ¶hen wenn unter 10 (Maximum)
                 if (Stats.PlotSlots < 10)
                 {
                     Stats.PlotSlots++;
@@ -297,7 +297,8 @@ namespace SpinARayan.Services
                 }
                 Stats.SelectedDiceIndex = 0;
                 
-                _saveService.Save(Stats);
+                // Use standard Save() method which respects database-only mode
+                Save();
                 OnStatsChanged?.Invoke();
             }
         }
@@ -326,21 +327,26 @@ namespace SpinARayan.Services
             // Save quest progress before saving stats
             _questService.SaveQuestsToStats();
             
-            // Only save to DB if database service is available (online mode)
+            // Priority: Database-only mode when database service is available
             if (_databaseService != null)
             {
                 // Async save to DB (fire and forget for performance)
                 _ = SaveToDbAsync();
+                // NOTE: Local save is NOT performed here - database is the primary storage
+                // Local XML is only used as emergency fallback when database is unavailable
             }
             else
             {
-                // Fallback to local save if no database service
+                // Fallback to local save only if no database service
+                // This should only happen in offline mode
                 _saveService.Save(Stats);
+                Console.WriteLine("[GameManager] WARNING: Saving to local file (offline mode)");
             }
         }
         
         /// <summary>
         /// Save to database asynchronously
+        /// Database-only mode: No local fallback during normal saves
         /// </summary>
         private async Task SaveToDbAsync()
         {
@@ -349,19 +355,25 @@ namespace SpinARayan.Services
                 var success = await _databaseService!.SavePlayerDataAsync(Stats);
                 if (!success)
                 {
-                    Console.WriteLine($"[GameManager] Database save failed, falling back to local save");
-                    _saveService.Save(Stats); // Fallback to local on error
+                    Console.WriteLine($"[GameManager] Database save failed (will retry on next auto-save)");
+                    // Do NOT fallback to local save - database is the primary storage
+                    // Local saves are only created as emergency fallback during app close (SaveSync)
+                }
+                else
+                {
+                    Console.WriteLine($"[GameManager] Database save successful");
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"[GameManager] Database save error: {ex.Message}");
-                _saveService.Save(Stats); // Fallback to local on error
+                // Do NOT fallback to local save - will retry on next auto-save
             }
         }
         
         /// <summary>
         /// Save to database synchronously (for app close)
+        /// Database-only mode: Local saves are only created as emergency fallback
         /// </summary>
         public void SaveSync()
         {
@@ -369,6 +381,8 @@ namespace SpinARayan.Services
             
             // Save quest progress
             _questService.SaveQuestsToStats();
+            
+            bool databaseSaveSuccessful = false;
             
             if (_databaseService != null)
             {
@@ -383,6 +397,7 @@ namespace SpinARayan.Services
                         if (task.Result)
                         {
                             Console.WriteLine("[GameManager] Database save successful");
+                            databaseSaveSuccessful = true;
                         }
                         else
                         {
@@ -405,18 +420,26 @@ namespace SpinARayan.Services
             }
             else
             {
-                Console.WriteLine("[GameManager] No database service, skipping DB save");
+                Console.WriteLine("[GameManager] No database service available");
             }
             
-            // Always save local as backup
-            try
+            // Only save to local file if database save failed OR no database service
+            // This ensures database is the primary storage, local is emergency fallback only
+            if (!databaseSaveSuccessful)
             {
-                _saveService.Save(Stats);
-                Console.WriteLine("[GameManager] Local save successful");
+                try
+                {
+                    _saveService.Save(Stats);
+                    Console.WriteLine("[GameManager] WARNING: Local emergency save created (database unavailable)");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[GameManager] Emergency local save error: {ex.Message}");
+                }
             }
-            catch (Exception ex)
+            else
             {
-                Console.WriteLine($"[GameManager] Local save error: {ex.Message}");
+                Console.WriteLine("[GameManager] Local save skipped (database save successful)");
             }
             
             Console.WriteLine("[GameManager] SaveSync completed");
@@ -735,7 +758,8 @@ namespace SpinARayan.Services
                     
                     // Overwrite local with cloud data
                     Stats = cloudStats;
-                    _saveService.Save(Stats); // Save cloud version locally
+                    // Use standard Save() method which respects database-only mode
+                    Save();
                     OnStatsChanged?.Invoke();
                 }
             }
@@ -746,12 +770,12 @@ namespace SpinARayan.Services
         }
         
         /// <summary>
-        /// Save only to local file (not cloud)
+        /// Save using standard method (respects database-only mode)
         /// </summary>
         private void SaveLocal()
         {
             _questService.SaveQuestsToStats();
-            _saveService.Save(Stats);
+            Save(); // Use standard Save() which prioritizes database
         }
         
         /// <summary>
