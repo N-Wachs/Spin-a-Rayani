@@ -214,7 +214,7 @@ namespace SpinARayan
             this.panelActions.Controls.Add(this.btnClose);
             
             // OptionsForm
-            this.ClientSize = new Size(744, 720);
+            this.ClientSize = new Size(744, 900); // Increased to 900 for account management buttons
             this.Controls.Add(this.lblTitle);
             this.Controls.Add(this.panelStats);
             this.Controls.Add(this.panelActions);

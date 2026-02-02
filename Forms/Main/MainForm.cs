@@ -56,9 +56,20 @@ namespace SpinARayan
         private List<Keys> _cheatSequence = new List<Keys>();
         private DateTime _lastCheatKeyPress = DateTime.MinValue;
         private readonly TimeSpan _cheatKeyTimeout = TimeSpan.FromSeconds(2);
+        
+        // Database and Savefile tracking
+        private DatabaseService? _databaseService;
+        private string? _currentSavefileId;
 
-        public MainForm()
+        public MainForm() : this(null, null, null)
         {
+        }
+        
+        public MainForm(string? username, DatabaseService? dbService, string? savefileId)
+        {
+            _databaseService = dbService;
+            _currentSavefileId = savefileId;
+            
             InitializeComponent();
             
             // Set application icon from embedded resource
@@ -98,14 +109,17 @@ namespace SpinARayan
             SetDoubleBuffered(panelCenter);
             SetDoubleBuffered(panelRight);
 
-            // MULTIPLAYER CONFIG: Ask for username on first run or load existing
-            string? multiplayerUsername = null;
+            // MULTIPLAYER CONFIG: Use provided username or ask
+            string? multiplayerUsername = username; // Use provided username from login
             
-            string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "multiplayer_username.txt");
-            
-            // Check if config exists
-            if (!File.Exists(configPath))
+            if (string.IsNullOrEmpty(multiplayerUsername))
             {
+                // Fallback: Old system - ask for username
+                string configPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "multiplayer_username.txt");
+                
+                // Check if config exists
+                if (!File.Exists(configPath))
+                {
                 // First run! Ask for username
                 using var inputDialog = new Form
                 {
@@ -222,8 +236,9 @@ namespace SpinARayan
                     Console.WriteLine($"[MainForm] Error loading multiplayer config: {ex.Message}");
                 }
             }
+            }
 
-            _gameManager = new GameManager(multiplayerUsername);
+            _gameManager = new GameManager(multiplayerUsername, _databaseService);
             _gameManager.OnStatsChanged += UpdateUI;
             _gameManager.OnRayanRolled += OnRayanRolled_Handler;
             _gameManager.OnEventsChanged += UpdateEventDisplay;
@@ -344,6 +359,18 @@ namespace SpinARayan
         private void ActivateAdminMode()
         {
             _gameManager.AdminMode = !_gameManager.AdminMode;
+            
+            // Track admin usage in database
+            if (_gameManager.AdminMode)
+            {
+                _gameManager.MarkAdminUsed();
+                Console.WriteLine($"[MainForm] Admin mode activated - tracking in database");
+            }
+            else
+            {
+                Console.WriteLine($"[MainForm] Admin mode deactivated");
+            }
+            
             UpdateUI();
         }
 
@@ -1627,7 +1654,7 @@ namespace SpinARayan
             var optionsForm = new OptionsForm(_gameManager, () =>
             {
                 UpdateUI();
-            });
+            }, _databaseService, _currentSavefileId);
             optionsForm.ShowDialog();
         }
 
@@ -1640,8 +1667,8 @@ namespace SpinARayan
                 _autoRollTimer?.Stop();
                 _autoSaveTimer?.Stop();
                 
-                // Final save before closing
-                _gameManager.Save();
+                // Final synchronous save before closing (waits for DB)
+                _gameManager.SaveSync();
                 Console.WriteLine("[MainForm] Final save completed on form closing");
             }
             catch (Exception ex)

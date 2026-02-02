@@ -370,6 +370,9 @@ namespace SpinARayan.Services
                     Console.WriteLine($"[EventSync] Applied {newEventCount} new event(s)");
                 }
                 
+                // Check for ended events in database that are still active locally
+                await CheckForEndedEventsAsync();
+                
                 _lastPollTime = DateTime.Now;
             }
             catch (HttpRequestException httpEx)
@@ -447,6 +450,62 @@ namespace SpinARayan.Services
         /// Check if multiplayer is connected (always true if initialized)
         /// </summary>
         public bool IsConnected => true;
+        
+        /// <summary>
+        /// Check if any events ended early in the database and end them locally too
+        /// </summary>
+        private async Task CheckForEndedEventsAsync()
+        {
+            try
+            {
+                // Get list of currently active local event IDs (only multiplayer events, not local ones)
+                var activeMultiplayerEventIds = _gameManager.CurrentEvents
+                    .Where(e => e.EventId > 0) // Only multiplayer events (positive IDs)
+                    .Select(e => e.EventId)
+                    .ToList();
+                
+                if (activeMultiplayerEventIds.Count == 0)
+                    return;
+                    
+                // Query database for these specific events
+                foreach (var eventId in activeMultiplayerEventIds)
+                {
+                    var url = $"{SUPABASE_URL}?id=eq.{eventId}";
+                    var response = await _httpClient.GetAsync(url);
+                    
+                    if (!response.IsSuccessStatusCode)
+                        continue;
+                        
+                    var json = await response.Content.ReadAsStringAsync();
+                    var events = JsonSerializer.Deserialize<List<SharedEventData>>(json);
+                    
+                    if (events == null || events.Count == 0)
+                    {
+                        // Event not found in DB anymore - end it locally
+                        Console.WriteLine($"[EventSync] WARNING Event {eventId} not found in DB - ending locally");
+                        _gameManager.EndEventById(eventId);
+                        continue;
+                    }
+                    
+                    var dbEvent = events[0];
+                    
+                    // Check if event ended early (EndsAt is in the past but we still have it active)
+                    if (dbEvent.EndsAt <= DateTime.UtcNow)
+                    {
+                        Console.WriteLine($"[EventSync] WARNING Event {eventId} ended early in DB - ending locally");
+                        Console.WriteLine($"[EventSync]   DB EndTime: {dbEvent.EndsAt:HH:mm:ss} UTC");
+                        Console.WriteLine($"[EventSync]   Current Time: {DateTime.UtcNow:HH:mm:ss} UTC");
+                        _gameManager.EndEventById(eventId);
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[EventSync] CheckForEndedEvents ERROR: {ex.Message}");
+            }
+        }
+
+
 
         public string Username => _username;
 

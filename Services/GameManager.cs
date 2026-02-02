@@ -1,6 +1,7 @@
 using System;
 using System.Linq;
 using System.Numerics;
+using System.Threading.Tasks;
 using SpinARayan.Models;
 
 namespace SpinARayan.Services
@@ -9,14 +10,18 @@ namespace SpinARayan.Services
     {
         public PlayerStats Stats { get; private set; }
         private readonly SaveService _saveService;
+        private readonly DatabaseService? _databaseService;
         private readonly RollService _rollService;
         private readonly QuestService _questService;
         private EventSyncService? _eventSync;
         private System.Windows.Forms.Timer _gameTimer;
+        private System.Windows.Forms.Timer _autoSaveTimer;
         private DateTime _lastUpdate;
         private DateTime _nextEventTime;
+        private DateTime _lastDbSync = DateTime.MinValue;
         private List<SuffixEvent> _currentEvents = new List<SuffixEvent>();
         private readonly System.Threading.SynchronizationContext? _uiContext;
+        private bool _isLoadingFromDb = false;
 
         public event Action? OnStatsChanged;
         public event Action<Rayan>? OnRayanRolled;
@@ -32,7 +37,7 @@ namespace SpinARayan.Services
         
         public List<SuffixEvent> CurrentEvents => _currentEvents.Where(e => e.IsActive).ToList();
 
-        public GameManager(string? multiplayerUsername = null)
+        public GameManager(string? multiplayerUsername = null, DatabaseService? databaseService = null)
         {
             // Capture UI synchronization context for cross-thread safety
             _uiContext = System.Threading.SynchronizationContext.Current;
@@ -40,7 +45,63 @@ namespace SpinARayan.Services
             _saveService = new SaveService();
             _rollService = new RollService();
             _questService = new QuestService();
-            Stats = _saveService.Load();
+            
+            // Use provided database service (from login system) or create new one
+            if (databaseService != null)
+            {
+                _databaseService = databaseService;
+                Console.WriteLine($"[GameManager] Using provided DatabaseService");
+                
+                // Try to load from database with already selected savefile
+                try
+                {
+                    Console.WriteLine($"[GameManager] Loading from database (savefile already selected)...");
+                    // FIXED: Don't block UI thread - use Task.Run to execute on background thread
+                    var loadTask = Task.Run(async () => await LoadFromDatabaseAsync());
+                    loadTask.Wait(); // This is safer than GetAwaiter().GetResult()
+                }
+                catch (Exception loadEx)
+                {
+                    Console.WriteLine($"[GameManager] Database load failed: {loadEx.Message}");
+                }
+            }
+            else if (!string.IsNullOrEmpty(multiplayerUsername))
+            {
+                // Old system: Initialize DatabaseService if multiplayer enabled
+                try
+                {
+                    _databaseService = new DatabaseService(multiplayerUsername);
+                    Console.WriteLine($"[GameManager] DatabaseService initialized for: {multiplayerUsername}");
+                    
+                    // Try to load from database first (don't block UI thread!)
+                    try
+                    {
+                        // FIXED: Don't block UI thread - use Task.Run to execute on background thread
+                        var loadTask = Task.Run(async () => await LoadFromDatabaseAsync());
+                        loadTask.Wait(); // This is safer than GetAwaiter().GetResult()
+                    }
+                    catch (Exception loadEx)
+                    {
+                        Console.WriteLine($"[GameManager] Database load failed: {loadEx.Message}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[GameManager] DatabaseService initialization failed: {ex.Message}");
+                    _databaseService = null;
+                }
+            }
+            
+            // Fallback to local load if no database or loading failed
+            if (Stats == null)
+            {
+                Console.WriteLine($"[GameManager] Loading from local file (fallback)");
+                Stats = _saveService.Load();
+            }
+            else
+            {
+                Console.WriteLine($"[GameManager] Stats loaded from database successfully");
+            }
             
             // Load saved quest progress
             _questService.LoadQuestsFromStats(Stats);
@@ -67,6 +128,16 @@ namespace SpinARayan.Services
             _gameTimer.Interval = 1000; // 1 second
             _gameTimer.Tick += GameTimer_Tick;
             _gameTimer.Start();
+            
+            // Setup auto-save timer for cloud sync (every 20 seconds)
+            if (_databaseService != null)
+            {
+                _autoSaveTimer = new System.Windows.Forms.Timer();
+                _autoSaveTimer.Interval = 20000; // 20 seconds
+                _autoSaveTimer.Tick += AutoSaveTimer_Tick;
+                _autoSaveTimer.Start();
+                Console.WriteLine("[GameManager] Auto-save to database enabled (every 20s)");
+            }
         }
 
         private void GameTimer_Tick(object? sender, EventArgs e)
@@ -93,11 +164,11 @@ namespace SpinARayan.Services
                 });
             }
 
-            // Autosave every 20 seconds for data safety
-            if ((int)(Stats.PlayTimeMinutes * 60) % 20 == 0 && (int)(Stats.PlayTimeMinutes * 60) > 0)
+            // Local auto-save every 60 seconds
+            if ((int)(Stats.PlayTimeMinutes * 60) % 60 == 0 && (int)(Stats.PlayTimeMinutes * 60) > 0)
             {
-                Save();
-                Console.WriteLine($"[GameManager] Auto-saved at {DateTime.Now:HH:mm:ss}");
+                SaveLocal(); // Only save locally, cloud sync handled by AutoSaveTimer
+                Console.WriteLine($"[GameManager] Local auto-save at {DateTime.Now:HH:mm:ss}");
             }
 
             // PERFORMANCE: Only trigger OnStatsChanged, don't force full UI update
@@ -246,12 +317,114 @@ namespace SpinARayan.Services
                 OnStatsChanged?.Invoke();
             }
         }
+        
+        /// <summary>
+        /// Mark that admin mode was used (tracked in database)
+        /// </summary>
+        public void MarkAdminUsed()
+        {
+            _databaseService?.MarkAdminUsed();
+        }
 
         public void Save()
         {
             // Save quest progress before saving stats
             _questService.SaveQuestsToStats();
-            _saveService.Save(Stats);
+            
+            // Only save to DB if database service is available (online mode)
+            if (_databaseService != null)
+            {
+                // Async save to DB (fire and forget for performance)
+                _ = SaveToDbAsync();
+            }
+            else
+            {
+                // Fallback to local save if no database service
+                _saveService.Save(Stats);
+            }
+        }
+        
+        /// <summary>
+        /// Save to database asynchronously
+        /// </summary>
+        private async Task SaveToDbAsync()
+        {
+            try
+            {
+                var success = await _databaseService!.SavePlayerDataAsync(Stats);
+                if (!success)
+                {
+                    Console.WriteLine($"[GameManager] Database save failed, falling back to local save");
+                    _saveService.Save(Stats); // Fallback to local on error
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[GameManager] Database save error: {ex.Message}");
+                _saveService.Save(Stats); // Fallback to local on error
+            }
+        }
+        
+        /// <summary>
+        /// Save to database synchronously (for app close)
+        /// </summary>
+        public void SaveSync()
+        {
+            Console.WriteLine("[GameManager] SaveSync started");
+            
+            // Save quest progress
+            _questService.SaveQuestsToStats();
+            
+            if (_databaseService != null)
+            {
+                try
+                {
+                    Console.WriteLine("[GameManager] Starting database save...");
+                    var task = Task.Run(async () => await _databaseService.SavePlayerDataAsync(Stats));
+                    
+                    // Wait max 5 seconds for save to complete
+                    if (task.Wait(TimeSpan.FromSeconds(5)))
+                    {
+                        if (task.Result)
+                        {
+                            Console.WriteLine("[GameManager] Database save successful");
+                        }
+                        else
+                        {
+                            Console.WriteLine("[GameManager] Database save failed (returned false)");
+                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("[GameManager] Database save timeout (5s exceeded)");
+                    }
+                }
+                catch (AggregateException ae)
+                {
+                    Console.WriteLine($"[GameManager] Database save error: {ae.InnerException?.Message ?? ae.Message}");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[GameManager] Database save error: {ex.Message}");
+                }
+            }
+            else
+            {
+                Console.WriteLine("[GameManager] No database service, skipping DB save");
+            }
+            
+            // Always save local as backup
+            try
+            {
+                _saveService.Save(Stats);
+                Console.WriteLine("[GameManager] Local save successful");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[GameManager] Local save error: {ex.Message}");
+            }
+            
+            Console.WriteLine("[GameManager] SaveSync completed");
         }
         
         public double GetTotalLuckBonus()
@@ -451,6 +624,176 @@ namespace SpinARayan.Services
             {
                 OnEventsChanged?.Invoke(activeEventsList);
             });
+        }
+        
+        /// <summary>
+        /// Auto-save timer tick - Saves to database every 20 seconds
+        /// </summary>
+        private async void AutoSaveTimer_Tick(object? sender, EventArgs e)
+        {
+            if (_databaseService == null || _isLoadingFromDb)
+                return;
+                
+            try
+            {
+                // Save quest progress before syncing
+                _questService.SaveQuestsToStats();
+                
+                // Save to database (no conflict check needed - DB is single source of truth)
+                bool success = await _databaseService.SavePlayerDataAsync(Stats);
+                
+                if (success)
+                {
+                    _lastDbSync = DateTime.Now;
+                    Console.WriteLine($"[GameManager] Cloud sync successful at {DateTime.Now:HH:mm:ss}");
+                }
+                else
+                {
+                    Console.WriteLine($"[GameManager] Cloud sync failed");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[GameManager] Auto-save error: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Load player data from database
+        /// </summary>
+        private async Task LoadFromDatabaseAsync()
+        {
+            if (_databaseService == null)
+                return;
+                
+            try
+            {
+                _isLoadingFromDb = true;
+                var dbStats = await _databaseService.LoadOrCreateSavefileAsync();
+                
+                if (dbStats != null)
+                {
+                    Stats = dbStats;
+                    Console.WriteLine($"[GameManager] Loaded player data from database");
+                }
+                else
+                {
+                    // Loading failed, use local
+                    Stats = _saveService.Load();
+                    Console.WriteLine($"[GameManager] Database load failed, using local save");
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[GameManager] Database load error: {ex.Message}");
+                Stats = _saveService.Load(); // Fallback to local
+            }
+            finally
+            {
+                _isLoadingFromDb = false;
+            }
+        }
+        
+        /// <summary>
+        /// Check for conflicts between local and cloud data, resolve by taking cloud version
+        /// </summary>
+        private async Task CheckAndResolveConflictsAsync()
+        {
+            if (_databaseService == null)
+                return;
+                
+            try
+            {
+                var cloudStats = await _databaseService.LoadOrCreateSavefileAsync();
+                
+                if (cloudStats == null)
+                    return;
+                    
+                // Compare key metrics to detect conflicts
+                bool hasConflict = 
+                    cloudStats.Money != Stats.Money ||
+                    cloudStats.Gems != Stats.Gems ||
+                    cloudStats.Rebirths != Stats.Rebirths ||
+                    cloudStats.TotalRollsAllTime != Stats.TotalRollsAllTime;
+                
+                if (hasConflict)
+                {
+                    Console.WriteLine($"[GameManager] WARNING CONFLICT DETECTED!");
+                    Console.WriteLine($"[GameManager]   Local  - Money: {Stats.Money}, Gems: {Stats.Gems}, Rebirths: {Stats.Rebirths}");
+                    Console.WriteLine($"[GameManager]   Cloud  - Money: {cloudStats.Money}, Gems: {cloudStats.Gems}, Rebirths: {cloudStats.Rebirths}");
+                    Console.WriteLine($"[GameManager]   Resolution: Using CLOUD version");
+                    
+                    // Show warning to user (thread-safe)
+                    InvokeOnUIThread(() =>
+                    {
+                        System.Windows.Forms.MessageBox.Show(
+                            $"Konflikt erkannt!\n\n" +
+                            $"Lokale Daten weichen von Cloud-Daten ab.\n" +
+                            $"Cloud-Version wird uebernommen.\n\n" +
+                            $"Cloud: {FormatMoney(cloudStats.Money)} Money, {cloudStats.Gems} Gems\n" +
+                            $"Lokal: {FormatMoney(Stats.Money)} Money, {Stats.Gems} Gems",
+                            "Daten-Synchronisation",
+                            System.Windows.Forms.MessageBoxButtons.OK,
+                            System.Windows.Forms.MessageBoxIcon.Warning
+                        );
+                    });
+                    
+                    // Overwrite local with cloud data
+                    Stats = cloudStats;
+                    _saveService.Save(Stats); // Save cloud version locally
+                    OnStatsChanged?.Invoke();
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[GameManager] Conflict check error: {ex.Message}");
+            }
+        }
+        
+        /// <summary>
+        /// Save only to local file (not cloud)
+        /// </summary>
+        private void SaveLocal()
+        {
+            _questService.SaveQuestsToStats();
+            _saveService.Save(Stats);
+        }
+        
+        /// <summary>
+        /// Format BigInteger for display
+        /// </summary>
+        private string FormatMoney(BigInteger value)
+        {
+            if (value < 1000) return value.ToString();
+            if (value < 1000000) return ((double)value / 1000).ToString("F1") + "K";
+            if (value < 1000000000) return ((double)value / 1000000).ToString("F1") + "M";
+            if (value < 1000000000000) return ((double)value / 1000000000).ToString("F1") + "B";
+            return value.ToString("E1");
+        }
+        
+        /// <summary>
+        /// End a specific event by ID (used for early termination from cloud sync)
+        /// </summary>
+        public void EndEventById(long eventId)
+        {
+            var eventToEnd = _currentEvents.FirstOrDefault(e => e.EventId == eventId);
+            
+            if (eventToEnd != null)
+            {
+                Console.WriteLine($"[GameManager] Ending event {eventId}: {eventToEnd.EventName}");
+                
+                // Set end time to now to expire it
+                eventToEnd.EndTime = DateTime.Now.AddSeconds(-1);
+                
+                // Remove from active list
+                _currentEvents.Remove(eventToEnd);
+                
+                // Notify UI
+                InvokeOnUIThread(() =>
+                {
+                    OnEventsChanged?.Invoke(_currentEvents.Where(e => e.IsActive).ToList());
+                });
+            }
         }
 
     }

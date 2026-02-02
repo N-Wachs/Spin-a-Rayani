@@ -13,6 +13,8 @@ namespace SpinARayan
     {
         private readonly GameManager _gameManager;
         private readonly Action _onOptionsChanged;
+        private readonly DatabaseService? _databaseService;
+        private readonly string? _currentSavefileId;
         
         // Modern Theme Colors (from ModernTheme.cs)
         private readonly Color DarkBackground = ModernTheme.BackgroundElevated;
@@ -24,14 +26,18 @@ namespace SpinARayan
         private readonly Color BrightRed = ModernTheme.Error;
         private readonly Color TextColor = ModernTheme.TextPrimary;
 
-        public OptionsForm(GameManager gameManager, Action onOptionsChanged)
+        public OptionsForm(GameManager gameManager, Action onOptionsChanged, DatabaseService? databaseService = null, string? savefileId = null)
         {
             _gameManager = gameManager;
             _onOptionsChanged = onOptionsChanged;
+            _databaseService = databaseService;
+            _currentSavefileId = savefileId;
+            
             InitializeComponent();
             ApplyDarkMode();
             AddMultiplayerSettings();
             LoadStatistics();
+            AddAccountManagementButtons();
         }
 
         private void ApplyDarkMode()
@@ -312,6 +318,281 @@ namespace SpinARayan
             
             // Adjust form size to accommodate multiplayer settings
             this.Height = Math.Max(this.Height, 660);
+        }
+        
+        /// <summary>
+        /// Add account management buttons (Logout, Savefile Reset, Savefile Delete)
+        /// </summary>
+        private void AddAccountManagementButtons()
+        {
+            if (_databaseService == null)
+            {
+                // No database service, skip account management
+                return;
+            }
+            
+            // Create account management panel (below action buttons)
+            var accountPanel = new Panel
+            {
+                Location = new Point(20, 710), // Below panelActions (620 + 80 + 10)
+                Size = new Size(700, 160),
+                BackColor = DarkPanel,
+                BorderStyle = BorderStyle.FixedSingle
+            };
+            
+            var lblAccountTitle = new Label
+            {
+                Text = "\U0001F464 Account Verwaltung",
+                Location = new Point(10, 10),
+                Size = new Size(540, 30),
+                Font = new Font("Segoe UI Emoji", 12F, FontStyle.Bold),
+                ForeColor = BrightGold
+            };
+            accountPanel.Controls.Add(lblAccountTitle);
+            
+            // Current Savefile Info
+            var lblSavefileInfo = new Label
+            {
+                Text = $"Aktueller Savefile: {_currentSavefileId ?? "Unbekannt"}",
+                Location = new Point(10, 45),
+                Size = new Size(540, 20),
+                Font = new Font("Segoe UI", 9F),
+                ForeColor = TextColor
+            };
+            accountPanel.Controls.Add(lblSavefileInfo);
+            
+            // Logout Button
+            var btnLogout = new Button
+            {
+                Location = new Point(10, 75),
+                Size = new Size(175, 35),
+                Text = "\U0001F6AA Logout",
+                Font = new Font("Segoe UI Emoji", 10F, FontStyle.Bold),
+                BackColor = BrightBlue,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnLogout.FlatAppearance.BorderSize = 0;
+            btnLogout.Click += BtnLogout_Click;
+            accountPanel.Controls.Add(btnLogout);
+            
+            // Reset Savefile Button (middle)
+            var btnResetSavefile = new Button
+            {
+                Location = new Point(195, 75),
+                Size = new Size(175, 35),
+                Text = "\U0001F504 Savefile reset",
+                Font = new Font("Segoe UI Emoji", 9F, FontStyle.Bold),
+                BackColor = Color.FromArgb(255, 140, 0), // Dark Orange
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnResetSavefile.FlatAppearance.BorderSize = 0;
+            btnResetSavefile.Click += BtnResetSavefile_Click;
+            accountPanel.Controls.Add(btnResetSavefile);
+            
+            // Delete Savefile Button (right)
+            var btnDeleteSavefile = new Button
+            {
+                Location = new Point(380, 75),
+                Size = new Size(175, 35),
+                Text = "\U0001F5D1 Savefile loeschen",
+                Font = new Font("Segoe UI Emoji", 9F, FontStyle.Bold),
+                BackColor = BrightRed,
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat
+            };
+            btnDeleteSavefile.FlatAppearance.BorderSize = 0;
+            btnDeleteSavefile.Click += BtnDeleteSavefile_Click;
+            accountPanel.Controls.Add(btnDeleteSavefile);
+            
+            // Warning label
+            var lblWarning = new Label
+            {
+                Text = "\U000026A0 Reset: Setzt Savefile auf Anfang | Loeschen: Entfernt komplett!",
+                Location = new Point(10, 115),
+                Size = new Size(540, 25),
+                Font = new Font("Segoe UI Emoji", 8F, FontStyle.Italic),
+                ForeColor = BrightRed
+            };
+            accountPanel.Controls.Add(lblWarning);
+            
+            this.Controls.Add(accountPanel);
+            accountPanel.BringToFront(); // Ensure panel is on top
+            
+            // Adjust form size to accommodate account management
+            this.Height = Math.Max(this.Height, 900); // Increased to 900 to show account panel
+        }
+        
+        /// <summary>
+        /// Logout - Clear saved login data and close application
+        /// </summary>
+        private void BtnLogout_Click(object? sender, EventArgs e)
+        {
+            var result = MessageBox.Show(
+                "Moechtest du dich wirklich ausloggen?\n\n" +
+                "Das Spiel wird geschlossen und du musst dich beim naechsten Start neu anmelden.",
+                "Logout",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question,
+                MessageBoxDefaultButton.Button2
+            );
+            
+            if (result == DialogResult.Yes)
+            {
+                Console.WriteLine($"[OptionsForm] Logging out...");
+                
+                // Clear saved login
+                LoginService.ClearSavedLogin();
+                
+                // Save current game state before closing (synchronous for app exit)
+                _gameManager.SaveSync();
+                
+                MessageBox.Show(
+                    "Logout erfolgreich!\n\nDas Spiel wird jetzt geschlossen.",
+                    "Logout",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information
+                );
+                
+                // Close the entire application
+                Application.Exit();
+            }
+        }
+        
+        /// <summary>
+        /// Reset current savefile - Resets all progress but keeps the savefile
+        /// </summary>
+        private void BtnResetSavefile_Click(object? sender, EventArgs e)
+        {
+            var result = MessageBox.Show(
+                "\U000026A0 WARNUNG \U000026A0\n\n" +
+                "Moechtest du den AKTUELLEN Savefile zuruecksetzen?\n\n" +
+                "Das loescht:\n" +
+                "- Alle Rayans\n" +
+                "- Alles Geld & Gems\n" +
+                "- Alle Rebirths\n" +
+                "- Alle Upgrades\n" +
+                "- Alle Dices\n" +
+                "- Alle Quest-Fortschritte\n\n" +
+                "Der Savefile bleibt erhalten, aber alle Daten werden zurueckgesetzt!\n\n" +
+                "DIESE AKTION KANN NICHT RUECKGAENGIG GEMACHT WERDEN!",
+                "Savefile zuruecksetzen",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning,
+                MessageBoxDefaultButton.Button2
+            );
+            
+            if (result == DialogResult.Yes)
+            {
+                // Double confirmation
+                var doubleCheck = MessageBox.Show(
+                    "Bist du dir ABSOLUT SICHER?\n\nDies ist deine letzte Chance!",
+                    "Letzte Bestaetigung",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Exclamation,
+                    MessageBoxDefaultButton.Button2
+                );
+
+                if (doubleCheck == DialogResult.Yes)
+                {
+                    ResetGame(); // Uses existing reset logic
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Delete current savefile from database AND local storage
+        /// </summary>
+        private async void BtnDeleteSavefile_Click(object? sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(_currentSavefileId))
+            {
+                MessageBox.Show("Kein aktiver Savefile!", "Fehler", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+            
+            var result = MessageBox.Show(
+                "\U000026A0 WARNUNG \U000026A0\n\n" +
+                "Moechtest du den AKTUELLEN Savefile KOMPLETT loeschen?\n\n" +
+                "Das loescht:\n" +
+                "- Savefile aus der Datenbank\n" +
+                "- Lokale Speicherdatei (falls vorhanden)\n" +
+                "- ALLE Daten dieses Savefiles!\n\n" +
+                "DIESE AKTION KANN NICHT RUECKGAENGIG GEMACHT WERDEN!\n\n" +
+                "Das Spiel wird danach geschlossen.",
+                "Savefile loeschen",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Warning,
+                MessageBoxDefaultButton.Button2
+            );
+            
+            if (result == DialogResult.Yes)
+            {
+                try
+                {
+                    Console.WriteLine($"[OptionsForm] Deleting savefile: {_currentSavefileId}");
+                    
+                    // 1. Delete from database
+                    bool dbDeleted = await _databaseService!.DeleteSavefileAsync(_currentSavefileId);
+                    
+                    if (dbDeleted)
+                    {
+                        Console.WriteLine($"[OptionsForm] Savefile deleted from database");
+                        
+                        // 2. Delete local save file (if exists)
+                        try
+                        {
+                            string localSavePath = Path.Combine(
+                                Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                                "SpinARayan",
+                                "savegame.xml"
+                            );
+                            
+                            if (File.Exists(localSavePath))
+                            {
+                                File.Delete(localSavePath);
+                                Console.WriteLine($"[OptionsForm] Local save file deleted");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Console.WriteLine($"[OptionsForm] Error deleting local save: {ex.Message}");
+                        }
+                        
+                        MessageBox.Show(
+                            "Savefile erfolgreich geloescht!\n\n" +
+                            "Das Spiel wird jetzt geschlossen.\n" +
+                            "Beim naechsten Start kannst du einen neuen Savefile erstellen.",
+                            "Savefile geloescht",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Information
+                        );
+                        
+                        // Close application
+                        Application.Exit();
+                    }
+                    else
+                    {
+                        MessageBox.Show(
+                            "Fehler beim Loeschen des Savefiles aus der Datenbank!",
+                            "Fehler",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Error
+                        );
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"[OptionsForm] Error deleting savefile: {ex.Message}");
+                    MessageBox.Show(
+                        $"Fehler beim Loeschen des Savefiles:\n\n{ex.Message}",
+                        "Fehler",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                }
+            }
         }
     }
 }
