@@ -252,6 +252,10 @@ private const string SERVER_IP = "Server=10.0.2.15;Database=game_db;Uid=root;Pwd
 7. **Table names are lowercase**: `users`, `savefile`
 8. **Use `LAST_INSERT_ID()`** to get auto-increment IDs after INSERT
 
+### Known Design Decisions
+
+**total_gems Field:** Currently stores the same value as `gems` (current gems). This matches the behavior from the migration guide (MYSQL_MIGRATION.md lines 334 and 576). While ideally this would track total gems earned across all time (like `TotalMoneyEarned` does for money), the `PlayerStats` model does not currently have a `TotalGems` or `TotalGemsEarned` property. To maintain minimal changes and compatibility with existing database schema, this behavior is preserved. Future enhancement could add a proper total gems tracking system.
+
 ---
 
 ## 🚀 Next Steps
