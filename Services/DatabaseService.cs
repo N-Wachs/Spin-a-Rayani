@@ -2,6 +2,7 @@ using System.Text;
 using System.Text.Json;
 using SpinARayan.Models;
 using System.Numerics;
+using MySqlConnector;
 
 namespace SpinARayan.Services
 {
@@ -18,6 +19,7 @@ namespace SpinARayan.Services
         private string? _currentSavefileId;
         private string? _currentUserId;
         private bool _adminUsedThisSession = false;
+        private const string SERVER_IP = "Server=10.0.2.15;Database=game_db;Uid=root;Pwd=ServerRoot123;"; // Aktuell über NAT
 
         private const string SUPABASE_URL = "https://gflohnjhunyukdayaahn.supabase.co/rest/v1";
         private const string SUPABASE_KEY = "sb_publishable_dZXMv77hZa3_vZbQTYSKeQ_rZ49Ro9w";
